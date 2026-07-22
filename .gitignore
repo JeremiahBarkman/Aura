@@ -115,9 +115,17 @@ native/runtime/node.exe
 # -----------------------------------------------------------------------------
 # Editor / tooling
 # -----------------------------------------------------------------------------
-# Machine-specific Claude Code permissions; the shared .claude/settings.json
-# (if one is ever added) stays tracked.
+# Machine-specific Claude Code permissions. The shared .claude/settings.json
+# and .claude/hooks/ ARE tracked - they use $CLAUDE_PROJECT_DIR rather than
+# absolute paths, so they work for anyone who clones.
 .claude/settings.local.json
+
+# CV-Git per-machine state. Written by `cv init`, and it records an absolute
+# repository root ("C:\\Projects\\aura") plus a locally-generated repoId used
+# to name this machine's graph/vector databases. Committing it would hand
+# every teammate a path that does not exist on their machine. Each developer
+# runs `cv init` themselves.
+.cv/
 .vscode/
 !.vscode/extensions.json
 *.code-workspace
