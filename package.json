@@ -1,0 +1,81 @@
+{
+  "name": "aura",
+  "version": "1.4.8",
+  "description": "",
+  "main": "electron-main.js",
+  "scripts": {
+    "start": "node src/web/server.js",
+    "electron": "electron electron-main.js",
+    "stage": "node scripts/stage-resources.js",
+    "predist": "node scripts/stage-resources.js",
+    "dist": "electron-builder",
+    "predist:dir": "node scripts/stage-resources.js",
+    "dist:dir": "electron-builder --dir"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@personifyinc/psyseg-sdk": "^5.6.0",
+    "adm-zip": "^0.5.17",
+    "archiver": "^8.0.0",
+    "better-sqlite3": "^12.10.0",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "multer": "^2.1.1"
+  },
+  "devDependencies": {
+    "electron": "^42.3.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.aura.studio",
+    "productName": "Aura",
+    "npmRebuild": false,
+    "asar": false,
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron-main.js",
+      "electron-preload.js",
+      "package.json",
+      ".env.example",
+      "public/**/*",
+      "src/**/*",
+      "comfy/**/*",
+      "node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "native/runtime/AuraFrameBridge.exe",
+        "to": "native/AuraFrameBridge.exe"
+      },
+      {
+        "from": "native/runtime/VCamSample.exe",
+        "to": "native/VCamSample.exe"
+      },
+      {
+        "from": "native/runtime/VCamSampleSource.dll",
+        "to": "native/VCamSampleSource.dll"
+      },
+      {
+        "from": "native/runtime/node.exe",
+        "to": "node.exe"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Aura"
+    }
+  }
+}

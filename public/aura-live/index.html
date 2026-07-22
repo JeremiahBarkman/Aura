@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Aura Live View</title>
+    <style>
+        body {
+            margin: 0;
+            background: #0f1117;
+            color: #d7dce2;
+            font-family: Consolas, monospace;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            height: 100vh;
+        }
+
+        .controls {
+            background: #161b22;
+            border-right: 1px solid #30363d;
+            padding: 18px;
+            overflow-y: auto;
+        }
+
+        .stage {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        h1, h2 {
+            color: #7ee787;
+        }
+
+        button {
+            background: #238636;
+            color: white;
+            border: 1px solid #2ea043;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-family: Consolas, monospace;
+            cursor: pointer;
+            margin: 6px 0;
+            width: 100%;
+        }
+
+        button:hover {
+            background: #2ea043;
+        }
+
+        .secondary {
+            background: #21262d;
+            border-color: #30363d;
+        }
+
+        .danger {
+            background: #8b0000;
+            border-color: #b22222;
+        }
+
+        video {
+            display: none;
+        }
+
+        canvas {
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background: black;
+            border: 1px solid #30363d;
+            border-radius: 14px;
+            box-shadow: 0 0 30px rgba(0,255,140,0.08);
+        }
+
+        .status {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 10px;
+            white-space: pre-wrap;
+            color: #8b949e;
+            margin-top: 10px;
+        }
+
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            min-height: 90px;
+            background: #0d1117;
+            color: #d7dce2;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 10px;
+            font-family: Consolas, monospace;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="controls">
+        <h1>Aura Live View</h1>
+
+        <button onclick="startCamera()">Start Camera</button>
+        <button onclick="useRemoveMode()" class="secondary">Remove Background</button>
+        <button onclick="useBlurMode()" class="secondary">Blur Background</button>
+    <button onclick="resetSegmentation()" class="danger">
+    Reset Segmentation
+    </button>
+        <h2>Semantic Background Test</h2>
+        <textarea id="spokenText" placeholder="Type a phrase that should match a record..."></textarea>
+        <button onclick="matchAndReplaceBackground()">Match + Replace Background</button>
+
+    <button onclick="startLiveSemanticBackground()" class="secondary">
+        Start Live Semantic Background
+    </button>
+
+    <button onclick="stopLiveSemanticBackground()" class="danger">
+        Stop Live Semantic Background
+    </button>
+
+        <div class="status" id="status">Waiting.</div>
+        <div class="status" id="matchStatus">No match yet.</div>
+    </div>
+
+    <div class="stage">
+        <video id="video" autoplay playsinline muted></video>
+        <canvas id="outputCanvas"></canvas>
+    </div>
+
+    <script src="/node_modules/@personifyinc/psyseg-sdk/src/index.min.js"></script>
+
+    <script type="module">
+        import { PsySegSegmentationProvider } from '../segmentation/PsySegSegmentationProvider.js?v=6';
+
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('outputCanvas');
+        const statusBox = document.getElementById('status');
+        const matchStatus = document.getElementById('matchStatus');
+
+        let provider = null;
+        let stream = null;
+        let liveRecognition = null;
+        let liveBuffer = [];
+        let liveMatchInterval = null;
+        let lastBackgroundImageUrl = null;
+        let lastBackgroundSwitchTime = 0;
+
+        window.startLiveSemanticBackground = function () {
+            const SpeechRecognition =
+                window.SpeechRecognition || window.webkitSpeechRecognition;
+
+            if (!SpeechRecognition) {
+                matchStatus.textContent = 'Speech recognition not supported. Use Chrome or Edge.';
+                return;
+            }
+
+            liveRecognition = new SpeechRecognition();
+            liveRecognition.continuous = true;
+            liveRecognition.interimResults = true;
+            liveRecognition.lang = 'en-US';
+
+            liveRecognition.onstart = function () {
+                matchStatus.textContent = 'Live semantic background listening...';
+            };
+
+            liveRecognition.onresult = function (event) {
+                let text = '';
+
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    text += event.results[i][0].transcript + ' ';
+                }
+
+                text = text.trim();
+
+                if (text) {
+                    liveBuffer.push(text);
+
+                    while (liveBuffer.length > 5) {
+                        liveBuffer.shift();
+                    }
+
+                    matchStatus.textContent = 'Live transcript:\n' + liveBuffer.join(' ');
+                }
+            };
+
+            liveRecognition.onerror = function (event) {
+                matchStatus.textContent = 'Speech recognition error: ' + event.error;
+            };
+
+            liveRecognition.onend = function () {
+                if (liveRecognition) {
+                    try {
+                        liveRecognition.start();
+                    } catch (error) {
+                        matchStatus.textContent = 'Speech restart error: ' + error.message;
+                    }
+                }
+            };
+
+            liveMatchInterval = setInterval(runLiveSemanticBackgroundMatch, 2500);
+
+            liveRecognition.start();
+        };
+
+        window.stopLiveSemanticBackground = function () {
+            if (liveRecognition) {
+                liveRecognition.onend = null;
+                liveRecognition.stop();
+                liveRecognition = null;
+            }
+
+            if (liveMatchInterval) {
+                clearInterval(liveMatchInterval);
+                liveMatchInterval = null;
+            }
+
+            matchStatus.textContent = 'Live semantic background stopped.';
+        };
+
+        async function runLiveSemanticBackgroundMatch() {
+            const spokenText = liveBuffer.join(' ').trim();
+
+            if (!spokenText) {
+                return;
+            }
+
+            const response = await fetch('/api/play/match', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ spokenText })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok || !result.matches.length) {
+                return;
+            }
+
+            const match = result.matches[0];
+
+            if (match.score < 0.25) {
+                return;
+            }
+
+            const imageUrl = imageUrlFromPath(match.image_path, match.workflow_name || '');
+            const now = Date.now();
+
+            if (imageUrl === lastBackgroundImageUrl) {
+                return;
+            }
+
+            if (now - lastBackgroundSwitchTime < 3000) {
+                return;
+            }
+
+            const bgImage = await loadImage(imageUrl);
+
+            await provider.replaceBackground(bgImage);
+
+            lastBackgroundImageUrl = imageUrl;
+            lastBackgroundSwitchTime = now;
+
+            matchStatus.textContent =
+                `LIVE MATCH\n` +
+                `record ${match.source_item_id}\n` +
+                `image ${match.image_id}\n` +
+                `score ${match.score.toFixed(3)}\n\n` +
+                `transcript:\n${spokenText}`;
+        }    
+        async function initializeProvider() {
+            statusBox.textContent = 'Initializing segmentation provider...';
+
+            provider = new PsySegSegmentationProvider();
+            await provider.initialize();
+
+            provider.attachVideo(video);
+            provider.attachCanvas(canvas);
+
+            statusBox.textContent = 'Segmentation provider initialized.';
+        }
+
+        window.startCamera = async function () {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: 1280, height: 720 },
+                    audio: false
+                });
+
+                video.srcObject = stream;
+                await video.play();
+
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+
+                statusBox.textContent = 'Camera started.';
+            } catch (error) {
+                statusBox.textContent = 'Camera error: ' + error.message;
+            }
+        };
+
+        window.useRemoveMode = async function () {
+            await provider.removeBackground();
+            statusBox.textContent = 'Remove background mode active.';
+        };
+        window.resetSegmentation = async function () {
+            if (!provider) {
+                return;
+            }
+
+            provider.stop();
+
+            const ctx = canvas.getContext('2d');
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (video.videoWidth) {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            }
+
+            statusBox.textContent = 'Segmentation reset.';
+        };
+        window.useBlurMode = async function () {
+            await provider.blurBackground();
+            statusBox.textContent = 'Blur background mode active.';
+        };
+
+        function imageUrlFromPath(imagePath, workflowName = '') {
+            if (!imagePath) return '';
+
+            const normalized = imagePath.replaceAll('\\', '/');
+            const fileName = normalized.split('/').pop();
+
+            // Match on /images/... (not /data/images/...) so both the dev
+            // layout (<repo>/data/images/...) and the packaged layout
+            // (userData/images/...) classify correctly.
+            if (normalized.includes('/images/imports/')) {
+                return `/imported-images/${encodeURIComponent(fileName)}`;
+            }
+
+            if (normalized.includes('/images/manual/')) {
+                return `/manual-images/${encodeURIComponent(fileName)}`;
+            }
+
+            if (normalized.includes('/images/generated/') || normalized.includes('/ComfyUI/output/')) {
+                return `/generated-images/${encodeURIComponent(fileName)}`;
+            }
+
+            return `/manual-images/${encodeURIComponent(fileName)}`;
+        }
+
+        async function loadImage(url) {
+            return new Promise((resolve, reject) => {
+                const image = new Image();
+                image.crossOrigin = 'anonymous';
+                image.onload = () => resolve(image);
+                image.onerror = reject;
+                image.src = url;
+            });
+        }
+
+        window.matchAndReplaceBackground = async function () {
+            const spokenText = document.getElementById('spokenText').value;
+
+            matchStatus.textContent = 'Matching...';
+
+            const response = await fetch('/api/play/match', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ spokenText })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok || !result.matches.length) {
+                matchStatus.textContent = 'No match found.';
+                return;
+            }
+
+            const match = result.matches[0];
+            const imageUrl = imageUrlFromPath(match.image_path, match.workflow_name || '');
+            const bgImage = await loadImage(imageUrl);
+
+            await provider.replaceBackground(bgImage);
+
+            matchStatus.textContent =
+                `Matched record ${match.source_item_id}\n` +
+                `image ${match.image_id}\n` +
+                `score ${match.score.toFixed(3)}\n` +
+                imageUrl;
+        };
+
+        initializeProvider().catch(error => {
+            statusBox.textContent = 'Provider initialization error: ' + error.message;
+            console.error(error);
+        });
+    </script>
+</body>
+</html>

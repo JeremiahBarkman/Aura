@@ -1,0 +1,150 @@
+# =============================================================================
+# Aura .gitignore
+#
+# Tailored to this repo. Verified with `git check-ignore` against the actual
+# working tree - see the notes on native binaries near the bottom, which use
+# negation rules that are easy to get subtly wrong.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Secrets  (MOST IMPORTANT RULE IN THIS FILE)
+# -----------------------------------------------------------------------------
+# .env holds the PsySeg license/access keys and the SerpAPI key. It must never
+# be committed. .env.example is the redacted template and IS tracked.
+.env
+.env.*
+!.env.example
+
+# -----------------------------------------------------------------------------
+# Dependencies and build output
+# -----------------------------------------------------------------------------
+node_modules/
+jspm_packages/
+
+# electron-builder output (installers are ~125 MB each)
+dist/
+
+# NuGet packages restored into the native projects
+packages/
+
+# NOTE: the top-level build/ directory is NOT ignored - it holds icon.ico and
+# installer.nsh, which are source assets the installer needs.
+
+# -----------------------------------------------------------------------------
+# Aura runtime and user data
+# -----------------------------------------------------------------------------
+# The SQLite DB, the user's image library, recorded audio, imports and the
+# session/PID file. All generated at runtime and personal to each machine.
+# The app recreates what it needs (see sessionTracker.js mkdirSync).
+/data/
+
+# Per-service logs written by attachServiceLogging() in dev mode.
+/logs/
+logs/
+*.log
+
+# Output of Diagnose Aura.bat, if anyone runs it inside the repo.
+aura-diagnostics.txt
+
+# -----------------------------------------------------------------------------
+# Python (speech service)
+# -----------------------------------------------------------------------------
+# The venv is ~292 MB. It currently self-excludes via a .gitignore that the
+# venv module writes inside itself - do not rely on that, it disappears if the
+# environment is ever recreated by different tooling.
+/services/speech/venv/
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+
+# -----------------------------------------------------------------------------
+# Visual Studio / MSBuild  (native/)
+# -----------------------------------------------------------------------------
+# .vs/ alone was ~1.7 GB of precompiled-header cache in this tree.
+.vs/
+ipch/
+*.VC.db
+*.VC.VC.opendb
+*.user
+*.suo
+*.sdf
+*.opensdf
+*.aps
+
+# Intermediate build artifacts
+*.obj
+*.pdb
+*.ilk
+*.exp
+*.idb
+*.iobj
+*.ipdb
+*.tlog
+*.pch
+*.res
+*.lastbuildstate
+*.recipe
+
+# Build output directories
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+
+# -----------------------------------------------------------------------------
+# Native binaries the installer SHIPS  (deliberately tracked)
+# -----------------------------------------------------------------------------
+# NOTHING is tracked out of the Visual Studio output folders above. The
+# binaries we ship are copied into native/runtime/ by scripts/stage-resources.js
+# (run automatically by `npm run dist`), and tracked from there.
+#
+# That was not just tidiness: the vendored VCamSample project ships its own
+# native/external/VCamSample/.gitignore whose `x64/` rule excludes the parent
+# directory, and git cannot re-include a file whose parent directory is
+# excluded - so those binaries were untrackable in place at any price.
+
+# Curated staging area for the binaries we ship - NOT a build output
+# directory, so it is tracked normally.
+!native/runtime/
+
+# ...except node.exe, which is 85 MB and is re-staged on every build from the
+# interpreter running the build (process.execPath). No reason to carry it.
+native/runtime/node.exe
+
+# -----------------------------------------------------------------------------
+# Editor / tooling
+# -----------------------------------------------------------------------------
+# Machine-specific Claude Code permissions; the shared .claude/settings.json
+# (if one is ever added) stays tracked.
+.claude/settings.local.json
+.vscode/
+!.vscode/extensions.json
+*.code-workspace
+
+# -----------------------------------------------------------------------------
+# OS noise
+# -----------------------------------------------------------------------------
+Thumbs.db
+ehthumbs.db
+desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# -----------------------------------------------------------------------------
+# Misc Node
+# -----------------------------------------------------------------------------
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.eslintcache
+*.tgz
+.node_repl_history
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+*.pid
+*.seed
+*.pid.lock
+coverage/
+*.lcov
+.nyc_output

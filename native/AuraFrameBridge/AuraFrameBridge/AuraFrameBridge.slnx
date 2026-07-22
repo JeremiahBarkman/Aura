@@ -1,0 +1,8 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="../AuraFrameReader/AuraFrameReader.vcxproj" Id="c961e5ae-901a-4933-aa78-e8883f033a7b" />
+  <Project Path="AuraFrameBridge.vcxproj" Id="e7a5642d-bd13-4d38-89e3-6cd355b723bd" />
+</Solution>

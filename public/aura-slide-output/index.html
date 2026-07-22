@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Aura Slide Output</title>
+    <link rel="icon" type="image/png" href="/assets/favicon.png">
+
+    <style>
+        html,
+        body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+        }
+
+        #slideStage {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slide-image {
+            position: absolute;
+            max-width: 100%;
+            max-height: 90%;
+            object-fit: contain;
+            opacity: 0;
+            transition: opacity 800ms ease-in-out;
+        }
+
+        .dual-slot {
+            position: absolute;
+            top: 0;
+            height: 90%;
+            width: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .dual-slot.left {
+            left: 0;
+        }
+
+        .dual-slot.right {
+            right: 0;
+        }
+
+        .dual-slot img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        #tripleStage {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .triple-slot {
+            position: absolute;
+            top: 0;
+            height: 90%;
+            width: 33.3333%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .triple-slot.left {
+            left: 0;
+        }
+
+        .triple-slot.center {
+            left: 33.3333%;
+        }
+
+        .triple-slot.right {
+            right: 0;
+        }
+
+        .triple-slot img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        #auraStage {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+       .aura-image {
+    position: absolute;
+    /* cover, not contain: contain leaves letterbox gaps inside the mask
+       ellipse, so the image's own hard edges survive the feathering. */
+    object-fit: cover;
+
+    border-radius: 36px;
+
+    -webkit-mask-image:
+        radial-gradient(
+            ellipse at center,
+            rgba(0,0,0,1) 34%,
+            rgba(0,0,0,0.82) 52%,
+            rgba(0,0,0,0.48) 70%,
+            rgba(0,0,0,0.18) 86%,
+            rgba(0,0,0,0) 100%
+        );
+
+    mask-image:
+        radial-gradient(
+            ellipse at center,
+            rgba(0,0,0,1) 34%,
+            rgba(0,0,0,0.82) 52%,
+            rgba(0,0,0,0.48) 70%,
+            rgba(0,0,0,0.18) 86%,
+            rgba(0,0,0,0) 100%
+        );
+
+    filter: drop-shadow(0 0 52px rgba(255,255,255,0.18));
+
+    transition:
+        opacity 1200ms ease-in-out,
+        transform 1200ms ease-in-out,
+        filter 1200ms ease-in-out;
+}
+
+/* Sizes match the canvas SceneRenderer's aura layout so the camera path
+   and Slide Output produce the same composition: smaller boxes with
+   modest overlap, blended by the per-image feather masks above. */
+#auraPrimary {
+    top: -5%;
+    left: 50%;
+    transform: translateX(-50%);
+
+    width: 60%;
+    height: 66%;
+
+    z-index: 30;
+
+    opacity: 0.95;
+}
+
+#auraLeft {
+    top: 28%;
+    left: -5%;
+
+    width: 56%;
+    height: 64%;
+
+    z-index: 20;
+
+    opacity: 0.85;
+}
+
+#auraRight {
+    top: 28%;
+    right: -5%;
+
+    width: 56%;
+    height: 64%;
+
+    z-index: 20;
+
+    opacity: 0.85;
+}
+
+#auraStage::after {
+    content: '';
+
+    position: absolute;
+    inset: 0;
+
+    pointer-events: none;
+
+    background:
+        radial-gradient(
+            ellipse at center,
+            rgba(0,0,0,0) 42%,
+            rgba(0,0,0,0.16) 62%,
+            rgba(0,0,0,0.48) 82%,
+            rgba(0,0,0,0.88) 100%
+        ),
+        linear-gradient(
+            to bottom,
+            rgba(0,0,0,0) 62%,
+            rgba(0,0,0,0.72) 100%
+        );
+
+    z-index: 100;
+}
+
+        .slide-image.active {
+            opacity: 1;
+        }
+
+        #bottomFade {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 22%;
+            pointer-events: none;
+            background: linear-gradient(
+                to bottom,
+                rgba(0, 0, 0, 0),
+                rgba(0, 0, 0, 0.92)
+            );
+        }
+
+        #status {
+            position: fixed;
+            left: 16px;
+            bottom: 12px;
+            color: rgba(255,255,255,0.45);
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 12px;
+            z-index: 10;
+        }
+    </style>
+        </head>
+
+            <body>
+            <div id="slideStage">
+                <img id="imageA" class="slide-image active">
+                <img id="imageB" class="slide-image">
+
+                <div id="dualStage" style="display:none;">
+                    <div class="dual-slot left">
+                        <img id="dualImageLeft">
+                    </div>
+
+                    <div class="dual-slot right">
+                        <img id="dualImageRight">
+                    </div>
+                </div>
+
+            <div id="tripleStage" style="display:none;">
+                <div class="triple-slot left">
+                    <img id="tripleImageLeft">
+                </div>
+
+                <div class="triple-slot center">
+                    <img id="tripleImageCenter">
+                </div>
+
+                <div class="triple-slot right">
+                    <img id="tripleImageRight">
+                </div>
+            </div>
+
+            <div id="auraStage" style="display:none;">
+                <img id="auraPrimary" class="aura-image">
+                <img id="auraLeft" class="aura-image">
+                <img id="auraRight" class="aura-image">
+            </div>
+
+    </div>
+
+    <div id="bottomFade"></div>
+    <div id="status">Aura Slide Output waiting for active scene...</div>
+
+    <script type="module">
+
+        import { SceneRenderer } from '/rendering/SceneRenderer.js';
+        import { SceneImageCache } from '/rendering/SceneImageCache.js';
+
+        const sceneCanvas = document.createElement('canvas');
+
+        const sceneRenderer =
+            new SceneRenderer(sceneCanvas);
+
+        const sceneImageCache =
+            new SceneImageCache();
+
+        let currentImageUrl = '';
+        let showingA = true;
+
+        let currentSceneKey = '';
+        let currentSceneStartedAt = 0;
+        let pendingScene = null;
+
+function getSceneKey(scene) {
+    if (!scene || !Array.isArray(scene.slots)) {
+        return '';
+    }
+
+    return [
+        scene.sceneMode || 'single',
+        ...scene.slots.map(slot => slot.image_id || slot.image_path || '')
+    ].join('|');
+}
+
+function getMinimumDisplayMs(scene) {
+    return Number(scene?.transition?.minimumDisplayMs || 0);
+}
+
+function canReplaceCurrentScene(nextScene) {
+    if (!currentSceneKey) {
+        return true;
+    }
+
+    const now = Date.now();
+    const minimumDisplayMs = getMinimumDisplayMs(nextScene);
+
+    return now - currentSceneStartedAt >= minimumDisplayMs;
+}
+
+async function loadSceneImages(slots) {
+    return sceneImageCache.loadSlots(
+        slots,
+        imageUrlFromPath
+    );
+}
+
+let slideOutputConfig = {
+    displayMode: 'single'
+};
+
+async function loadSlideOutputConfig() {
+    const response = await fetch('/api/config');
+    const result = await response.json();
+
+    if (response.ok && result.success && result.config) {
+        slideOutputConfig = result.config;
+    }
+
+    return slideOutputConfig;
+}
+
+function getSlideDisplayMode() {
+    return slideOutputConfig.displayMode || 'single';
+}
+
+function getEffectiveSceneMode(displayMode, slotCount) {
+    if (displayMode === 'single') {
+        return 'single';
+    }
+
+    if (displayMode === 'dual') {
+        return slotCount >= 2 ? 'dual' : 'single';
+    }
+
+    if (displayMode === 'triple') {
+        if (slotCount >= 3) return 'triple';
+        if (slotCount >= 2) return 'dual';
+        return 'single';
+    }
+
+    return 'aura';
+}
+
+function getDisplaySlotLimit(displayMode) {
+    if (displayMode === 'single') return 1;
+    if (displayMode === 'dual') return 2;
+    return 3;
+}
+
+function cloneDisplaySlot(slot, slotIndex = 0, role = 'primary') {
+    if (!slot) {
+        return null;
+    }
+
+    return {
+        ...slot,
+        slotIndex,
+        role
+    };
+}
+
+function getMostRecentSceneSlot(slots) {
+    return slots
+        .filter(Boolean)
+        .slice()
+        .sort((a, b) => {
+            const aTime = Number(a.lastMatchedAt || a.insertedAt || 0);
+            const bTime = Number(b.lastMatchedAt || b.insertedAt || 0);
+
+            return bTime - aTime;
+        })[0] || null;
+}
+
+function getDisplaySlotsForMode(scene, displayMode) {
+    const sourceSlots =
+        Array.isArray(scene?.slots)
+            ? scene.slots.filter(Boolean)
+            : [];
+
+    if (!sourceSlots.length) {
+        return [];
+    }
+
+    const sortedSlots =
+        sourceSlots
+            .slice()
+            .sort((a, b) => {
+                const aTime = Number(a.lastMatchedAt || a.insertedAt || 0);
+                const bTime = Number(b.lastMatchedAt || b.insertedAt || 0);
+
+                return bTime - aTime;
+            });
+
+    if (displayMode === 'single') {
+        return [
+            cloneDisplaySlot(
+                sortedSlots[0],
+                0,
+                'primary'
+            )
+        ];
+    }
+
+    if (displayMode === 'dual') {
+        return sortedSlots
+            .slice(0, 2)
+            .map((slot, index) => {
+                return cloneDisplaySlot(
+                    slot,
+                    index,
+                    index === 0
+                        ? 'primary'
+                        : 'supporting-left'
+                );
+            });
+    }
+
+    return sortedSlots
+        .slice(0, getDisplaySlotLimit(displayMode))
+        .map((slot, index) => {
+            const role =
+                index === 0
+                    ? 'primary'
+                    : index === 1
+                        ? 'supporting-left'
+                        : 'supporting-right';
+
+            return cloneDisplaySlot(slot, index, role);
+        });
+}
+
+function applyDisplayModeToScene(scene) {
+    if (!scene || !Array.isArray(scene.slots)) {
+        return scene;
+    }
+
+    const displayMode =
+        getSlideDisplayMode();
+
+    const slots =
+        getDisplaySlotsForMode(scene, displayMode);
+
+    return {
+        ...scene,
+        sceneMode: getEffectiveSceneMode(displayMode, slots.length),
+        requestedDisplayMode: displayMode,
+        slots
+    };
+}
+
+        function imageUrlFromPath(imagePath, workflowName = '') {
+            if (!imagePath) {
+                return '';
+            }
+
+            const normalized = imagePath.replaceAll('\\', '/');
+            const fileName = normalized.split('/').pop();
+
+            // Match on /images/imports/ (not /data/images/imports/) so both
+            // the dev layout (<repo>/data/images/...) and the packaged layout
+            // (userData/images/...) classify correctly.
+            if (normalized.includes('/images/imports/')) {
+                return `/imported-images/${encodeURIComponent(fileName)}`;
+            }
+
+            if (normalized.includes('/images/manual/')) {
+                return `/manual-images/${encodeURIComponent(fileName)}`;
+            }
+
+            if (normalized.includes('/images/generated/') || normalized.includes('/ComfyUI/output/')) {
+                return `/generated-images/${encodeURIComponent(fileName)}`;
+            }
+
+            return `/manual-images/${encodeURIComponent(fileName)}`;
+        }
+
+                function renderDualScene(slots, metaText) {
+            const imageA = document.getElementById('imageA');
+            const imageB = document.getElementById('imageB');
+            const dualStage = document.getElementById('dualStage');
+            const dualImageLeft = document.getElementById('dualImageLeft');
+            const dualImageRight = document.getElementById('dualImageRight');
+            const tripleStage = document.getElementById('tripleStage');
+            const auraStage = document.getElementById('auraStage');
+            const status = document.getElementById('status');
+
+            if (!slots[0] || !slots[1]) {
+                return;
+            }
+
+            const leftUrl =
+                imageUrlFromPath(
+                    slots[0].image_path,
+                    slots[0].workflow_name || ''
+                );
+
+            const rightUrl =
+                imageUrlFromPath(
+                    slots[1].image_path,
+                    slots[1].workflow_name || ''
+                );
+
+            imageA.classList.remove('active');
+            imageB.classList.remove('active');
+                    if (tripleStage) {
+            tripleStage.style.display = 'none';
+        }
+        if (auraStage) {
+            auraStage.style.display = 'none';
+        }
+
+            dualImageLeft.src = leftUrl;
+            dualImageRight.src = rightUrl;
+
+            dualStage.style.display = 'block';
+            dualStage.style.opacity = '1';
+
+            status.textContent = metaText || 'Aura Slide Output dual scene active.';
+        }
+       function renderTripleScene(slots, metaText) {
+    const imageA = document.getElementById('imageA');
+    const imageB = document.getElementById('imageB');
+    const dualStage = document.getElementById('dualStage');
+    const tripleStage = document.getElementById('tripleStage');
+
+    const tripleImageLeft = document.getElementById('tripleImageLeft');
+    const tripleImageCenter = document.getElementById('tripleImageCenter');
+    const tripleImageRight = document.getElementById('tripleImageRight');
+
+    const status = document.getElementById('status');
+
+    if (!slots[0] || !slots[1] || !slots[2]) {
+        return;
+    }
+
+    const leftUrl =
+        imageUrlFromPath(
+            slots[0].image_path,
+            slots[0].workflow_name || ''
+        );
+
+    const centerUrl =
+        imageUrlFromPath(
+            slots[1].image_path,
+            slots[1].workflow_name || ''
+        );
+
+    const rightUrl =
+        imageUrlFromPath(
+            slots[2].image_path,
+            slots[2].workflow_name || ''
+        );
+
+    imageA.classList.remove('active');
+    imageB.classList.remove('active');
+
+    if (dualStage) {
+        dualStage.style.display = 'none';
+    }
+
+    tripleImageLeft.src = leftUrl;
+    tripleImageCenter.src = centerUrl;
+    tripleImageRight.src = rightUrl;
+
+    tripleStage.style.display = 'block';
+    tripleStage.style.opacity = '1';
+
+    status.textContent = metaText || 'Aura Slide Output triple scene active.';
+}
+
+function renderAuraScene(slots, metaText) {
+    const imageA = document.getElementById('imageA');
+    const imageB = document.getElementById('imageB');
+
+    const dualStage =
+        document.getElementById('dualStage');
+
+    const tripleStage =
+        document.getElementById('tripleStage');
+
+    const auraStage =
+        document.getElementById('auraStage');
+
+    const auraPrimary =
+        document.getElementById('auraPrimary');
+
+    const auraLeft =
+        document.getElementById('auraLeft');
+
+    const auraRight =
+        document.getElementById('auraRight');
+
+    const status =
+        document.getElementById('status');
+
+    if (!slots[0] || !slots[1] || !slots[2]) {
+        return;
+    }
+
+    imageA.classList.remove('active');
+    imageB.classList.remove('active');
+
+    if (dualStage) {
+        dualStage.style.display = 'none';
+    }
+    
+    if (auraStage) {
+    auraStage.style.display = 'none';
+    }
+
+    if (tripleStage) {
+        tripleStage.style.display = 'none';
+    }
+
+    auraPrimary.src =
+        imageUrlFromPath(
+            slots[1].image_path,
+            slots[1].workflow_name || ''
+        );
+
+    auraLeft.src =
+        imageUrlFromPath(
+            slots[0].image_path,
+            slots[0].workflow_name || ''
+        );
+
+    auraRight.src =
+        imageUrlFromPath(
+            slots[2].image_path,
+            slots[2].workflow_name || ''
+        );
+
+    auraStage.style.display = 'block';
+
+    status.textContent =
+        metaText ||
+        'Aura scene active.';
+}
+
+function swapImage(imageUrl, metaText, transition = {}) {
+    if (!imageUrl || imageUrl === currentImageUrl) {
+        return;
+    }
+
+    const transitionType =
+        transition.type || 'crossfade';
+
+    const durationMs =
+        Number(transition.durationMs || 800);
+
+    const easing =
+        transition.easing || 'ease-in-out';
+
+    const dualStage = document.getElementById('dualStage');
+    const tripleStage = document.getElementById('tripleStage');
+
+    const auraStage =
+        document.getElementById('auraStage');
+
+        
+    if (dualStage) {
+        dualStage.style.display = 'none';
+    }
+
+    if (tripleStage) {
+        tripleStage.style.display = 'none';
+    }
+
+    if (auraStage) {
+    auraStage.style.display = 'none';
+}
+    const imageA = document.getElementById('imageA');
+    const imageB = document.getElementById('imageB');
+    const status = document.getElementById('status');
+
+    const incoming = showingA ? imageB : imageA;
+    const outgoing = showingA ? imageA : imageB;
+
+    incoming.style.transition =
+        `opacity ${durationMs}ms ${easing}`;
+
+    outgoing.style.transition =
+        `opacity ${durationMs}ms ${easing}`;
+
+    incoming.onload = () => {
+        if (transitionType === 'instant' || durationMs === 0) {
+            incoming.style.transition = 'none';
+            outgoing.style.transition = 'none';
+
+            incoming.classList.add('active');
+            outgoing.classList.remove('active');
+        } else if (transitionType === 'fade') {
+            outgoing.classList.remove('active');
+
+            setTimeout(() => {
+                incoming.classList.add('active');
+            }, durationMs);
+        } else {
+            // crossfade default
+            incoming.classList.add('active');
+            outgoing.classList.remove('active');
+        }
+
+        showingA = !showingA;
+        currentImageUrl = imageUrl;
+
+        status.textContent = metaText || 'Aura Slide Output active.';
+    };
+
+    incoming.src = imageUrl;
+}
+
+async function renderSceneWithSharedRenderer(scene) {
+    const slots =
+        Array.isArray(scene.slots)
+            ? scene.slots
+            : [];
+
+    if (!slots.length) {
+        return false;
+    }
+
+    const loadedImages =
+        await loadSceneImages(slots);
+
+    sceneRenderer.resize(
+        window.innerWidth,
+        window.innerHeight
+    );
+
+    sceneRenderer.render(
+        scene,
+        loadedImages
+    );
+
+    const imageUrl =
+        sceneCanvas.toDataURL('image/png');
+
+    const metaText =
+        `mode=${scene.sceneMode || 'single'} | shared renderer | slots=${slots.length} | minDisplay=${getMinimumDisplayMs(scene)}ms`;
+
+    swapImage(
+        imageUrl,
+        metaText,
+        scene.transition || {}
+    );
+
+    return true;
+}
+
+function renderScene(scene) {
+    const slots =
+        Array.isArray(scene.slots)
+            ? scene.slots
+            : [];
+
+    if (!slots.length) {
+        return;
+    }
+
+    const sceneKey = getSceneKey(scene);
+
+    if (sceneKey === currentSceneKey) {
+        return;
+    }
+
+    if (!canReplaceCurrentScene(scene)) {
+        pendingScene = scene;
+        return;
+    }
+
+    pendingScene = null;
+    currentSceneKey = sceneKey;
+    currentSceneStartedAt = Date.now();
+
+if ((scene.sceneMode === 'dual' || slots.length === 2) && slots.length >= 2) {
+    renderSceneWithSharedRenderer(scene).catch(error => {
+        document.getElementById('status').textContent =
+            'Shared renderer dual error: ' + error.message;
+    });
+
+    return;
+}
+
+if (scene.sceneMode === 'aura' && slots.length >= 3) {
+
+    renderSceneWithSharedRenderer(scene).catch(error => {
+        document.getElementById('status').textContent =
+            'Shared renderer aura error: ' + error.message;
+    });
+
+    return;
+}
+
+    if ((scene.sceneMode === 'triple' || slots.length === 3) && slots.length >= 3) {
+
+        renderSceneWithSharedRenderer(scene).catch(error => {
+            document.getElementById('status').textContent =
+                'Shared renderer triple error: ' + error.message;
+        });
+
+        return;
+    }
+
+    const primarySlot = slots[0];
+
+    if (!primarySlot.image_path) {
+        return;
+    }
+
+    const imageUrl =
+        imageUrlFromPath(
+            primarySlot.image_path,
+            primarySlot.workflow_name || ''
+        );
+
+    const metaText =
+        `mode=${scene.sceneMode || 'single'} | slots=${slots.length} | image_id=${primarySlot.image_id} | minDisplay=${getMinimumDisplayMs(scene)}ms`;
+
+    renderSceneWithSharedRenderer(scene).catch(error => {
+    document.getElementById('status').textContent =
+        'Shared renderer single error: ' + error.message;
+});
+}
+
+function tryRenderPendingScene() {
+    if (!pendingScene) {
+        return;
+    }
+
+    if (canReplaceCurrentScene(pendingScene)) {
+        const sceneToRender = pendingScene;
+        pendingScene = null;
+        renderScene(sceneToRender);
+    }
+}
+
+async function pollActiveScene() {
+    try {
+        await loadSlideOutputConfig();
+
+        const response = await fetch('/api/play/active-scene');
+        const result = await response.json();
+
+        const rawScene = result.activeScene;
+
+        if (!rawScene) {
+            return;
+        }
+
+        const displayScene =
+            applyDisplayModeToScene(rawScene);
+
+        renderScene(displayScene);
+        tryRenderPendingScene();
+
+    } catch (error) {
+        document.getElementById('status').textContent =
+            'Aura Slide Output error: ' + error.message;
+    }
+}
+
+        setInterval(pollActiveScene, 750);
+        pollActiveScene();
+    </script>
+</body>
+</html>

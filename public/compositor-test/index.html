@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Aura Live Compositor Test</title>
+    <style>
+        body {
+            margin: 0;
+            background: #0f1117;
+            color: #d7dce2;
+            font-family: Consolas, monospace;
+            padding: 24px;
+        }
+
+        h1 {
+            color: #7ee787;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        button {
+            background: #238636;
+            color: white;
+            border: 1px solid #2ea043;
+            border-radius: 8px;
+            padding: 10px 16px;
+            cursor: pointer;
+            font-family: Consolas, monospace;
+        }
+
+        input {
+            width: 720px;
+            max-width: 95vw;
+            background: #0d1117;
+            color: #d7dce2;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 10px;
+            font-family: Consolas, monospace;
+        }
+
+        video {
+            display: none;
+        }
+
+        canvas {
+            width: 960px;
+            max-width: 95vw;
+            aspect-ratio: 16 / 9;
+            background: black;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+        }
+
+        #status {
+            margin-top: 12px;
+            color: #8b949e;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Aura Live Compositor Test</h1>
+
+<div class="controls">
+    <button onclick="startCompositor()">Start Compositor</button>
+    <button onclick="setMode('replace')">Replace</button>
+    <button onclick="setMode('blur')">Blur</button>
+    <button onclick="setMode('remove')">Remove</button>
+</div>
+
+<div class="controls">
+    <input
+        id="backgroundUrl"
+        value="/generated-images/ComfyUI_00001_.png"
+        placeholder="Enter Aura image URL..."
+    />
+    <button onclick="loadBackground()">Load Background</button>
+</div>
+
+<video id="cameraVideo" autoplay playsinline muted></video>
+<canvas id="compositeCanvas"></canvas>
+
+<div id="status">Waiting.</div>
+
+<script src="/node_modules/@personifyinc/psyseg-sdk/src/index.min.js"></script>
+
+<script type="module">
+import { PsySegBrowserProvider } from '/js/PsySegBrowserProvider.js';
+import { LiveCompositor } from '/js/LiveCompositor.js';
+
+const video = document.getElementById('cameraVideo');
+const canvas = document.getElementById('compositeCanvas');
+const statusBox = document.getElementById('status');
+
+let compositor = null;
+let provider = null;
+
+window.startCompositor = async function () {
+    try {
+        statusBox.textContent = 'Starting camera...';
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                width: 1280,
+                height: 720
+            },
+            audio: false
+        });
+
+        video.srcObject = stream;
+        await video.play();
+
+        statusBox.textContent = 'Initializing PsySeg provider...';
+
+        provider = new PsySegBrowserProvider();
+        await provider.initialize();
+
+        compositor = new LiveCompositor({
+            videoElement: video,
+            outputCanvas: canvas,
+            segmentationProvider: provider
+        });
+
+        await loadBackground();
+
+        compositor.setMode('replace');
+        compositor.start();
+
+        statusBox.textContent = 'Compositor running.';
+    } catch (error) {
+        console.error(error);
+        statusBox.textContent = 'ERROR:\n' + error.message;
+    }
+};
+
+window.loadBackground = async function () {
+    if (!compositor) {
+        return;
+    }
+
+    const url = document.getElementById('backgroundUrl').value.trim();
+
+    if (!url) {
+        statusBox.textContent = 'No background URL entered.';
+        return;
+    }
+
+    await compositor.setBackgroundImage(url);
+
+    statusBox.textContent = 'Background loaded: ' + url;
+};
+
+window.setMode = function (mode) {
+    if (!compositor) {
+        statusBox.textContent = 'Compositor not started.';
+        return;
+    }
+
+    compositor.setMode(mode);
+    statusBox.textContent = 'Mode set to: ' + mode;
+};
+</script>
+
+</body>
+</html>

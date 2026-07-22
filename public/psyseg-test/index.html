@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Aura PsySeg Test</title>
+
+    <style>
+        body {
+            margin: 0;
+            background: #0f1117;
+            color: #d7dce2;
+            font-family: Consolas, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px;
+        }
+
+        h1 {
+            color: #7ee787;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: #238636;
+            color: white;
+            border: 1px solid #2ea043;
+            border-radius: 8px;
+            padding: 10px 16px;
+            cursor: pointer;
+            font-family: Consolas, monospace;
+        }
+
+        button:hover {
+            background: #2ea043;
+        }
+
+        video, canvas {
+            width: 960px;
+            max-width: 95vw;
+            border-radius: 12px;
+            border: 1px solid #30363d;
+            background: black;
+        }
+
+        #status {
+            margin-top: 16px;
+            color: #8b949e;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Aura PsySeg Test</h1>
+
+<div class="controls">
+    <button onclick="startCamera()">Start Camera</button>
+    <button onclick="enableBlur()">Blur Background</button>
+    <button onclick="removeBackground()">Remove Background</button>
+</div>
+
+<video id="video" autoplay playsinline muted></video>
+
+<canvas id="outputCanvas"></canvas>
+
+<div id="status">
+    Waiting for initialization...
+</div>
+
+<script src="/node_modules/@personifyinc/psyseg-sdk/src/index.min.js"></script>
+
+<script type="module">
+import { PsySegSegmentationProvider } from '../segmentation/PsySegSegmentationProvider.js';
+
+const video = document.getElementById('video');
+const canvas = document.getElementById('outputCanvas');
+const statusBox = document.getElementById('status');
+
+let provider = null;
+let stream = null;
+
+async function initializeSegmentationProvider() {
+    statusBox.textContent = 'Initializing PsySeg provider...';
+
+    provider = new PsySegSegmentationProvider();
+    await provider.initialize();
+
+    provider.attachVideo(video);
+    provider.attachCanvas(canvas);
+
+    statusBox.textContent = 'PsySeg provider initialized.';
+}
+
+window.startCamera = async function () {
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                width: 1280,
+                height: 720
+            },
+            audio: false
+        });
+
+        video.srcObject = stream;
+
+        await video.play();
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        statusBox.textContent = 'Camera started.';
+    } catch (error) {
+        statusBox.textContent = 'Camera error: ' + error.message;
+    }
+};
+
+window.enableBlur = async function () {
+    if (!provider) {
+        statusBox.textContent = 'Provider not initialized.';
+        return;
+    }
+
+    await provider.blurBackground();
+    statusBox.textContent = 'Blur background mode active.';
+};
+
+window.removeBackground = async function () {
+    if (!provider) {
+        statusBox.textContent = 'Provider not initialized.';
+        return;
+    }
+
+    await provider.removeBackground();
+    statusBox.textContent = 'Remove background mode active.';
+};
+
+initializeSegmentationProvider().catch(error => {
+    statusBox.textContent = 'Provider initialization error: ' + error.message;
+    console.error(error);
+});
+</script>
+
+</body>
+</html>

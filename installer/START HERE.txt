@@ -1,0 +1,104 @@
+========================================================================
+ AURA - Tester Package    START HERE
+========================================================================
+
+Thanks for helping test Aura! This package has TWO parts. You need both.
+Set aside about 20-30 minutes (most of it is downloads finishing).
+
+------------------------------------------------------------------------
+ STEP 0 - UNBLOCK FIRST (do this before anything else)
+------------------------------------------------------------------------
+Because this arrived over the internet/email, Windows marks the files as
+"blocked" and may show a blue "Windows protected your PC" box.
+
+  * Right-click the .zip you received -> Properties ->
+    check "Unblock" (bottom-right) -> Apply -> OK.
+  * THEN extract the zip to a real folder (e.g. your Desktop).
+    Don't run files straight from the zip preview window.
+
+Unblocking the zip once clears the block from everything inside it.
+
+------------------------------------------------------------------------
+ STEP 1 - RUN THE PREREQUISITES WIZARD
+------------------------------------------------------------------------
+Open the "Aura Prerequisites" folder and double-click:
+
+      Install Aura Prerequisites.bat
+
+A window opens and checks everything Aura needs. Each row shows:
+
+      [OK]  ready
+      [!]   installed but not running yet (that's fine - Aura starts it)
+      [X]   missing - click its button
+
+Work top to bottom. The blue status bar at the top always tells you the
+NEXT thing to do, so you never have to guess whether it's stalled.
+
+  * Each button does the work for you - installing Ollama, Python, FFmpeg,
+    the speech service, the embedding model, your text model, and the
+    6.5 GB image checkpoint. You never have to type a command.
+  * Anything the wizard does for you is saved automatically. You only need
+    "Save my keys + config" for the keys you paste in yourself.
+  * Some steps open a SEPARATE window (an installer or a download). Finish
+    in that window, return to the wizard, and click "Re-check all".
+
+ComfyUI used to be the step people got stuck on. It is now automated:
+  * Click "Set up ComfyUI..." -> "Install it for me". The wizard detects
+    your graphics card, downloads the matching build (~2 GB), unpacks it,
+    and configures the paths. (If ComfyUI is already installed, it usually
+    gets found at startup with no clicks at all.)
+  * Then the "SDXL checkpoint" row downloads the 6.5 GB image model right
+    into the correct folder - don't go hunting for it yourself.
+  * You do NOT need to start ComfyUI. Aura starts it automatically.
+  * If you do try run_nvidia_gpu.bat yourself, don't use "Run as
+    administrator" - it then fails with "The system cannot find the path
+    specified". That doesn't affect Aura.
+
+TIDINESS
+  Everything the wizard downloads goes to one folder and is sent to the
+  RECYCLE BIN once it's no longer needed. Nothing is left lying around,
+  and nothing is permanently deleted.
+
+Paste your keys into the Configuration fields (PsySeg + SerpAPI - sent to
+you separately), click "Save my keys + config", then "Re-check all".
+When every row is [OK] (or the only [!] rows are "not running yet"),
+you're done here.
+
+------------------------------------------------------------------------
+ STEP 2 - INSTALL THE AURA APP
+------------------------------------------------------------------------
+Double-click:
+
+      Aura Setup 1.4.8.exe
+
+If "Windows protected your PC" appears, click "More info" -> "Run anyway"
+(expected for an unsigned tester build).
+
+It WILL ask for administrator permission - please approve it. Admin is
+required to register Aura's virtual camera with Windows so that Teams,
+Zoom, OBS and similar apps can see "Aura Camera". Without that step the
+camera shows a black image in those apps.
+
+It adds a Start Menu + Desktop shortcut named "Aura".
+
+Order between Step 1 and Step 2 doesn't matter, but Aura won't work until
+BOTH are done.
+
+------------------------------------------------------------------------
+ STEP 3 - LAUNCH
+------------------------------------------------------------------------
+Open "Aura" from the Start Menu or Desktop. On first launch it starts the
+speech service and ComfyUI for you (a console window may appear - leave it
+open). Give it a moment the first time.
+
+------------------------------------------------------------------------
+ IF SOMETHING GOES WRONG
+------------------------------------------------------------------------
+  * Re-run the prerequisites wizard anytime - it re-checks everything and
+    never erases keys you already entered.
+  * The "Details / progress log" area at the bottom of the wizard shows
+    exactly what each step did.
+  * Note which row was [X] or [!] and what the log/status bar said, and
+    send that back to us.
+
+Thanks again!

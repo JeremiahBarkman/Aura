@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Aura Output</title>
+    <link rel="icon" type="image/png" href="/assets/favicon.png">
+    <style>
+        html, body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: black;
+        }
+
+        #stage {
+            position: fixed;
+            inset: 0;
+            background: black;
+        }
+
+        canvas {
+            position: absolute;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: contain;
+            background: black;
+            display: block;
+        }
+
+        #outputCanvas {
+            z-index: 1;
+        }
+
+        #transitionOverlayCanvas {
+            z-index: 2;
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+<div id="stage">
+    <canvas id="outputCanvas"></canvas>
+    <canvas id="transitionOverlayCanvas"></canvas>
+</div>
+
+<script>
+const outputCanvas = document.getElementById('outputCanvas');
+const outputCtx = outputCanvas.getContext('2d');
+
+const overlayCanvas = document.getElementById('transitionOverlayCanvas');
+const overlayCtx = overlayCanvas.getContext('2d');
+
+const channel = new BroadcastChannel('aura-output');
+
+function resizeCanvas(canvas, width, height) {
+    if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+    }
+}
+
+// A transition that has snapshotted the old frame and is waiting for the new
+// background to appear underneath before it fades. { targetGeneration,
+// durationMs, safetyTimer }.
+let pendingTransition = null;
+
+// If the tagged new-background frame never arrives (e.g. generation stamping
+// unavailable in an older control panel), start the fade anyway after this
+// long so a transition always happens rather than silently stalling.
+const TRANSITION_SAFETY_MS = 500;
+
+function drawFrame(bitmap, width, height, generation) {
+    resizeCanvas(outputCanvas, width, height);
+    resizeCanvas(overlayCanvas, width, height);
+
+    outputCtx.clearRect(0, 0, outputCanvas.width, outputCanvas.height);
+    outputCtx.drawImage(bitmap, 0, 0, outputCanvas.width, outputCanvas.height);
+
+    bitmap.close();
+
+    // The new background is now drawn underneath the (old) overlay -- start
+    // the fade in sync with it.
+    if (
+        pendingTransition &&
+        generation >= pendingTransition.targetGeneration
+    ) {
+        const transition = pendingTransition;
+        pendingTransition = null;
+
+        if (transition.safetyTimer) {
+            clearTimeout(transition.safetyTimer);
+        }
+
+        beginOverlayFade(transition.durationMs);
+    }
+}
+
+// Snapshot the current (old) output frame onto the overlay and hold it fully
+// opaque, but do NOT fade yet -- the fade is armed to begin once the first
+// new-background frame lands (see drawFrame) or the safety timer fires.
+function armOverlayTransition(durationMs, transitionType, targetGeneration) {
+    if (!outputCanvas.width || !outputCanvas.height) {
+        return;
+    }
+
+    if (pendingTransition && pendingTransition.safetyTimer) {
+        clearTimeout(pendingTransition.safetyTimer);
+    }
+
+    resizeCanvas(overlayCanvas, outputCanvas.width, outputCanvas.height);
+
+    overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+    overlayCtx.drawImage(outputCanvas, 0, 0, overlayCanvas.width, overlayCanvas.height);
+
+    overlayCanvas.style.transition = 'none';
+    overlayCanvas.style.opacity = '1';
+
+    const safeDurationMs = Math.max(0, Number(durationMs || 0));
+
+    if (transitionType === 'instant' || safeDurationMs === 0) {
+        // Nothing to animate -- reveal the new frame immediately.
+        pendingTransition = null;
+        overlayCanvas.style.transition = 'none';
+        overlayCanvas.style.opacity = '0';
+        return;
+    }
+
+    const safetyTimer = setTimeout(() => {
+        if (pendingTransition && pendingTransition.safetyTimer === safetyTimer) {
+            const transition = pendingTransition;
+            pendingTransition = null;
+            beginOverlayFade(transition.durationMs);
+        }
+    }, TRANSITION_SAFETY_MS);
+
+    pendingTransition = {
+        targetGeneration: Number(targetGeneration || 0),
+        durationMs: safeDurationMs,
+        safetyTimer
+    };
+}
+
+function beginOverlayFade(durationMs) {
+    // Double rAF: commit opacity:1 (+ transition:none) as a distinct style
+    // frame before switching to the animated opacity:0, so the browser
+    // actually animates rather than snapping.
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            overlayCanvas.style.transition =
+                `opacity ${durationMs}ms ease-in-out`;
+
+            overlayCanvas.style.opacity = '0';
+        });
+    });
+}
+
+channel.onmessage = event => {
+    if (!event.data) {
+        return;
+    }
+
+    if (event.data.type === 'transition') {
+        armOverlayTransition(
+            event.data.durationMs,
+            event.data.transitionType,
+            event.data.targetGeneration
+        );
+        return;
+    }
+
+    if (event.data.type !== 'frame') {
+        return;
+    }
+
+    const { width, height, bitmap, generation } = event.data;
+
+    drawFrame(bitmap, width, height, generation || 0);
+};
+</script>
+</body>
+</html>
