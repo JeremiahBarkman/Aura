@@ -1,0 +1,1716 @@
+﻿From 3fab24bf218c5d1c66fcd10eeb8e39e21c0528ac Mon Sep 17 00:00:00 2001
+From: JeremiahBarkman <119763642+JeremiahBarkman@users.noreply.github.com>
+Date: Wed, 22 Jul 2026 13:39:28 -0700
+Subject: [PATCH] Aura integration: TCP frame client and shared-memory frame
+ source
+
+Consume frames from AuraFrameBridge (127.0.0.1:5151) instead of the
+upstream sample's synthetic frame generator.
+
+Adds TcpFrameClient and AuraSharedMemory; rewires FrameGenerator to
+render Aura frames.
+
+Based on upstream smourier/VCamSample @ ae42a88.
+---
+ VCamSample/VCamSample.rc                      | Bin 9502 -> 9508 bytes
+ VCamSampleSource/AuraSharedMemory.cpp         | 317 +++++++
+ VCamSampleSource/AuraSharedMemory.h           |  12 +
+ VCamSampleSource/FrameGenerator.cpp           | 808 ++++++++++++------
+ VCamSampleSource/MediaStream.cpp              |   2 +-
+ VCamSampleSource/TcpFrameClient.cpp           | 315 +++++++
+ VCamSampleSource/TcpFrameClient.h             |  66 ++
+ VCamSampleSource/VCamSampleSource.rc          | Bin 4700 -> 4702 bytes
+ VCamSampleSource/VCamSampleSource.vcxproj     |   4 +
+ .../VCamSampleSource.vcxproj.filters          |  12 +
+ VCamSampleSource/framework.h                  |   4 +
+ 11 files changed, 1266 insertions(+), 274 deletions(-)
+ create mode 100644 VCamSampleSource/AuraSharedMemory.cpp
+ create mode 100644 VCamSampleSource/AuraSharedMemory.h
+ create mode 100644 VCamSampleSource/TcpFrameClient.cpp
+ create mode 100644 VCamSampleSource/TcpFrameClient.h
+
+diff --git a/VCamSample/VCamSample.rc b/VCamSample/VCamSample.rc
+index c36b1e2575efb92b1c6859bdc4d09cca74213bc2..fa67a463fc131fcea4d6c566f9b7c82a0306cdff 100644
+GIT binary patch
+delta 88
+zcmbQ|wZv<Ki-4#hgARisgDIFaWH5p7Hirw8^NBh#lrj`CBr+&4I0MOChEx!5^Fz6I
+LCLB`Lii?>6BIy$3
+
+delta 61
+zcmZ4DHP35<i-52ZgARisg9(^~&=#8`1<Ls*=gA37{=>&LIZ9S-vyglg)8swuB9r*p
+KHg_n_VFm!kArHy`
+
+diff --git a/VCamSampleSource/AuraSharedMemory.cpp b/VCamSampleSource/AuraSharedMemory.cpp
+new file mode 100644
+index 0000000..8c7afe9
+--- /dev/null
++++ b/VCamSampleSource/AuraSharedMemory.cpp
+@@ -0,0 +1,317 @@
++#include "pch.h"
++#include "AuraSharedMemory.h"
++#include "TcpFrameClient.h"
++
++#include <algorithm>
++#include <cstdint>
++#include <mutex>
++#include <vector>
++
++namespace
++{
++    std::mutex g_renderMutex;
++
++    wil::com_ptr_nothrow<ID2D1Bitmap> g_bitmap;
++
++    ID2D1RenderTarget* g_bitmapRenderTarget = nullptr;
++
++    UINT g_bitmapWidth = 0;
++    UINT g_bitmapHeight = 0;
++
++    uint64_t g_lastBitmapFrameNumber = UINT64_MAX;
++
++    void ResetCachedBitmap()
++    {
++        g_bitmap.reset();
++
++        g_bitmapRenderTarget = nullptr;
++
++        g_bitmapWidth = 0;
++        g_bitmapHeight = 0;
++
++        g_lastBitmapFrameNumber = UINT64_MAX;
++    }
++
++    D2D1_RECT_F CalculateContainedDestination(
++        UINT sourceWidth,
++        UINT sourceHeight,
++        UINT targetWidth,
++        UINT targetHeight
++    )
++    {
++        if (
++            sourceWidth == 0 ||
++            sourceHeight == 0 ||
++            targetWidth == 0 ||
++            targetHeight == 0
++            )
++        {
++            return D2D1::RectF(
++                0.0f,
++                0.0f,
++                static_cast<FLOAT>(targetWidth),
++                static_cast<FLOAT>(targetHeight)
++            );
++        }
++
++        const FLOAT sourceAspect =
++            static_cast<FLOAT>(sourceWidth) /
++            static_cast<FLOAT>(sourceHeight);
++
++        const FLOAT targetAspect =
++            static_cast<FLOAT>(targetWidth) /
++            static_cast<FLOAT>(targetHeight);
++
++        FLOAT destinationWidth = 0.0f;
++        FLOAT destinationHeight = 0.0f;
++
++        if (sourceAspect > targetAspect)
++        {
++            /*
++                Source is wider than the camera output.
++
++                Fit to the target width and add bars above and below.
++            */
++            destinationWidth =
++                static_cast<FLOAT>(targetWidth);
++
++            destinationHeight =
++                destinationWidth / sourceAspect;
++        }
++        else
++        {
++            /*
++                Source is taller than the camera output.
++
++                Fit to the target height and add bars on the sides.
++            */
++            destinationHeight =
++                static_cast<FLOAT>(targetHeight);
++
++            destinationWidth =
++                destinationHeight * sourceAspect;
++        }
++
++        const FLOAT left =
++            (
++                static_cast<FLOAT>(targetWidth) -
++                destinationWidth
++                ) / 2.0f;
++
++        const FLOAT top =
++            (
++                static_cast<FLOAT>(targetHeight) -
++                destinationHeight
++                ) / 2.0f;
++
++        return D2D1::RectF(
++            left,
++            top,
++            left + destinationWidth,
++            top + destinationHeight
++        );
++    }
++
++    bool CreateCachedBitmap(
++        ID2D1RenderTarget* renderTarget,
++        const AuraTcpFrameHeader& header,
++        const std::vector<uint8_t>& pixels
++    )
++    {
++        D2D1_BITMAP_PROPERTIES bitmapProperties{};
++
++        bitmapProperties.pixelFormat.format =
++            DXGI_FORMAT_B8G8R8A8_UNORM;
++
++        bitmapProperties.pixelFormat.alphaMode =
++            D2D1_ALPHA_MODE_IGNORE;
++
++        wil::com_ptr_nothrow<ID2D1Bitmap> newBitmap;
++
++        const HRESULT result =
++            renderTarget->CreateBitmap(
++                D2D1::SizeU(
++                    header.width,
++                    header.height
++                ),
++                pixels.data(),
++                header.stride,
++                bitmapProperties,
++                &newBitmap
++            );
++
++        if (FAILED(result) || !newBitmap)
++        {
++            return false;
++        }
++
++        g_bitmap = std::move(newBitmap);
++
++        g_bitmapRenderTarget = renderTarget;
++
++        g_bitmapWidth = header.width;
++        g_bitmapHeight = header.height;
++
++        g_lastBitmapFrameNumber =
++            header.frameNumber;
++
++        return true;
++    }
++
++    bool UpdateCachedBitmap(
++        const AuraTcpFrameHeader& header,
++        const std::vector<uint8_t>& pixels
++    )
++    {
++        if (!g_bitmap)
++        {
++            return false;
++        }
++
++        const HRESULT result =
++            g_bitmap->CopyFromMemory(
++                nullptr,
++                pixels.data(),
++                header.stride
++            );
++
++        if (FAILED(result))
++        {
++            return false;
++        }
++
++        g_lastBitmapFrameNumber =
++            header.frameNumber;
++
++        return true;
++    }
++}
++
++namespace AuraSharedMemory
++{
++    bool DrawLatestFrame(
++        ID2D1RenderTarget* renderTarget,
++        UINT targetWidth,
++        UINT targetHeight
++    )
++    {
++        /*
++            Once the Aura renderer is active, always return true for a valid
++            render target.
++
++            Returning false activates the old Microsoft rainbow fallback.
++            Temporary transport delays should instead hold the last good frame.
++        */
++        if (!renderTarget)
++        {
++            return false;
++        }
++
++        std::lock_guard<std::mutex> lock(
++            g_renderMutex
++        );
++
++        AuraTcpFrameHeader header{};
++        std::vector<uint8_t> pixels;
++
++        const bool hasFrame =
++            TcpFrameClient::Instance().CopyLatestFrame(
++                header,
++                pixels
++            );
++
++        /*
++            If the render target changed, the existing Direct2D bitmap belongs
++            to the old target and must be recreated.
++        */
++        if (
++            g_bitmap &&
++            g_bitmapRenderTarget != renderTarget
++            )
++        {
++            ResetCachedBitmap();
++        }
++
++        if (hasFrame)
++        {
++            const bool dimensionsChanged =
++                !g_bitmap ||
++                g_bitmapWidth != header.width ||
++                g_bitmapHeight != header.height;
++
++            if (dimensionsChanged)
++            {
++                ResetCachedBitmap();
++
++                CreateCachedBitmap(
++                    renderTarget,
++                    header,
++                    pixels
++                );
++            }
++            else if (
++                header.frameNumber !=
++                g_lastBitmapFrameNumber
++                )
++            {
++                if (
++                    !UpdateCachedBitmap(
++                        header,
++                        pixels
++                    )
++                    )
++                {
++                    /*
++                        If updating the existing bitmap fails, attempt one clean
++                        recreation before retaining the last rendered state.
++                    */
++                    ResetCachedBitmap();
++
++                    CreateCachedBitmap(
++                        renderTarget,
++                        header,
++                        pixels
++                    );
++                }
++            }
++        }
++
++        /*
++            Clear the unused camera-output area to black. This produces clean
++            letterboxing rather than stretching the Aura frame.
++        */
++        renderTarget->Clear(
++            D2D1::ColorF(
++                0.0f,
++                0.0f,
++                0.0f,
++                1.0f
++            )
++        );
++
++        if (g_bitmap)
++        {
++            const D2D1_RECT_F destination =
++                CalculateContainedDestination(
++                    g_bitmapWidth,
++                    g_bitmapHeight,
++                    targetWidth,
++                    targetHeight
++                );
++
++            renderTarget->DrawBitmap(
++                g_bitmap.get(),
++                destination,
++                1.0f,
++                D2D1_BITMAP_INTERPOLATION_MODE_LINEAR
++            );
++        }
++
++        /*
++            Return true even when the TCP connection briefly lacks a frame.
++            This prevents flashes of the Microsoft rainbow fallback and keeps
++            the last successful Aura frame visible.
++        */
++        return true;
++    }
++}
+\ No newline at end of file
+diff --git a/VCamSampleSource/AuraSharedMemory.h b/VCamSampleSource/AuraSharedMemory.h
+new file mode 100644
+index 0000000..27c5c60
+--- /dev/null
++++ b/VCamSampleSource/AuraSharedMemory.h
+@@ -0,0 +1,12 @@
++#pragma once
++
++#include <d2d1.h>
++
++namespace AuraSharedMemory
++{
++    bool DrawLatestFrame(
++        ID2D1RenderTarget* renderTarget,
++        UINT targetWidth,
++        UINT targetHeight
++    );
++}
+diff --git a/VCamSampleSource/FrameGenerator.cpp b/VCamSampleSource/FrameGenerator.cpp
+index b5e5a8a..4f5cd3d 100644
+--- a/VCamSampleSource/FrameGenerator.cpp
++++ b/VCamSampleSource/FrameGenerator.cpp
+@@ -4,291 +4,553 @@
+ #include "EnumNames.h"
+ #include "MFTools.h"
+ #include "FrameGenerator.h"
++#include "AuraSharedMemory.h"
+ 
+-HRESULT FrameGenerator::EnsureRenderTarget(UINT width, UINT height)
++HRESULT FrameGenerator::EnsureRenderTarget(
++    UINT width,
++    UINT height
++)
+ {
+-	if (!HasD3DManager())
+-	{
+-		// create a D2D1 render target from WIC bitmap
+-		wil::com_ptr_nothrow<ID2D1Factory> d2d1Factory;
+-		RETURN_IF_FAILED(D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, IID_PPV_ARGS(&d2d1Factory)));
+-
+-		wil::com_ptr_nothrow<IWICImagingFactory> wicFactory;
+-		RETURN_IF_FAILED(CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&wicFactory)));
+-
+-		RETURN_IF_FAILED(wicFactory->CreateBitmap(width, height, GUID_WICPixelFormat32bppPBGRA, WICBitmapCacheOnDemand, &_bitmap));
+-
+-		D2D1_RENDER_TARGET_PROPERTIES props{};
+-		props.pixelFormat.format = DXGI_FORMAT_B8G8R8A8_UNORM;
+-		props.pixelFormat.alphaMode = D2D1_ALPHA_MODE_PREMULTIPLIED;
+-		RETURN_IF_FAILED(d2d1Factory->CreateWicBitmapRenderTarget(_bitmap.get(), props, &_renderTarget));
+-
+-		RETURN_IF_FAILED(CreateRenderTargetResources(width, height));
+-	}
+-
+-	_prevTime = MFGetSystemTime();
+-	_frame = 0;
+-	return S_OK;
++    if (!HasD3DManager())
++    {
++        wil::com_ptr_nothrow<ID2D1Factory> d2d1Factory;
++
++        RETURN_IF_FAILED(
++            D2D1CreateFactory(
++                D2D1_FACTORY_TYPE_MULTI_THREADED,
++                IID_PPV_ARGS(&d2d1Factory)
++            )
++        );
++
++        wil::com_ptr_nothrow<IWICImagingFactory> wicFactory;
++
++        RETURN_IF_FAILED(
++            CoCreateInstance(
++                CLSID_WICImagingFactory,
++                nullptr,
++                CLSCTX_ALL,
++                IID_PPV_ARGS(&wicFactory)
++            )
++        );
++
++        RETURN_IF_FAILED(
++            wicFactory->CreateBitmap(
++                width,
++                height,
++                GUID_WICPixelFormat32bppPBGRA,
++                WICBitmapCacheOnDemand,
++                &_bitmap
++            )
++        );
++
++        D2D1_RENDER_TARGET_PROPERTIES properties{};
++
++        properties.pixelFormat.format =
++            DXGI_FORMAT_B8G8R8A8_UNORM;
++
++        properties.pixelFormat.alphaMode =
++            D2D1_ALPHA_MODE_PREMULTIPLIED;
++
++        RETURN_IF_FAILED(
++            d2d1Factory->CreateWicBitmapRenderTarget(
++                _bitmap.get(),
++                properties,
++                &_renderTarget
++            )
++        );
++
++        RETURN_IF_FAILED(
++            CreateRenderTargetResources(
++                width,
++                height
++            )
++        );
++    }
++
++    _prevTime = MFGetSystemTime();
++    _frame = 0;
++
++    return S_OK;
+ }
+ 
+ const bool FrameGenerator::HasD3DManager() const
+ {
+-	return _texture != nullptr;
++    return _texture != nullptr;
+ }
+ 
+-HRESULT FrameGenerator::SetD3DManager(IUnknown* manager, UINT width, UINT height)
++HRESULT FrameGenerator::SetD3DManager(
++    IUnknown* manager,
++    UINT width,
++    UINT height
++)
+ {
+-	RETURN_HR_IF_NULL(E_POINTER, manager);
+-	RETURN_HR_IF(E_INVALIDARG, !width || !height);
+-
+-	RETURN_IF_FAILED(manager->QueryInterface(&_dxgiManager));
+-	RETURN_IF_FAILED(_dxgiManager->OpenDeviceHandle(&_deviceHandle));
+-
+-	wil::com_ptr_nothrow<ID3D11Device> device;
+-	RETURN_IF_FAILED(_dxgiManager->GetVideoService(_deviceHandle, IID_PPV_ARGS(&device)));
+-
+-	// create a texture/surface to write
+-	CD3D11_TEXTURE2D_DESC desc
+-	(
+-		DXGI_FORMAT_B8G8R8A8_UNORM,
+-		width,
+-		height,
+-		1,
+-		1,
+-		D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET
+-	);
+-	RETURN_IF_FAILED(device->CreateTexture2D(&desc, nullptr, &_texture));
+-	wil::com_ptr_nothrow<IDXGISurface> surface;
+-	RETURN_IF_FAILED(_texture.copy_to(&surface));
+-
+-	// create a D2D1 render target from 2D GPU surface
+-	wil::com_ptr_nothrow<ID2D1Factory> d2d1Factory;
+-	RETURN_IF_FAILED(D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, IID_PPV_ARGS(&d2d1Factory)));
+-
+-	auto props = D2D1::RenderTargetProperties
+-	(
+-		D2D1_RENDER_TARGET_TYPE_DEFAULT,
+-		D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED)
+-	);
+-	RETURN_IF_FAILED(d2d1Factory->CreateDxgiSurfaceRenderTarget(surface.get(), props, &_renderTarget));
+-
+-	RETURN_IF_FAILED(CreateRenderTargetResources(width, height));
+-
+-	// create GPU RGB => NV12 converter
+-	RETURN_IF_FAILED(CoCreateInstance(CLSID_VideoProcessorMFT, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&_converter)));
+-
+-	wil::com_ptr_nothrow<IMFAttributes> atts;
+-	RETURN_IF_FAILED(_converter->GetAttributes(&atts));
+-	TraceMFAttributes(atts.get(), L"VideoProcessorMFT");
+-
+-	MFT_OUTPUT_STREAM_INFO info{};
+-	RETURN_IF_FAILED(_converter->GetOutputStreamInfo(0, &info));
+-	WINTRACE(L"FrameGenerator::SetD3DManager CLSID_VideoProcessorMFT flags:0x%08X size:%u alignment:%u", info.dwFlags, info.cbSize, info.cbAlignment);
+-
+-	wil::com_ptr_nothrow<IMFMediaType> inputType;
+-	RETURN_IF_FAILED(MFCreateMediaType(&inputType));
+-	inputType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
+-	inputType->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_RGB32);
+-	MFSetAttributeSize(inputType.get(), MF_MT_FRAME_SIZE, width, height);
+-	RETURN_IF_FAILED(_converter->SetInputType(0, inputType.get(), 0));
+-
+-	wil::com_ptr_nothrow<IMFMediaType> outputType;
+-	RETURN_IF_FAILED(MFCreateMediaType(&outputType));
+-	outputType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
+-	outputType->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_NV12);
+-	MFSetAttributeSize(outputType.get(), MF_MT_FRAME_SIZE, width, height);
+-	RETURN_IF_FAILED(_converter->SetOutputType(0, outputType.get(), 0));
+-
+-	// make sure the video processor works on GPU
+-	RETURN_IF_FAILED(_converter->ProcessMessage(MFT_MESSAGE_SET_D3D_MANAGER, (ULONG_PTR)manager));
+-	return S_OK;
++    RETURN_HR_IF_NULL(
++        E_POINTER,
++        manager
++    );
++
++    RETURN_HR_IF(
++        E_INVALIDARG,
++        !width || !height
++    );
++
++    RETURN_IF_FAILED(
++        manager->QueryInterface(
++            &_dxgiManager
++        )
++    );
++
++    RETURN_IF_FAILED(
++        _dxgiManager->OpenDeviceHandle(
++            &_deviceHandle
++        )
++    );
++
++    wil::com_ptr_nothrow<ID3D11Device> device;
++
++    RETURN_IF_FAILED(
++        _dxgiManager->GetVideoService(
++            _deviceHandle,
++            IID_PPV_ARGS(&device)
++        )
++    );
++
++    CD3D11_TEXTURE2D_DESC description(
++        DXGI_FORMAT_B8G8R8A8_UNORM,
++        width,
++        height,
++        1,
++        1,
++        D3D11_BIND_SHADER_RESOURCE |
++        D3D11_BIND_RENDER_TARGET
++    );
++
++    RETURN_IF_FAILED(
++        device->CreateTexture2D(
++            &description,
++            nullptr,
++            &_texture
++        )
++    );
++
++    wil::com_ptr_nothrow<IDXGISurface> surface;
++
++    RETURN_IF_FAILED(
++        _texture.copy_to(
++            &surface
++        )
++    );
++
++    wil::com_ptr_nothrow<ID2D1Factory> d2d1Factory;
++
++    RETURN_IF_FAILED(
++        D2D1CreateFactory(
++            D2D1_FACTORY_TYPE_MULTI_THREADED,
++            IID_PPV_ARGS(&d2d1Factory)
++        )
++    );
++
++    auto properties =
++        D2D1::RenderTargetProperties(
++            D2D1_RENDER_TARGET_TYPE_DEFAULT,
++            D2D1::PixelFormat(
++                DXGI_FORMAT_UNKNOWN,
++                D2D1_ALPHA_MODE_PREMULTIPLIED
++            )
++        );
++
++    RETURN_IF_FAILED(
++        d2d1Factory->CreateDxgiSurfaceRenderTarget(
++            surface.get(),
++            properties,
++            &_renderTarget
++        )
++    );
++
++    RETURN_IF_FAILED(
++        CreateRenderTargetResources(
++            width,
++            height
++        )
++    );
++
++    RETURN_IF_FAILED(
++        CoCreateInstance(
++            CLSID_VideoProcessorMFT,
++            nullptr,
++            CLSCTX_ALL,
++            IID_PPV_ARGS(&_converter)
++        )
++    );
++
++    wil::com_ptr_nothrow<IMFAttributes> attributes;
++
++    RETURN_IF_FAILED(
++        _converter->GetAttributes(
++            &attributes
++        )
++    );
++
++    TraceMFAttributes(
++        attributes.get(),
++        L"VideoProcessorMFT"
++    );
++
++    MFT_OUTPUT_STREAM_INFO streamInfo{};
++
++    RETURN_IF_FAILED(
++        _converter->GetOutputStreamInfo(
++            0,
++            &streamInfo
++        )
++    );
++
++    wil::com_ptr_nothrow<IMFMediaType> inputType;
++
++    RETURN_IF_FAILED(
++        MFCreateMediaType(
++            &inputType
++        )
++    );
++
++    inputType->SetGUID(
++        MF_MT_MAJOR_TYPE,
++        MFMediaType_Video
++    );
++
++    inputType->SetGUID(
++        MF_MT_SUBTYPE,
++        MFVideoFormat_RGB32
++    );
++
++    MFSetAttributeSize(
++        inputType.get(),
++        MF_MT_FRAME_SIZE,
++        width,
++        height
++    );
++
++    RETURN_IF_FAILED(
++        _converter->SetInputType(
++            0,
++            inputType.get(),
++            0
++        )
++    );
++
++    wil::com_ptr_nothrow<IMFMediaType> outputType;
++
++    RETURN_IF_FAILED(
++        MFCreateMediaType(
++            &outputType
++        )
++    );
++
++    outputType->SetGUID(
++        MF_MT_MAJOR_TYPE,
++        MFMediaType_Video
++    );
++
++    outputType->SetGUID(
++        MF_MT_SUBTYPE,
++        MFVideoFormat_NV12
++    );
++
++    MFSetAttributeSize(
++        outputType.get(),
++        MF_MT_FRAME_SIZE,
++        width,
++        height
++    );
++
++    RETURN_IF_FAILED(
++        _converter->SetOutputType(
++            0,
++            outputType.get(),
++            0
++        )
++    );
++
++    RETURN_IF_FAILED(
++        _converter->ProcessMessage(
++            MFT_MESSAGE_SET_D3D_MANAGER,
++            reinterpret_cast<ULONG_PTR>(manager)
++        )
++    );
++
++    return S_OK;
+ }
+ 
+-// common to CPU & GPU
+-HRESULT FrameGenerator::CreateRenderTargetResources(UINT width, UINT height)
++HRESULT FrameGenerator::CreateRenderTargetResources(
++    UINT width,
++    UINT height
++)
+ {
+-	assert(_renderTarget);
+-	RETURN_IF_FAILED(_renderTarget->CreateSolidColorBrush(D2D1::ColorF(1, 1, 1, 1), &_whiteBrush));
+-
+-	RETURN_IF_FAILED(DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), (IUnknown**)&_dwrite));
+-	RETURN_IF_FAILED(_dwrite->CreateTextFormat(L"Segoe UI", nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 40, L"", &_textFormat));
+-	RETURN_IF_FAILED(_textFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER));
+-	RETURN_IF_FAILED(_textFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER));
+-	_width = width;
+-	_height = height;
+-	return S_OK;
++    assert(_renderTarget);
++
++    /*
++        Aura production output does not need the Microsoft sample brushes,
++        fonts, diagnostic text, circles, rectangles, or test pattern.
++    */
++
++    _width = width;
++    _height = height;
++
++    return S_OK;
+ }
+ 
+-HRESULT FrameGenerator::Generate(IMFSample* sample, REFGUID format, IMFSample** outSample)
++HRESULT FrameGenerator::Generate(
++    IMFSample* sample,
++    REFGUID format,
++    IMFSample** outSample
++)
+ {
+-	RETURN_HR_IF_NULL(E_POINTER, sample);
+-	RETURN_HR_IF_NULL(E_POINTER, outSample);
+-	*outSample = nullptr;
+-
+-	// render something on image common to CPU & GPU
+-	if (_renderTarget && _textFormat && _dwrite && _whiteBrush)
+-	{
+-		_renderTarget->BeginDraw();
+-		_renderTarget->Clear(D2D1::ColorF(0, 0, 1, 1));
+-
+-		// draw some HSL blocks
+-		const float divisor = 20;
+-		for (UINT i = 0; i < _width / divisor; i++)
+-		{
+-			for (UINT j = 0; j < _height / divisor; j++)
+-			{
+-				wil::com_ptr_nothrow<ID2D1SolidColorBrush> brush;
+-				auto color = HSL2RGB((float)i / (_height / divisor), 1, ((float)j / (_width / divisor)));
+-				RETURN_IF_FAILED(_renderTarget->CreateSolidColorBrush(color, &brush));
+-				_renderTarget->FillRectangle(D2D1::Rect(i * divisor, j * divisor, (i + 1) * divisor, (j + 1) * divisor), brush.get());
+-			}
+-		}
+-
+-		auto radius = divisor * 2;
+-		const float padding = 1;
+-		_renderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(radius + padding, radius + padding), radius, radius), _whiteBrush.get());
+-		_renderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(radius + padding, _height - radius - padding), radius, radius), _whiteBrush.get());
+-		_renderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(_width - radius - padding, radius + padding), radius, radius), _whiteBrush.get());
+-		_renderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(_width - radius - padding, _height - radius - padding), radius, radius), _whiteBrush.get());
+-		_renderTarget->DrawRectangle(D2D1::Rect(radius, radius, _width - radius, _height - radius), _whiteBrush.get());
+-
+-		// draw resolution at center
+-		// note: we could optimize here and compute layout only once if text doesn't change (depending on the font, etc.)
+-		wchar_t text[127];
+-		wchar_t fmt[15];
+-		if (format == MFVideoFormat_NV12)
+-		{
+-			if (HasD3DManager())
+-			{
+-				lstrcpy(fmt, L"NV12 (GPU)");
+-			}
+-			else
+-			{
+-				lstrcpy(fmt, L"NV12 (CPU)");
+-			}
+-		}
+-		else
+-		{
+-			if (HasD3DManager())
+-			{
+-				lstrcpy(fmt, L"RGB32 (GPU)");
+-			}
+-			else
+-			{
+-				lstrcpy(fmt, L"RGB32 (CPU)");
+-			}
+-		}
+-
+-#define FRAMES_FOR_FPS 60 // number of frames to wait to compute fps from last measure
+-#define NS_PER_MS 10000
+-#define MS_PER_S 1000
+-
+-		if (!_fps || !(_frame % FRAMES_FOR_FPS))
+-		{
+-			auto time = MFGetSystemTime();
+-			_fps = (UINT)(MS_PER_S * NS_PER_MS * FRAMES_FOR_FPS / (time - _prevTime));
+-			_prevTime = time;
+-		}
+-
+-		auto len = wsprintf(text, L"Format: %s\nFrame#: %I64i\nFps: %u\nResolution: %u x %u", fmt, _frame, _fps, _width, _height);
+-
+-		wil::com_ptr_nothrow<IDWriteTextLayout> layout;
+-		RETURN_IF_FAILED(_dwrite->CreateTextLayout(text, len, _textFormat.get(), (FLOAT)_width, (FLOAT)_height, &layout));
+-
+-		_renderTarget->DrawTextLayout(D2D1::Point2F(0, 0), layout.get(), _whiteBrush.get());
+-		_renderTarget->EndDraw();
+-	}
+-
+-	// build a sample using either D3D/DXGI (GPU) or WIC (CPU)
+-	wil::com_ptr_nothrow<IMFMediaBuffer> mediaBuffer;
+-	if (HasD3DManager())
+-	{
+-		// remove all existing buffers
+-		RETURN_IF_FAILED(sample->RemoveAllBuffers());
+-
+-		// create a buffer from this and add to sample
+-		RETURN_IF_FAILED(MFCreateDXGISurfaceBuffer(__uuidof(ID3D11Texture2D), _texture.get(), 0, 0, &mediaBuffer));
+-		RETURN_IF_FAILED(sample->AddBuffer(mediaBuffer.get()));
+-
+-		// if we're on GPU & format is not RGB, convert using GPU
+-		if (format == MFVideoFormat_NV12)
+-		{
+-			assert(_converter);
+-			RETURN_IF_FAILED(_converter->ProcessInput(0, sample, 0));
+-
+-			// let converter build the sample for us, note it works because we gave it the D3DManager
+-			MFT_OUTPUT_DATA_BUFFER buffer = {};
+-			DWORD status = 0;
+-			RETURN_IF_FAILED(_converter->ProcessOutput(0, 1, &buffer, &status));
+-			*outSample = buffer.pSample;
+-		}
+-		else
+-		{
+-			sample->AddRef();
+-			*outSample = sample;
+-		}
+-
+-		_frame++;
+-		return S_OK;
+-	}
+-
+-	RETURN_IF_FAILED(sample->GetBufferByIndex(0, &mediaBuffer));
+-	wil::com_ptr_nothrow<IMF2DBuffer2> buffer2D;
+-	BYTE* scanline;
+-	LONG pitch;
+-	BYTE* start;
+-	DWORD length;
+-	RETURN_IF_FAILED(mediaBuffer->QueryInterface(IID_PPV_ARGS(&buffer2D)));
+-	RETURN_IF_FAILED(buffer2D->Lock2DSize(MF2DBuffer_LockFlags_Write, &scanline, &pitch, &start, &length));
+-
+-	wil::com_ptr_nothrow<IWICBitmapLock> lock;
+-	auto hr = _bitmap->Lock(nullptr, WICBitmapLockRead, &lock);
+-	// now we're using regular COM macros because we want to be sure to unlock (or we could use try/catch)
+-	if (SUCCEEDED(hr))
+-	{
+-		UINT w, h;
+-		hr = lock->GetSize(&w, &h);
+-		if (SUCCEEDED(hr))
+-		{
+-			UINT wicStride;
+-			hr = lock->GetStride(&wicStride);
+-			if (SUCCEEDED(hr))
+-			{
+-				UINT wicSize;
+-				WICInProcPointer wicPointer;
+-				hr = lock->GetDataPointer(&wicSize, &wicPointer);
+-				if (SUCCEEDED(hr))
+-				{
+-					WINTRACE(L"WIC stride:%u WIC size:%u MF pitch:%u MF length:%u frame:%u format:%s", wicStride, wicSize, pitch, length, _frame, GUID_ToStringW(format).c_str());
+-					if (format == MFVideoFormat_NV12)
+-					{
+-						// note we could use MF's converter too
+-						hr = RGB32ToNV12(wicPointer, wicSize, wicStride, w, h, scanline, length, pitch);
+-					}
+-					else
+-					{
+-						hr = (wicSize != length || wicStride != pitch) ? E_FAIL : S_OK;
+-						if (SUCCEEDED(hr))
+-						{
+-							if (assert_true(wicPointer)) // WIC annotation is currently wrong on GetDataPointer wicPointer arg
+-							{
+-								CopyMemory(scanline, wicPointer, length);
+-							}
+-						}
+-					}
+-
+-					if (SUCCEEDED(hr))
+-					{
+-						_frame++;
+-						sample->AddRef();
+-						*outSample = sample;
+-					}
+-				}
+-			}
+-		}
+-		lock.reset();
+-	}
+-
+-	buffer2D->Unlock2D();
+-	return hr;
+-}
++    RETURN_HR_IF_NULL(
++        E_POINTER,
++        sample
++    );
++
++    RETURN_HR_IF_NULL(
++        E_POINTER,
++        outSample
++    );
++
++    *outSample = nullptr;
++
++    if (_renderTarget)
++    {
++        _renderTarget->BeginDraw();
++
++        /*
++            Black is the production-safe state before the first Aura frame.
++            AuraSharedMemory::DrawLatestFrame() holds the last good frame after
++            one has arrived, so transport interruptions never reveal the old
++            Microsoft rainbow pattern.
++        */
++        _renderTarget->Clear(
++            D2D1::ColorF(
++                0.0f,
++                0.0f,
++                0.0f,
++                1.0f
++            )
++        );
++
++        AuraSharedMemory::DrawLatestFrame(
++            _renderTarget.get(),
++            _width,
++            _height
++        );
++
++        const HRESULT drawResult =
++            _renderTarget->EndDraw();
++
++        if (
++            drawResult == D2DERR_RECREATE_TARGET
++            )
++        {
++            return drawResult;
++        }
++
++        RETURN_IF_FAILED(
++            drawResult
++        );
++    }
++
++    wil::com_ptr_nothrow<IMFMediaBuffer> mediaBuffer;
++
++    if (HasD3DManager())
++    {
++        RETURN_IF_FAILED(
++            sample->RemoveAllBuffers()
++        );
++
++        RETURN_IF_FAILED(
++            MFCreateDXGISurfaceBuffer(
++                __uuidof(ID3D11Texture2D),
++                _texture.get(),
++                0,
++                FALSE,
++                &mediaBuffer
++            )
++        );
++
++        RETURN_IF_FAILED(
++            sample->AddBuffer(
++                mediaBuffer.get()
++            )
++        );
++
++        if (
++            format == MFVideoFormat_NV12
++            )
++        {
++            assert(_converter);
++
++            RETURN_IF_FAILED(
++                _converter->ProcessInput(
++                    0,
++                    sample,
++                    0
++                )
++            );
++
++            MFT_OUTPUT_DATA_BUFFER outputBuffer{};
++            DWORD status = 0;
++
++            RETURN_IF_FAILED(
++                _converter->ProcessOutput(
++                    0,
++                    1,
++                    &outputBuffer,
++                    &status
++                )
++            );
++
++            *outSample =
++                outputBuffer.pSample;
++        }
++        else
++        {
++            sample->AddRef();
++
++            *outSample =
++                sample;
++        }
++
++        _frame++;
++
++        return S_OK;
++    }
++
++    RETURN_IF_FAILED(
++        sample->GetBufferByIndex(
++            0,
++            &mediaBuffer
++        )
++    );
++
++    wil::com_ptr_nothrow<IMF2DBuffer2> buffer2D;
++
++    BYTE* scanline = nullptr;
++    LONG pitch = 0;
++    BYTE* start = nullptr;
++    DWORD length = 0;
++
++    RETURN_IF_FAILED(
++        mediaBuffer->QueryInterface(
++            IID_PPV_ARGS(&buffer2D)
++        )
++    );
++
++    RETURN_IF_FAILED(
++        buffer2D->Lock2DSize(
++            MF2DBuffer_LockFlags_Write,
++            &scanline,
++            &pitch,
++            &start,
++            &length
++        )
++    );
++
++    wil::com_ptr_nothrow<IWICBitmapLock> bitmapLock;
++
++    HRESULT result =
++        _bitmap->Lock(
++            nullptr,
++            WICBitmapLockRead,
++            &bitmapLock
++        );
++
++    if (SUCCEEDED(result))
++    {
++        UINT bitmapWidth = 0;
++        UINT bitmapHeight = 0;
++
++        result =
++            bitmapLock->GetSize(
++                &bitmapWidth,
++                &bitmapHeight
++            );
++
++        if (SUCCEEDED(result))
++        {
++            UINT bitmapStride = 0;
++
++            result =
++                bitmapLock->GetStride(
++                    &bitmapStride
++                );
++
++            if (SUCCEEDED(result))
++            {
++                UINT bitmapSize = 0;
++                WICInProcPointer bitmapPixels = nullptr;
++
++                result =
++                    bitmapLock->GetDataPointer(
++                        &bitmapSize,
++                        &bitmapPixels
++                    );
++
++                if (SUCCEEDED(result))
++                {
++                    if (
++                        format == MFVideoFormat_NV12
++                        )
++                    {
++                        result =
++                            RGB32ToNV12(
++                                bitmapPixels,
++                                bitmapSize,
++                                bitmapStride,
++                                bitmapWidth,
++                                bitmapHeight,
++                                scanline,
++                                length,
++                                pitch
++                            );
++                    }
++                    else
++                    {
++                        result =
++                            (
++                                bitmapSize != length ||
++                                bitmapStride != pitch
++                                )
++                            ? E_FAIL
++                            : S_OK;
++
++                        if (
++                            SUCCEEDED(result) &&
++                            bitmapPixels
++                            )
++                        {
++                            CopyMemory(
++                                scanline,
++                                bitmapPixels,
++                                length
++                            );
++                        }
++                    }
++
++                    if (SUCCEEDED(result))
++                    {
++                        _frame++;
++
++                        sample->AddRef();
++
++                        *outSample =
++                            sample;
++                    }
++                }
++            }
++        }
++
++        bitmapLock.reset();
++    }
++
++    buffer2D->Unlock2D();
++
++    return result;
++}
+\ No newline at end of file
+diff --git a/VCamSampleSource/MediaStream.cpp b/VCamSampleSource/MediaStream.cpp
+index baf739f..959b8b1 100644
+--- a/VCamSampleSource/MediaStream.cpp
++++ b/VCamSampleSource/MediaStream.cpp
+@@ -24,7 +24,7 @@ HRESULT MediaStream::Initialize(IMFMediaSource* source, int index)
+ 	auto types = wil::make_unique_cotaskmem_array<wil::com_ptr_nothrow<IMFMediaType>>(2);
+ 
+ #define NUM_IMAGE_COLS 1280 // 640
+-#define NUM_IMAGE_ROWS 960 //480
++#define NUM_IMAGE_ROWS 720 //480
+ 
+ 	wil::com_ptr_nothrow<IMFMediaType> rgbType;
+ 	RETURN_IF_FAILED(MFCreateMediaType(&rgbType));
+diff --git a/VCamSampleSource/TcpFrameClient.cpp b/VCamSampleSource/TcpFrameClient.cpp
+new file mode 100644
+index 0000000..b7d45a1
+--- /dev/null
++++ b/VCamSampleSource/TcpFrameClient.cpp
+@@ -0,0 +1,315 @@
++#include "pch.h"
++#include "TcpFrameClient.h"
++
++#include <chrono>
++
++#pragma comment(lib, "Ws2_32.lib")
++
++namespace
++{
++    constexpr uint32_t AuraFrameMagic =
++        0x41555241; // 'AURA'
++
++    constexpr uint32_t AuraFrameVersion = 1;
++    constexpr uint32_t AuraFrameFormatBGRA32 = 1;
++
++    constexpr uint16_t AuraTcpFramePort = 5151;
++
++    constexpr uint32_t AuraMaximumWidth = 3840;
++    constexpr uint32_t AuraMaximumHeight = 2160;
++    constexpr uint32_t AuraBytesPerPixel = 4;
++
++    constexpr uint32_t AuraMaximumPayloadSize =
++        AuraMaximumWidth *
++        AuraMaximumHeight *
++        AuraBytesPerPixel;
++}
++
++TcpFrameClient& TcpFrameClient::Instance()
++{
++    static TcpFrameClient instance;
++    return instance;
++}
++
++TcpFrameClient::TcpFrameClient()
++    : stopRequested_(false),
++    socket_(INVALID_SOCKET),
++    latestHeader_{},
++    hasFrame_(false)
++{
++    workerThread_ =
++        std::thread(
++            [this]()
++            {
++                Run();
++            }
++        );
++}
++
++TcpFrameClient::~TcpFrameClient()
++{
++    stopRequested_.store(true);
++
++    const SOCKET activeSocket =
++        socket_.exchange(INVALID_SOCKET);
++
++    if (activeSocket != INVALID_SOCKET)
++    {
++        shutdown(activeSocket, SD_BOTH);
++        closesocket(activeSocket);
++    }
++
++    if (workerThread_.joinable())
++    {
++        workerThread_.join();
++    }
++}
++
++bool TcpFrameClient::CopyLatestFrame(
++    AuraTcpFrameHeader& header,
++    std::vector<uint8_t>& pixels
++)
++{
++    std::lock_guard<std::mutex> lock(frameMutex_);
++
++    if (!hasFrame_ || latestPixels_.empty())
++    {
++        return false;
++    }
++
++    header = latestHeader_;
++    pixels = latestPixels_;
++
++    return true;
++}
++
++bool TcpFrameClient::IsValidHeader(
++    const AuraTcpFrameHeader& header
++) const
++{
++    if (
++        header.magic != AuraFrameMagic ||
++        header.version != AuraFrameVersion ||
++        header.format != AuraFrameFormatBGRA32
++        )
++    {
++        return false;
++    }
++
++    if (
++        header.width == 0 ||
++        header.height == 0 ||
++        header.width > AuraMaximumWidth ||
++        header.height > AuraMaximumHeight
++        )
++    {
++        return false;
++    }
++
++    if (
++        header.stride < header.width * AuraBytesPerPixel ||
++        header.dataSize == 0 ||
++        header.dataSize > AuraMaximumPayloadSize
++        )
++    {
++        return false;
++    }
++
++    const uint64_t minimumPayloadSize =
++        static_cast<uint64_t>(header.stride) *
++        static_cast<uint64_t>(header.height);
++
++    return header.dataSize >= minimumPayloadSize;
++}
++
++bool TcpFrameClient::Connect()
++{
++    SOCKET newSocket =
++        socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
++
++    if (newSocket == INVALID_SOCKET)
++    {
++        return false;
++    }
++
++    sockaddr_in address{};
++    address.sin_family = AF_INET;
++    address.sin_port = htons(AuraTcpFramePort);
++
++    if (
++        inet_pton(
++            AF_INET,
++            "127.0.0.1",
++            &address.sin_addr
++        ) != 1
++        )
++    {
++        closesocket(newSocket);
++        return false;
++    }
++
++    if (
++        connect(
++            newSocket,
++            reinterpret_cast<sockaddr*>(&address),
++            sizeof(address)
++        ) == SOCKET_ERROR
++        )
++    {
++        closesocket(newSocket);
++        return false;
++    }
++
++    BOOL noDelay = TRUE;
++
++    setsockopt(
++        newSocket,
++        IPPROTO_TCP,
++        TCP_NODELAY,
++        reinterpret_cast<const char*>(&noDelay),
++        sizeof(noDelay)
++    );
++
++    socket_.store(newSocket);
++
++    return true;
++}
++
++bool TcpFrameClient::ReceiveExact(
++    void* destination,
++    int bytesToReceive
++)
++{
++    auto* output =
++        static_cast<uint8_t*>(destination);
++
++    int totalReceived = 0;
++
++    while (
++        totalReceived < bytesToReceive &&
++        !stopRequested_.load()
++        )
++    {
++        const SOCKET activeSocket = socket_.load();
++
++        if (activeSocket == INVALID_SOCKET)
++        {
++            return false;
++        }
++
++        const int received =
++            recv(
++                activeSocket,
++                reinterpret_cast<char*>(
++                    output + totalReceived
++                    ),
++                bytesToReceive - totalReceived,
++                0
++            );
++
++        if (received <= 0)
++        {
++            return false;
++        }
++
++        totalReceived += received;
++    }
++
++    return totalReceived == bytesToReceive;
++}
++
++bool TcpFrameClient::ReceiveFrame()
++{
++    AuraTcpFrameHeader header{};
++
++    if (
++        !ReceiveExact(
++            &header,
++            static_cast<int>(sizeof(header))
++        )
++        )
++    {
++        return false;
++    }
++
++    if (!IsValidHeader(header))
++    {
++        return false;
++    }
++
++    std::vector<uint8_t> pixels(header.dataSize);
++
++    if (
++        !ReceiveExact(
++            pixels.data(),
++            static_cast<int>(pixels.size())
++        )
++        )
++    {
++        return false;
++    }
++
++    {
++        std::lock_guard<std::mutex> lock(frameMutex_);
++
++        latestHeader_ = header;
++        latestPixels_ = std::move(pixels);
++        hasFrame_ = true;
++    }
++
++    return true;
++}
++
++void TcpFrameClient::CloseSocket()
++{
++    const SOCKET activeSocket =
++        socket_.exchange(INVALID_SOCKET);
++
++    if (activeSocket != INVALID_SOCKET)
++    {
++        shutdown(activeSocket, SD_BOTH);
++        closesocket(activeSocket);
++    }
++}
++
++void TcpFrameClient::Run()
++{
++    WSADATA wsaData{};
++
++    if (
++        WSAStartup(
++            MAKEWORD(2, 2),
++            &wsaData
++        ) != 0
++        )
++    {
++        return;
++    }
++
++    while (!stopRequested_.load())
++    {
++        if (socket_.load() == INVALID_SOCKET)
++        {
++            if (!Connect())
++            {
++                std::this_thread::sleep_for(
++                    std::chrono::milliseconds(500)
++                );
++
++                continue;
++            }
++        }
++
++        if (!ReceiveFrame())
++        {
++            CloseSocket();
++
++            std::this_thread::sleep_for(
++                std::chrono::milliseconds(250)
++            );
++        }
++    }
++
++    CloseSocket();
++    WSACleanup();
++}
+\ No newline at end of file
+diff --git a/VCamSampleSource/TcpFrameClient.h b/VCamSampleSource/TcpFrameClient.h
+new file mode 100644
+index 0000000..af57989
+--- /dev/null
++++ b/VCamSampleSource/TcpFrameClient.h
+@@ -0,0 +1,66 @@
++#pragma once
++
++#include <atomic>
++#include <cstdint>
++#include <mutex>
++#include <thread>
++#include <vector>
++
++#pragma pack(push, 1)
++
++struct AuraTcpFrameHeader
++{
++    uint32_t magic;
++    uint32_t version;
++    uint32_t width;
++    uint32_t height;
++    uint32_t stride;
++    uint32_t format;
++    uint64_t frameNumber;
++    uint64_t timestampMs;
++    uint32_t dataSize;
++};
++
++#pragma pack(pop)
++
++static_assert(
++    sizeof(AuraTcpFrameHeader) == 44,
++    "Aura TCP frame header must be exactly 44 bytes."
++    );
++
++class TcpFrameClient
++{
++public:
++    static TcpFrameClient& Instance();
++
++    TcpFrameClient(const TcpFrameClient&) = delete;
++    TcpFrameClient& operator=(const TcpFrameClient&) = delete;
++
++    bool CopyLatestFrame(
++        AuraTcpFrameHeader& header,
++        std::vector<uint8_t>& pixels
++    );
++
++private:
++    TcpFrameClient();
++    ~TcpFrameClient();
++
++    void Run();
++
++    bool Connect();
++    bool ReceiveExact(void* destination, int bytesToReceive);
++    bool ReceiveFrame();
++
++    void CloseSocket();
++    bool IsValidHeader(const AuraTcpFrameHeader& header) const;
++
++    std::atomic<bool> stopRequested_;
++    std::atomic<SOCKET> socket_;
++
++    std::thread workerThread_;
++
++    std::mutex frameMutex_;
++    AuraTcpFrameHeader latestHeader_;
++    std::vector<uint8_t> latestPixels_;
++    bool hasFrame_;
++};
+\ No newline at end of file
+diff --git a/VCamSampleSource/VCamSampleSource.rc b/VCamSampleSource/VCamSampleSource.rc
+index 4728b6c387ea7cb61ba38c0653884299e59f14df..2253d17afc44a6ca2dc8329dbdcdf5d8ffcbb672 100644
+GIT binary patch
+delta 38
+qcmcbka!+N$Azo2OhEj$ihC~Jh24^6d%a97<O@7F&yP1hEiUk1P1`1XH
+
+delta 24
+gcmcboaz|yuA>PReyaLQQ45^bJa_eqp;frDc0C%1UH2?qr
+
+diff --git a/VCamSampleSource/VCamSampleSource.vcxproj b/VCamSampleSource/VCamSampleSource.vcxproj
+index 2b4d6de..0621d6d 100644
+--- a/VCamSampleSource/VCamSampleSource.vcxproj
++++ b/VCamSampleSource/VCamSampleSource.vcxproj
+@@ -220,6 +220,7 @@
+   </ItemDefinitionGroup>
+   <ItemGroup>
+     <ClInclude Include="Activator.h" />
++    <ClInclude Include="AuraSharedMemory.h" />
+     <ClInclude Include="EnumNames.h" />
+     <ClInclude Include="FrameGenerator.h" />
+     <ClInclude Include="framework.h" />
+@@ -228,12 +229,14 @@
+     <ClInclude Include="MFTools.h" />
+     <ClInclude Include="pch.h" />
+     <ClInclude Include="resource.h" />
++    <ClInclude Include="TcpFrameClient.h" />
+     <ClInclude Include="Tools.h" />
+     <ClInclude Include="Undocumented.h" />
+     <ClInclude Include="WinTrace.h" />
+   </ItemGroup>
+   <ItemGroup>
+     <ClCompile Include="Activator.cpp" />
++    <ClCompile Include="AuraSharedMemory.cpp" />
+     <ClCompile Include="dllmain.cpp" />
+     <ClCompile Include="EnumNames.cpp" />
+     <ClCompile Include="FrameGenerator.cpp" />
+@@ -248,6 +251,7 @@
+       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">Create</PrecompiledHeader>
+     </ClCompile>
++    <ClCompile Include="TcpFrameClient.cpp" />
+     <ClCompile Include="Tools.cpp" />
+     <ClCompile Include="WinTrace.cpp" />
+   </ItemGroup>
+diff --git a/VCamSampleSource/VCamSampleSource.vcxproj.filters b/VCamSampleSource/VCamSampleSource.vcxproj.filters
+index 4153c2c..fd0ca6c 100644
+--- a/VCamSampleSource/VCamSampleSource.vcxproj.filters
++++ b/VCamSampleSource/VCamSampleSource.vcxproj.filters
+@@ -51,6 +51,12 @@
+     <ClInclude Include="resource.h">
+       <Filter>Header Files</Filter>
+     </ClInclude>
++    <ClInclude Include="AuraSharedMemory.h">
++      <Filter>Header Files</Filter>
++    </ClInclude>
++    <ClInclude Include="TcpFrameClient.h">
++      <Filter>Header Files</Filter>
++    </ClInclude>
+   </ItemGroup>
+   <ItemGroup>
+     <ClCompile Include="dllmain.cpp">
+@@ -83,6 +89,12 @@
+     <ClCompile Include="FrameGenerator.cpp">
+       <Filter>Source Files</Filter>
+     </ClCompile>
++    <ClCompile Include="AuraSharedMemory.cpp">
++      <Filter>Source Files</Filter>
++    </ClCompile>
++    <ClCompile Include="TcpFrameClient.cpp">
++      <Filter>Source Files</Filter>
++    </ClCompile>
+   </ItemGroup>
+   <ItemGroup>
+     <None Include="VCamSampleSource.def">
+diff --git a/VCamSampleSource/framework.h b/VCamSampleSource/framework.h
+index e94fa73..126238a 100644
+--- a/VCamSampleSource/framework.h
++++ b/VCamSampleSource/framework.h
+@@ -12,6 +12,10 @@
+ #define DBG_NEW new
+ #endif
+ 
++// Windows networking must be included before windows.h.
++#include <winsock2.h>
++#include <ws2tcpip.h>
++
+ // Windows Header Files
+ #include <windows.h>
+ #include <evntprov.h>
+-- 
+2.53.0.windows.1
+
