@@ -20,6 +20,13 @@ namespace
 
     uint64_t g_lastBitmapFrameNumber = UINT64_MAX;
 
+    /*
+        Persistent staging buffer for frame copies, guarded by g_renderMutex.
+        Hoisted so the per-sample path never allocates: the old local vector
+        re-allocated ~3.7 MB on every generated camera sample.
+    */
+    std::vector<uint8_t> g_framePixels;
+
     void ResetCachedBitmap()
     {
         g_bitmap.reset();
@@ -211,18 +218,13 @@ namespace AuraSharedMemory
             g_renderMutex
         );
 
-        AuraTcpFrameHeader header{};
-        std::vector<uint8_t> pixels;
-
-        const bool hasFrame =
-            TcpFrameClient::Instance().CopyLatestFrame(
-                header,
-                pixels
-            );
-
         /*
-            If the render target changed, the existing Direct2D bitmap belongs
-            to the old target and must be recreated.
+            If the render target changed, the existing Direct2D bitmap
+            belongs to the old target and must be recreated. This runs
+            BEFORE the copy check on purpose: resetting sets
+            g_lastBitmapFrameNumber back to the sentinel, which forces the
+            copy below to fetch pixels for the recreation even when the
+            frame number itself has not advanced.
         */
         if (
             g_bitmap &&
@@ -232,7 +234,22 @@ namespace AuraSharedMemory
             ResetCachedBitmap();
         }
 
-        if (hasFrame)
+        /*
+            Copies only when the client holds a frame newer than the one
+            already uploaded to the cached bitmap. The common case at
+            camera-sample cadence -- no new Aura frame yet -- now costs a
+            frame-number comparison instead of a 3.7 MB copy.
+        */
+        AuraTcpFrameHeader header{};
+
+        const bool hasNewFrame =
+            TcpFrameClient::Instance().CopyLatestFrameIfNewer(
+                g_lastBitmapFrameNumber,
+                header,
+                g_framePixels
+            );
+
+        if (hasNewFrame)
         {
             const bool dimensionsChanged =
                 !g_bitmap ||
@@ -246,33 +263,27 @@ namespace AuraSharedMemory
                 CreateCachedBitmap(
                     renderTarget,
                     header,
-                    pixels
+                    g_framePixels
                 );
             }
             else if (
-                header.frameNumber !=
-                g_lastBitmapFrameNumber
+                !UpdateCachedBitmap(
+                    header,
+                    g_framePixels
+                )
                 )
             {
-                if (
-                    !UpdateCachedBitmap(
-                        header,
-                        pixels
-                    )
-                    )
-                {
-                    /*
-                        If updating the existing bitmap fails, attempt one clean
-                        recreation before retaining the last rendered state.
-                    */
-                    ResetCachedBitmap();
+                /*
+                    If updating the existing bitmap fails, attempt one clean
+                    recreation before retaining the last rendered state.
+                */
+                ResetCachedBitmap();
 
-                    CreateCachedBitmap(
-                        renderTarget,
-                        header,
-                        pixels
-                    );
-                }
+                CreateCachedBitmap(
+                    renderTarget,
+                    header,
+                    g_framePixels
+                );
             }
         }
 

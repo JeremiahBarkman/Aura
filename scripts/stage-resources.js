@@ -47,15 +47,22 @@ const items = [
         source: path.join(root, 'native/AuraFrameBridge/AuraFrameBridge/x64/Release/AuraFrameBridge.exe'),
         hint: 'Build AuraFrameBridge.vcxproj in the x64/Release configuration.'
     },
+    // Release, never Debug: the Debug DLL runs unoptimized inside the Windows
+    // camera frame-server process on every delivered frame, and shipping it
+    // measurably halved the virtual-camera frame rate whenever a consumer
+    // (Teams/OBS) attached. fallback lets a clean clone that has only ever
+    // built Debug still produce an installer -- with a warning.
     {
         label: 'VCamSample.exe',
-        source: path.join(root, 'native/external/VCamSample/x64/Debug/VCamSample.exe'),
-        hint: 'Build VCamSample.sln (x64).'
+        source: path.join(root, 'native/external/VCamSample/x64/Release/VCamSample.exe'),
+        fallback: path.join(root, 'native/external/VCamSample/x64/Debug/VCamSample.exe'),
+        hint: 'Build VCamSample.sln (x64 Release).'
     },
     {
         label: 'VCamSampleSource.dll',
-        source: path.join(root, 'native/external/VCamSample/x64/Debug/VCamSampleSource.dll'),
-        hint: 'Build VCamSample.sln (x64).'
+        source: path.join(root, 'native/external/VCamSample/x64/Release/VCamSampleSource.dll'),
+        fallback: path.join(root, 'native/external/VCamSample/x64/Debug/VCamSampleSource.dll'),
+        hint: 'Build VCamSample.sln (x64 Release).'
     },
     {
         label: 'node.exe',
@@ -75,8 +82,15 @@ console.log(`Staging shipped binaries -> ${path.relative(root, stageDir)}`);
 
 for (const item of items) {
     const dest = path.join(stageDir, item.label);
-    const haveSource = fs.existsSync(item.source);
+    let haveSource = fs.existsSync(item.source);
     const haveStaged = fs.existsSync(dest);
+
+    if (!haveSource && item.fallback && fs.existsSync(item.fallback)) {
+        console.warn(`  WARN    ${item.label.padEnd(22)} Release build not found - falling back to DEBUG build (slower!)`);
+        console.warn(`          build the Release configuration: ${item.hint}`);
+        item.source = item.fallback;
+        haveSource = true;
+    }
 
     if (!haveSource) {
         if (haveStaged) {

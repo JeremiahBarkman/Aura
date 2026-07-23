@@ -65,7 +65,8 @@ TcpFrameClient::~TcpFrameClient()
     }
 }
 
-bool TcpFrameClient::CopyLatestFrame(
+bool TcpFrameClient::CopyLatestFrameIfNewer(
+    uint64_t lastSeenFrameNumber,
     AuraTcpFrameHeader& header,
     std::vector<uint8_t>& pixels
 )
@@ -77,8 +78,27 @@ bool TcpFrameClient::CopyLatestFrame(
         return false;
     }
 
+    /*
+        The cheap check first: when the caller's cached frame is still
+        current, return before touching the pixel data at all. Inequality
+        rather than greater-than so a renderer restart (which resets frame
+        numbering) resumes immediately.
+    */
+    if (latestHeader_.frameNumber == lastSeenFrameNumber)
+    {
+        return false;
+    }
+
     header = latestHeader_;
-    pixels = latestPixels_;
+
+    /*
+        assign() reuses the caller's capacity; with a hoisted destination
+        vector this copies without allocating.
+    */
+    pixels.assign(
+        latestPixels_.begin(),
+        latestPixels_.end()
+    );
 
     return true;
 }
@@ -237,12 +257,19 @@ bool TcpFrameClient::ReceiveFrame()
         return false;
     }
 
-    std::vector<uint8_t> pixels(header.dataSize);
+    /*
+        Receive into the persistent buffer (resize is a no-op once capacity
+        has stabilized), then publish by swapping under the mutex. The old
+        code allocated a fresh vector for every frame -- ~3.7 MB, 30 times a
+        second -- and the swap keeps the lock hold-time to a pointer
+        exchange instead of a full copy.
+    */
+    receiveBuffer_.resize(header.dataSize);
 
     if (
         !ReceiveExact(
-            pixels.data(),
-            static_cast<int>(pixels.size())
+            receiveBuffer_.data(),
+            static_cast<int>(receiveBuffer_.size())
         )
         )
     {
@@ -253,7 +280,7 @@ bool TcpFrameClient::ReceiveFrame()
         std::lock_guard<std::mutex> lock(frameMutex_);
 
         latestHeader_ = header;
-        latestPixels_ = std::move(pixels);
+        latestPixels_.swap(receiveBuffer_);
         hasFrame_ = true;
     }
 

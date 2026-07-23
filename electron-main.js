@@ -730,6 +730,18 @@ function getAuraFrameBridgePath() {
         );
     }
 
+    // Prefer the optimized Release build in dev; the Debug fallback keeps a
+    // checkout that has only ever built Debug working.
+    const bridgeRelease = path.join(
+        __dirname,
+        'native', 'AuraFrameBridge', 'AuraFrameBridge',
+        'x64', 'Release', 'AuraFrameBridge.exe'
+    );
+
+    if (fs.existsSync(bridgeRelease)) {
+        return bridgeRelease;
+    }
+
     return path.join(
         __dirname,
         'native',
@@ -959,6 +971,20 @@ function getAuraCameraHostPath() {
             'native',
             'VCamSample.exe'
         );
+    }
+
+    // Same Release-first preference as the frame bridge. This matters more
+    // here: the camera host's media-source DLL does per-frame work inside
+    // the Windows frame-server process, where Debug codegen visibly cut the
+    // delivered frame rate.
+    const hostRelease = path.join(
+        __dirname,
+        'native', 'external', 'VCamSample',
+        'x64', 'Release', 'VCamSample.exe'
+    );
+
+    if (fs.existsSync(hostRelease)) {
+        return hostRelease;
     }
 
     return path.join(

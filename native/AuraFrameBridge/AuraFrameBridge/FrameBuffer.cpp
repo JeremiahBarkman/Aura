@@ -1,5 +1,6 @@
 #include "FrameBuffer.h"
 
+#include <chrono>
 #include <cstring>
 
 FrameBuffer::FrameBuffer()
@@ -33,20 +34,75 @@ void FrameBuffer::WriteFrame(
         return;
     }
 
-    std::lock_guard<std::mutex> lock(mutex_);
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
 
-    latestHeader_ = header;
-    latestPixels_.resize(header.dataSize);
+        latestHeader_ = header;
+        latestPixels_.resize(header.dataSize);
 
-    std::memcpy(
-        latestPixels_.data(),
-        pixels,
-        header.dataSize
+        std::memcpy(
+            latestPixels_.data(),
+            pixels,
+            header.dataSize
+        );
+
+        lastFrameTimeMs_ = AuraNowMs();
+        frameCount_++;
+        hasFrame_ = true;
+    }
+
+    /*
+        Notify after releasing the lock so woken senders don't immediately
+        block on a mutex the notifier still holds.
+    */
+    frameAvailable_.notify_all();
+}
+
+bool FrameBuffer::WaitForNewFrame(
+    uint64_t lastSeenFrameNumber,
+    AuraFrameHeader& header,
+    std::vector<uint8_t>& pixels,
+    uint32_t timeoutMs
+)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+
+    /*
+        Inequality rather than greater-than: a renderer restart resets frame
+        numbering, and the sender must pick the stream back up rather than
+        wait for the counter to catch up to its old position.
+    */
+    const bool hasNewFrame =
+        frameAvailable_.wait_for(
+            lock,
+            std::chrono::milliseconds(timeoutMs),
+            [&]()
+            {
+                return
+                    hasFrame_ &&
+                    !latestPixels_.empty() &&
+                    latestHeader_.frameNumber != lastSeenFrameNumber;
+            }
+        );
+
+    if (!hasNewFrame)
+    {
+        return false;
+    }
+
+    header = latestHeader_;
+
+    /*
+        assign() reuses the caller's existing capacity. Callers hoist the
+        vector out of their send loop, so steady state performs no heap
+        allocation at all.
+    */
+    pixels.assign(
+        latestPixels_.begin(),
+        latestPixels_.end()
     );
 
-    lastFrameTimeMs_ = AuraNowMs();
-    frameCount_++;
-    hasFrame_ = true;
+    return true;
 }
 
 bool FrameBuffer::CopyLatestFrame(

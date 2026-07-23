@@ -53,36 +53,47 @@ void TcpFrameServer::HandleClient(SOCKET clientSocket)
 
     uint64_t lastSentFrameNumber = UINT64_MAX;
 
+    /*
+        Hoisted out of the loop: with FrameBuffer::WaitForNewFrame's assign()
+        reusing this capacity, the steady-state send path performs zero heap
+        allocations. The old code allocated and freed ~3.7 MB every 5 ms per
+        client whether or not a new frame existed.
+    */
+    AuraFrameHeader header{};
+    std::vector<uint8_t> pixels;
+
     while (true)
     {
-        AuraFrameHeader header{};
-        std::vector<uint8_t> pixels;
-
-        if (frameBuffer_.CopyLatestFrame(header, pixels))
+        /*
+            Sleep until the writer publishes a genuinely new frame. The
+            timeout only bounds how often this loop re-checks a dead-idle
+            stream; a broken connection is still detected by send() failing.
+        */
+        if (!frameBuffer_.WaitForNewFrame(
+            lastSentFrameNumber,
+            header,
+            pixels,
+            250
+        ))
         {
-            if (header.frameNumber != lastSentFrameNumber)
-            {
-                if (!SendExact(clientSocket, &header, sizeof(header)))
-                {
-                    break;
-                }
-
-                if (!SendExact(
-                    clientSocket,
-                    pixels.data(),
-                    static_cast<int>(pixels.size())
-                ))
-                {
-                    break;
-                }
-
-                lastSentFrameNumber = header.frameNumber;
-            }
+            continue;
         }
 
-        std::this_thread::sleep_for(
-            std::chrono::milliseconds(5)
-        );
+        if (!SendExact(clientSocket, &header, sizeof(header)))
+        {
+            break;
+        }
+
+        if (!SendExact(
+            clientSocket,
+            pixels.data(),
+            static_cast<int>(pixels.size())
+        ))
+        {
+            break;
+        }
+
+        lastSentFrameNumber = header.frameNumber;
     }
 
     std::cout
