@@ -66,13 +66,14 @@
    <div><div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><div class="panel-title" style="margin:0">Aura Camera</div><span class="subtitle">composited output · camera → PsySeg → semantic background</span></div>
     <video id="auraLiveVideo" autoplay playsinline muted style="display:none"></video>
     <canvas id="auraLiveCanvas" class="hero-canvas"></canvas><canvas id="auraBroadcastCanvas" style="display:none"></canvas>
-    <div id="auraSegmentationStatus" class="active-meta">Segmentation not initialized.</div>
    </div>
    <div class="two-col">
-    <div class="panel"><div class="panel-title" data-i18n="cam.panel">Webcam Live View</div><label data-i18n="cam.device">Camera Device</label><select id="cameraDeviceSelect"></select>
+    <div class="panel"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:12px"><div class="panel-title" style="margin:0;flex-shrink:0" data-i18n="cam.panel">Webcam Live View</div><div id="auraSegmentationStatus" class="active-meta" style="text-align:right;min-width:0">Segmentation not initialized.</div></div><label data-i18n="cam.device">Camera Device</label><select id="cameraDeviceSelect"></select>
      <div class="button-row"><button onclick="startAuraCamera()" data-i18n="cam.start">Start Camera</button><button class="secondary" onclick="stopAuraCamera()" data-i18n="cam.stop">Stop Camera</button><button class="secondary" onclick="enableAuraBlur()" data-i18n="cam.blur">Blur</button><button class="secondary" onclick="enableAuraRemove()" data-i18n="cam.removeBg">Remove BG</button><button class="danger" onclick="resetAuraSegmentation()" data-i18n="cam.reset">Reset</button></div>
+    <label style="margin-top:16px"><span data-i18n="cam.erode">Edge Smoothing (Erode)</span> <span id="psySegErodeValue">1</span></label><input id="psySegErode" type="range" min="0" max="10" value="1" step="1" oninput="psySegErodeValue.textContent=this.value;handlePsySegParamChanged()">
+    <label><span data-i18n="cam.blurLevel">Background Blur</span> <span id="psySegBlurValue">39</span></label><input id="psySegBlur" type="range" min="1" max="60" value="39" step="1" oninput="psySegBlurValue.textContent=this.value;handlePsySegParamChanged()">
     </div>
-    <div class="panel"><div class="panel-title" data-i18n="visual.active">Active Visual</div><div id="activeVisualDisplay" class="active-visual-display">No active visual selected.</div><div id="activeVisualMeta" class="active-meta">Awaiting match.</div></div>
+    <div class="panel" style="display:flex;flex-direction:column"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:12px"><div class="panel-title" style="margin:0;flex-shrink:0" data-i18n="visual.active">Active Visual</div><div id="activeVisualMeta" class="active-meta" style="text-align:right;min-width:0">Awaiting match.</div></div><div id="activeVisualDisplay" class="active-visual-display" style="flex:1;aspect-ratio:auto">No active visual selected.</div></div>
    </div>
    <div class="panel"><div class="eyebrow" data-i18n="transcript.rolling">ROLLING TRANSCRIPT</div><div id="rollingTranscript" style="margin-top:10px">No speech captured yet.</div></div>
   </div>
@@ -1609,10 +1610,69 @@ async function initializeAuraSegmentationProvider() {
     auraSegmentationProvider.attachVideo(video);
     auraSegmentationProvider.attachCanvas(canvas);
 
+    // Apply the current Erode / Blur slider values to the fresh provider.
+    applyPsySegParams();
+
     document.getElementById('auraSegmentationStatus').textContent =
         'Segmentation provider initialized.';
 
     return auraSegmentationProvider;
+}
+
+// Read the Webcam Live View sliders and push their values onto the live
+// segmentation provider. erode affects blur/remove/replace; blur affects
+// blur mode only. Called on slider input and when a provider is (re)created.
+function applyPsySegParams() {
+    if (!auraSegmentationProvider) {
+        return;
+    }
+    const erodeEl = document.getElementById('psySegErode');
+    const blurEl = document.getElementById('psySegBlur');
+    if (erodeEl) {
+        auraSegmentationProvider.erodeLevel = parseInt(erodeEl.value, 10);
+    }
+    if (blurEl) {
+        auraSegmentationProvider.blurLevel = parseInt(blurEl.value, 10);
+    }
+}
+
+function handlePsySegParamChanged() {
+    applyPsySegParams();
+    savePsySegSettings();
+}
+
+// Persist the Erode / Blur slider values to aura-config.json. Matches the
+// display-settings sliders: saves on every input event.
+function savePsySegSettings() {
+    const erodeEl = document.getElementById('psySegErode');
+    const blurEl = document.getElementById('psySegBlur');
+
+    patchAuraConfig({
+        psySegErode: parseInt(erodeEl?.value ?? '1', 10),
+        psySegBlur: parseInt(blurEl?.value ?? '39', 10)
+    }).catch(console.error);
+}
+
+// Restore the Erode / Blur sliders (and their value labels) from config on
+// startup, then push the values onto the provider if one already exists.
+function loadPsySegSettings() {
+    const settings = auraConfigState || {};
+
+    const erodeEl = document.getElementById('psySegErode');
+    if (erodeEl && settings.psySegErode !== undefined) {
+        erodeEl.value = settings.psySegErode;
+        const lbl = document.getElementById('psySegErodeValue');
+        if (lbl) lbl.textContent = settings.psySegErode;
+    }
+
+    const blurEl = document.getElementById('psySegBlur');
+    if (blurEl && settings.psySegBlur !== undefined) {
+        blurEl.value = settings.psySegBlur;
+        const lbl = document.getElementById('psySegBlurValue');
+        if (lbl) lbl.textContent = settings.psySegBlur;
+    }
+
+    applyPsySegParams();
 }
 
 // -----------------------------------------------------------------------------
@@ -2690,6 +2750,7 @@ loadAuraConfig()
 
                 loadDisplaySettings();
         loadMatchingSettings();
+        loadPsySegSettings();
 
         try {
             await loadCameraDevices();

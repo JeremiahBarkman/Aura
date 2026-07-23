@@ -26,6 +26,13 @@ export class PsySegSegmentationProvider extends SegmentationProvider {
         this.backgroundCanvas = document.createElement('canvas');
         this.backgroundCtx = this.backgroundCanvas.getContext('2d', { willReadFrequently: true });
 
+        // PsySeg edge/blur controls, exposed as sliders on the Webcam Live View
+        // card. erodeLevel smooths the segmentation edge (applies to blur,
+        // remove, and replace); blurLevel is the background blur strength
+        // (blur mode only). Defaults match the previously hardcoded values.
+        this.erodeLevel = 1;
+        this.blurLevel = 39;
+
         // The replace-mode background is static between scene switches, so
         // its pixels are cached and only re-read when the image or output
         // size actually changes -- avoiding a full-frame getImageData
@@ -46,6 +53,7 @@ export class PsySegSegmentationProvider extends SegmentationProvider {
         this.transitionStartMs = 0;
         this.transitionDurationMs = 0;
         this.transitionType = 'crossfade';
+
     }
 
     async initialize() {
@@ -253,19 +261,17 @@ await this.psyseg.init({
 
                     if (this.renderMode === 'blur') {
                         result = await this.psyseg.blurBackground(inputImageData, {
-                            blur: 39,
-                            erode: 1,
+                            blur: this.blurLevel,
+                            erode: this.erodeLevel,
                             gamma: 0,
                             isRemoveBlob: true,
-                            skipAlpha: false,
-                            worker: false,
-                            backend: 'webgl',
                             dstSize: { width, height }
                         });
                     }
 
                     if (this.renderMode === 'remove') {
                         result = await this.psyseg.removeBackground(inputImageData, {
+                            erode: this.erodeLevel,
                             dstSize: { width, height }
                         });
                     }
@@ -277,6 +283,7 @@ await this.psyseg.init({
                             inputImageData,
                             backgroundImageData,
                             {
+                                erode: this.erodeLevel,
                                 dstSize: { width, height }
                             }
                         );
@@ -288,6 +295,13 @@ await this.psyseg.init({
                             this.canvasElement.getContext('2d', { willReadFrequently: true });
 
                         outputCtx.putImageData(result.data, 0, 0);
+
+                        // Hand the freshly composited pixels straight to the
+                        // frame-export sink -- the SAME data just painted, so
+                        // the export service needs no second canvas readback.
+                        if (window.__auraFrameSink) {
+                            window.__auraFrameSink.submitFrame(result.data, width, height);
+                        }
 
                         // Signal downstream consumers (frame export) that a new
                         // frame is available, so they can skip re-exporting an

@@ -33,29 +33,19 @@ export class AuraFrameExportService {
         }
 
         this.isRunning = false;
-        this.frameInProgress = false;
+
+        // Count of IPC sends dispatched but not yet acknowledged. Bounds
+        // pathological backpressure only (see submitFrame); does not gate
+        // normal per-frame cadence.
+        this.inFlight = 0;
 
         this.frameNumber = 0;
 
-        // Target approximately 30 frames per second.
-        this.intervalMs = 33;
-
+        // Reused BGRA output buffer (resized on resolution change) so the
+        // steady-state convert allocates nothing.
         this.bgraBuffer = null;
         this.bufferWidth = 0;
         this.bufferHeight = 0;
-
-        this.loopTimer = null;
-
-        this.lastStatusLogMs = 0;
-        this.framesExportedSinceStatus = 0;
-
-        // The compositor updates the canvas at its own (sub-30) rate. The
-        // export loop ticks at 30 FPS, so without this it would re-read,
-        // re-convert, and re-send byte-identical duplicate frames -- pure
-        // wasted work competing with the render loop. Track the canvas's
-        // frame id (bumped by the segmentation provider on each new frame)
-        // and skip export when nothing has changed.
-        this.lastExportedFrameId = -1;
     }
 
     start() {
@@ -65,58 +55,22 @@ export class AuraFrameExportService {
 
         this.isRunning = true;
 
-        this.scheduleNextFrame(0);
+        // Push model: the segmentation provider calls submitFrame() with the
+        // exact pixels it just composited. This replaces the old loop that
+        // polled the canvas via getImageData every tick -- a second full
+        // GPU->CPU readback per frame (~13 ms at 720p, measured) on top of the
+        // one the segmentation loop already pays. Registering as the sink lets
+        // the producer hand those pixels over directly, deleting the redundant
+        // readback and the polling entirely.
+        window.__auraFrameSink = this;
     }
 
     stop() {
         this.isRunning = false;
 
-        if (this.loopTimer) {
-            clearTimeout(this.loopTimer);
-            this.loopTimer = null;
+        if (window.__auraFrameSink === this) {
+            window.__auraFrameSink = null;
         }
-    }
-
-    scheduleNextFrame(delayMs = this.intervalMs) {
-        if (!this.isRunning) {
-            return;
-        }
-
-        this.loopTimer = setTimeout(() => {
-            this.loop();
-        }, Math.max(0, delayMs));
-    }
-
-    async loop() {
-        if (!this.isRunning) {
-            return;
-        }
-
-        const startedAt =
-            performance.now();
-
-        await this.exportFrame();
-
-        const elapsedMs =
-            performance.now() - startedAt;
-
-        /*
-            Subtract export time from the target interval.
-
-            This avoids:
-                export time + 33 ms delay
-
-            and instead aims for approximately one frame every 33 ms.
-        */
-        const remainingDelay =
-            Math.max(
-                0,
-                this.intervalMs - elapsedMs
-            );
-
-        this.scheduleNextFrame(
-            remainingDelay
-        );
     }
 
     ensureOutputBuffer(width, height) {
@@ -204,127 +158,67 @@ export class AuraFrameExportService {
         }
     }
 
-    async exportFrame() {
+    // Called by the segmentation provider with the RGBA pixels it just
+    // composited (result.data). No canvas readback here -- that is the whole
+    // point. The convert runs inline (~a few ms), then the IPC send is fired
+    // without awaiting so producer cadence is never gated on IPC latency.
+    submitFrame(imageData, width, height) {
         if (
-            this.frameInProgress ||
-            !this.canvas.width ||
-            !this.canvas.height ||
+            !this.isRunning ||
+            !imageData ||
+            !width ||
+            !height ||
             !window.auraElectron ||
             typeof window.auraElectron.sendAuraFrame !== 'function'
         ) {
             return;
         }
 
-        // Skip if the compositor hasn't produced a new frame since the last
-        // export. undefined means no producer is tagging frames, so fall
-        // through and export unconditionally rather than stalling forever.
-        const frameId = this.canvas.__auraFrameId;
-
-        if (frameId !== undefined && frameId === this.lastExportedFrameId) {
+        // Send EVERY frame the producer hands us. ipcRenderer.invoke
+        // structured-clones (copies) its args synchronously at call time, so
+        // the buffer is safe to reuse the moment the call returns -- there is
+        // no need to wait for the IPC round-trip. The old per-frame guard that
+        // waited for the round-trip dropped export ~5 FPS below the producer
+        // for no safety benefit. inFlight only guards against pathological
+        // backpressure (main process unable to drain), never normal cadence.
+        if (this.inFlight >= 3) {
             return;
         }
 
-        this.lastExportedFrameId = frameId;
-
-        this.frameInProgress = true;
-
         try {
-            const width =
-                this.canvas.width;
+            const stride = width * 4;
 
-            const height =
-                this.canvas.height;
+            const bgra = this.ensureOutputBuffer(width, height);
 
-            const stride =
-                width * 4;
+            this.convertRgbaToOpaqueBgra(imageData.data, bgra);
 
-            const imageData =
-                this.ctx.getImageData(
-                    0,
-                    0,
-                    width,
-                    height
-                );
+            this.inFlight++;
 
-            const bgra =
-                this.ensureOutputBuffer(
-                    width,
-                    height
-                );
-
-            this.convertRgbaToOpaqueBgra(
-                imageData.data,
-                bgra
-            );
-
-            const result =
-                await window.auraElectron.sendAuraFrame({
+            Promise.resolve(
+                window.auraElectron.sendAuraFrame({
                     width,
                     height,
                     stride,
                     frameNumber: this.frameNumber,
                     timestampMs: Date.now(),
                     pixels: bgra
-                });
-
-            if (
-                result &&
-                result.success === false
-            ) {
-                console.warn(
-                    'Aura frame export was not accepted:',
-                    result
-                );
-            }
+                })
+            ).then(result => {
+                if (result && result.success === false) {
+                    console.warn('Aura frame export was not accepted:', result);
+                }
+            }).catch(error => {
+                console.error('Aura frame export failed:', error);
+            }).finally(() => {
+                this.inFlight--;
+            });
 
             this.frameNumber++;
-            this.framesExportedSinceStatus++;
-
-            this.logPeriodicStatus(
-                width,
-                height
-            );
-
         } catch (error) {
             console.error(
                 'Aura frame export failed:',
                 error
             );
-        } finally {
-            this.frameInProgress = false;
         }
-    }
-
-    logPeriodicStatus(width, height) {
-        const now =
-            performance.now();
-
-        if (!this.lastStatusLogMs) {
-            this.lastStatusLogMs = now;
-            this.framesExportedSinceStatus = 0;
-            return;
-        }
-
-        const elapsedMs =
-            now - this.lastStatusLogMs;
-
-        if (elapsedMs < 5000) {
-            return;
-        }
-
-        const measuredFps =
-            (
-                this.framesExportedSinceStatus *
-                1000 /
-                elapsedMs
-            ).toFixed(1);
-
-        console.info(
-            `Aura frame export: ${measuredFps} FPS, ` +
-            `${width}x${height}, frame ${this.frameNumber}`
-        );
-
-        this.lastStatusLogMs = now;
-        this.framesExportedSinceStatus = 0;
     }
 }

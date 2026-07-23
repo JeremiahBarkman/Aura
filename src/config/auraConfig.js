@@ -15,6 +15,13 @@ const defaultConfig = Object.freeze({
     transitionDurationMs: 600,
     minimumDisplayMs: 3000,
     minimumMatchScore: 0.15,
+
+    // PsySeg segmentation edge/blur controls (Webcam Live View sliders).
+    // psySegErode smooths the segmentation edge (blur/remove/replace);
+    // psySegBlur is the background-blur strength (blur mode only).
+    psySegErode: 1,
+    psySegBlur: 39,
+
     activeLibraryGroupId: '',
     libraryView: 'all-complete',
     outputBroadcastIntervalMs: 66,

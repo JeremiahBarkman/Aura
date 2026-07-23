@@ -35,7 +35,7 @@ en: {
     'nav.studio': 'Studio', 'nav.library': 'Library', 'nav.capture': 'Capture', 'nav.imageSearch': 'Image Search', 'nav.dbManager': 'DB Manager', 'nav.settings': 'Settings',
     'output.title': 'OUTPUT WINDOWS', 'output.auraCamera': 'Aura Camera', 'output.slideOutput': 'Slide Output',
     'studio.title': 'Studio', 'studio.sub': 'RECORD · PLAY · PRESENT', 'studio.online': 'Local system online',
-    'cam.panel': 'Webcam Live View', 'cam.device': 'Camera Device', 'cam.start': 'Start Camera', 'cam.stop': 'Stop Camera', 'cam.blur': 'Blur', 'cam.removeBg': 'Remove BG', 'cam.reset': 'Reset',
+    'cam.panel': 'Webcam Live View', 'cam.device': 'Camera Device', 'cam.start': 'Start Camera', 'cam.stop': 'Stop Camera', 'cam.blur': 'Blur', 'cam.removeBg': 'Remove BG', 'cam.reset': 'Reset', 'cam.erode': 'Edge Smoothing (Erode)', 'cam.blurLevel': 'Background Blur',
     'visual.active': 'Active Visual', 'transcript.rolling': 'ROLLING TRANSCRIPT', 'log.activity': 'ACTIVITY LOG', 'status.system': 'SYSTEM STATUS',
     'play.title': 'Play Mode', 'play.group': 'Active Play Mode Group', 'play.allComplete': 'All Complete Records', 'play.mic': 'Microphone', 'play.start': 'Start Play Mode', 'play.stop': 'Stop',
     'play.status': 'LIVE PLAY STATUS', 'play.match': 'ACTIVE BACKGROUND MATCH', 'play.stopped': 'Play Mode is stopped.', 'play.listening': 'Play Mode listening...', 'play.noMatch': 'No active match yet.',
