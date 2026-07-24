@@ -1882,6 +1882,36 @@ window.startAuraCamera = async function () {
                 audio: false
             });
 
+        /*
+            Best-effort 60 Hz anti-flicker.
+
+            Many webcams default their powerline-frequency / anti-flicker to
+            50 Hz, which mechanically caps them to ~25 FPS regardless of
+            lighting or the frameRate constraint above (50 / 2 fields). On this
+            project's test camera the delivered rate plateaued at ~24 FPS in
+            good light -- the 50 Hz signature. Requesting 60 Hz lifts that cap
+            toward 30.
+
+            It is a non-standard, camera-dependent constraint, so it goes in
+            `advanced` (optional -- never causes getUserMedia/applyConstraints
+            to reject) and is wrapped in try/catch. On a camera that does not
+            expose it, or one already at 60 Hz, this is a harmless no-op.
+        */
+        try {
+            const videoTrack = auraCameraStream.getVideoTracks()[0];
+
+            if (videoTrack && typeof videoTrack.applyConstraints === 'function') {
+                await videoTrack.applyConstraints({
+                    advanced: [{ powerLineFrequency: 60 }]
+                });
+            }
+        } catch (powerLineError) {
+            console.info(
+                'Camera did not accept 60 Hz anti-flicker constraint (harmless):',
+                powerLineError?.name || powerLineError
+            );
+        }
+
         video.srcObject =
             auraCameraStream;
 
