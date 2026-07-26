@@ -52,6 +52,7 @@ en: {
     'cap.audioSource': 'Audio Source', 'cap.startRec': 'Start Recording', 'cap.stop': 'Stop', 'cap.saveRec': 'Save Recording', 'cap.whisper': 'WHISPER TRANSCRIPTION', 'cap.noRec': 'No recording yet.',
     'cap.manual': 'Manual Record', 'cap.summary': 'AI Summary', 'cap.prompt': 'Image Prompt', 'cap.triggers': 'Trigger Phrases', 'cap.image': 'Image', 'cap.uploadExisting': 'Upload Existing Image',
     'cap.saveComplete': 'Save Complete', 'cap.manualStatus': 'MANUAL RECORD STATUS',
+    'cap.indRecording': 'Recording', 'cap.indGenerating': 'Generating', 'cap.indCreating': 'Creating Record', 'cap.saveRecord': 'Save Record', 'cap.deleteRecord': 'Delete Record', 'cap.clear': 'Clear',
     'cap.pipe1': 'Source', 'cap.pipe2': 'Whisper', 'cap.pipe3': 'Summary', 'cap.pipe4': 'Prompt', 'cap.pipe5': 'Trigger', 'cap.pipe6': 'Image', 'cap.pipe7': 'Save',
     'imp.title': 'Image Search', 'imp.searchImport': 'Search and Import', 'imp.query': 'Search Query', 'imp.queryPh': 'Example: transformer architecture diagram', 'imp.batch': 'Batch Size',
     'imp.import': 'Import Images', 'imp.status': 'IMAGE SEARCH IMPORT STATUS', 'imp.target': 'Import Target', 'imp.targetGroup': 'Target Group', 'imp.onImport': 'ON IMPORT',

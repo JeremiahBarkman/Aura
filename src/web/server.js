@@ -183,24 +183,29 @@ app.post('/record/text', async (req, res) => {
         return res.status(400).send('Text is required.');
     }
 
-    const result = await recordModeService.ingestManualText(rawText.trim());
+    try {
+        const result = await recordModeService.ingestManualText(rawText.trim());
+        const tp = result.textProducts;
+        const generatedImage = tp.generatedImage || {};
 
-res.send(`
-    <h1>Text Saved</h1>
-    <p>Saved source item ID: ${escapeHtml(result.sourceItemId)}</p>
-
-    <h2>Summary</h2>
-    <pre>${escapeHtml(result.textProducts.summaryText)}</pre>
-
-    <h2>Image Prompt</h2>
-    <pre>${escapeHtml(result.textProducts.imagePrompt)}</pre>
-
-    <h2>Cleaned Trigger Text</h2>
-    <pre>${escapeHtml(result.textProducts.cleanedTriggerText)}</pre>
-
-    <a href="/">Add more text</a>
-`);
-
+        // JSON so the Capture page can show the generated image + editable
+        // fields inline instead of doing a full-page form reload.
+        res.json({
+            success: true,
+            sourceItemId: result.sourceItemId,
+            rawText: rawText.trim(),
+            summaryText: tp.summaryText,
+            imagePrompt: tp.imagePrompt,
+            originalTriggerText: tp.originalTriggerText,
+            cleanedTriggerText: tp.cleanedTriggerText,
+            generatedImageId: tp.generatedImageId,
+            imagePath: generatedImage.storedPath || generatedImage.localPath || null,
+            workflowName: 'aura_background_api.json'
+        });
+    } catch (error) {
+        console.error('Generate draft record failed:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
 });
 
 // -----------------------------------------------------------------------------
