@@ -54,6 +54,20 @@ export class PsySegSegmentationProvider extends SegmentationProvider {
         this.transitionDurationMs = 0;
         this.transitionType = 'crossfade';
 
+        // PsySeg's blur/remove/replace effects each carry their own
+        // first-call setup cost -- an engine already warm from Blur still
+        // shows a raw/incorrect mask for several frames the first time
+        // replaceBackground() specifically is called. So warm-up is tracked
+        // PER EFFECT (this.warmedModes), not just once per render-loop start:
+        // every mode's first real use discards its first WARMUP_FRAME_COUNT
+        // frames instead of painting them. Empirically chosen (PsySeg exposes
+        // no "ready" signal) -- at ~25-30 FPS this is under half a second.
+        // Raise this if a raw/incorrect mask is still visible after a mode
+        // switch; lower it if the hold is noticeably longer than needed.
+        this.WARMUP_FRAME_COUNT = 15;
+        this.warmupFramesRemaining = 0;
+        this.warmedModes = new Set();
+        this.lastWarmupCheckedMode = null;
     }
 
     async initialize() {
@@ -102,12 +116,25 @@ await this.psyseg.init({
 
     async blurBackground() {
         this.renderMode = 'blur';
-        this.startRenderLoop();
+
+        // Only start the loop if it isn't already running -- calling
+        // startRenderLoop() while a loop is already active spawns a second,
+        // overlapping loop (its stop-check races the new loop's startup and
+        // usually loses), doubling per-frame PsySeg/canvas work. The already
+        // running loop picks up the new renderMode on its very next
+        // iteration, same as startBackgroundTransition() relies on for
+        // switching into 'replace' mode.
+        if (!this.isRunning) {
+            this.startRenderLoop();
+        }
     }
 
     async removeBackground() {
         this.renderMode = 'remove';
-        this.startRenderLoop();
+
+        if (!this.isRunning) {
+            this.startRenderLoop();
+        }
     }
 
     async replaceBackground(backgroundImage) {
@@ -126,8 +153,11 @@ await this.psyseg.init({
      *   'crossfade' - direct dissolve, old and new blended simultaneously.
      *   'fade'      - dip through black: old -> black -> new.
      *
-     * durationMs <= 0 (or no current background, or the render loop not yet
-     * running) swaps instantly.
+     * durationMs <= 0 swaps instantly. A null current background (the very
+     * first background of a session) is a valid transition source, not a
+     * reason to skip animating -- getTransitionBackgroundImageData already
+     * renders a null "from" as black, so this fades in from black instead of
+     * flashing the first image straight to the screen.
      */
     startBackgroundTransition(backgroundImage, durationMs = 0, transitionType = 'crossfade') {
         // Settle any in-flight crossfade to its target first, so a new
@@ -144,10 +174,7 @@ await this.psyseg.init({
         this.renderMode = 'replace';
         this.cachedBackgroundPixels = null;
 
-        const canAnimate =
-            durationMs > 0 &&
-            !!this.backgroundImage &&
-            this.isRunning;
+        const canAnimate = durationMs > 0;
 
         if (!canAnimate) {
             this.backgroundImage = backgroundImage;
@@ -166,8 +193,14 @@ await this.psyseg.init({
         this.transitionDurationMs = durationMs;
         this.transitionType = transitionType === 'fade' ? 'fade' : 'crossfade';
         this.transitionActive = true;
-        // The already-running render loop picks up the blended background on
-        // its next frame; no loop restart (restarting caused visible strobing).
+
+        // The render loop may not be running yet (the very first background
+        // of a session) -- start it so the transition actually gets rendered.
+        // Once running, the loop just picks up the blended background on its
+        // next frame; no loop restart (restarting caused visible strobing).
+        if (!this.isRunning) {
+            this.startRenderLoop();
+        }
     }
 
     startRenderLoop() {
@@ -236,6 +269,24 @@ await this.psyseg.init({
                 // scheduleNextFrame ALWAYS runs in the finally, so the loop
                 // survives any per-frame error.
                 try {
+                    // PsySeg needs a handful of frames after a mode's FIRST
+                    // real use before its segmentation mask is actually
+                    // valid for that specific effect -- an engine already
+                    // warm from Blur still shows a raw/incorrect mask for a
+                    // beat the first time replaceBackground() specifically
+                    // gets called. Tracked per mode (this.warmedModes), not
+                    // just once per render-loop start, so every mode's first
+                    // real frames get discarded instead of painted, whether
+                    // that happens at Start Camera or at a later mode switch.
+                    if (this.renderMode !== this.lastWarmupCheckedMode) {
+                        this.lastWarmupCheckedMode = this.renderMode;
+
+                        this.warmupFramesRemaining =
+                            this.warmedModes.has(this.renderMode)
+                                ? 0
+                                : this.WARMUP_FRAME_COUNT;
+                    }
+
                     if (!this.videoElement.videoWidth || !this.videoElement.videoHeight) {
                         return;
                     }
@@ -265,6 +316,14 @@ await this.psyseg.init({
                             erode: this.erodeLevel,
                             gamma: 0,
                             isRemoveBlob: true,
+                            // Dropped by a refactor that swapped in slider values but
+                            // lost the rest of this object literal -- without an
+                            // explicit backend, PsySeg falls back to a much slower
+                            // path for blur specifically (remove/replace never needed
+                            // this option, which is why only Blur's FPS collapsed).
+                            skipAlpha: false,
+                            worker: false,
+                            backend: 'webgl',
                             dstSize: { width, height }
                         });
                     }
@@ -290,31 +349,53 @@ await this.psyseg.init({
                     }
 
                     if (result && result.data) {
-                        const outputCtx =
-                            this.outputCtx ||
-                            this.canvasElement.getContext('2d', { willReadFrequently: true });
+                        if (this.warmupFramesRemaining > 0) {
+                            this.warmupFramesRemaining--;
 
-                        outputCtx.putImageData(result.data, 0, 0);
+                            // If a crossfade started while the engine was
+                            // still warming up (its first frames all get
+                            // discarded, below), its wall-clock timer would
+                            // otherwise keep ticking through frames nobody
+                            // ever saw -- so painting would resume with the
+                            // fade already partway through (or finished),
+                            // reading as "flashes off, then snaps back on"
+                            // instead of a fade. Keep pushing the transition's
+                            // start time forward every discarded frame so it
+                            // only starts counting once real painting resumes,
+                            // guaranteeing the full configured duration plays
+                            // out from a visible starting point.
+                            if (this.transitionActive) {
+                                this.transitionStartMs = performance.now();
+                            }
+                        } else {
+                            this.warmedModes.add(this.renderMode);
 
-                        // Hand the freshly composited pixels straight to the
-                        // frame-export sink -- the SAME data just painted, so
-                        // the export service needs no second canvas readback.
-                        if (window.__auraFrameSink) {
-                            window.__auraFrameSink.submitFrame(result.data, width, height);
+                            const outputCtx =
+                                this.outputCtx ||
+                                this.canvasElement.getContext('2d', { willReadFrequently: true });
+
+                            outputCtx.putImageData(result.data, 0, 0);
+
+                            // Hand the freshly composited pixels straight to the
+                            // frame-export sink -- the SAME data just painted, so
+                            // the export service needs no second canvas readback.
+                            if (window.__auraFrameSink) {
+                                window.__auraFrameSink.submitFrame(result.data, width, height);
+                            }
+
+                            // Signal downstream consumers (frame export) that a new
+                            // frame is available, so they can skip re-exporting an
+                            // unchanged canvas.
+                            this.canvasElement.__auraFrameId =
+                                (this.canvasElement.__auraFrameId || 0) + 1;
+
+                            // Stamp the background generation this frame was
+                            // composited with, so the output window can sync its
+                            // crossfade to the first frame that shows the new
+                            // background.
+                            this.canvasElement.__auraBackgroundGeneration =
+                                this.backgroundGeneration;
                         }
-
-                        // Signal downstream consumers (frame export) that a new
-                        // frame is available, so they can skip re-exporting an
-                        // unchanged canvas.
-                        this.canvasElement.__auraFrameId =
-                            (this.canvasElement.__auraFrameId || 0) + 1;
-
-                        // Stamp the background generation this frame was
-                        // composited with, so the output window can sync its
-                        // crossfade to the first frame that shows the new
-                        // background.
-                        this.canvasElement.__auraBackgroundGeneration =
-                            this.backgroundGeneration;
                     }
                 } catch (error) {
                     console.error('Segmentation render frame failed (continuing):', error);
