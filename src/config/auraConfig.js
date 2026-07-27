@@ -12,9 +12,9 @@ const defaultConfig = Object.freeze({
     cameraMode: '',
     displayMode: 'single',
     transitionType: 'fade',
-    transitionDurationMs: 600,
+    transitionDurationMs: 1800,
     minimumDisplayMs: 3000,
-    minimumMatchScore: 0.15,
+    minimumMatchScore: 0.45,
 
     // PsySeg segmentation edge/blur controls (Webcam Live View sliders).
     // psySegErode smooths the segmentation edge (blur/remove/replace);

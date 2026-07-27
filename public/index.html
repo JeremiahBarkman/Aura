@@ -3,7 +3,7 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
 :root{--bg:#0c0a08;--panel:#141009;--input:#0e0b07;--ghost:#1c150d;--b1:#221d19;--b2:#2a2420;--b3:#33291f;--b4:#4a3a22;--amber:#e3b57f;--amber2:#eec596;--text:#efe9e2;--secondary:#c4b8aa;--muted:#a1968a;--label:#8a7e70;--disabled:#5a4f44;--green:#8fd18a;--coral:#e08b7a}
 *{box-sizing:border-box}html{scrollbar-color:var(--b3) var(--bg);scrollbar-width:thin}*::-webkit-scrollbar{width:10px;height:10px}*::-webkit-scrollbar-track{background:var(--bg)}*::-webkit-scrollbar-thumb{background:var(--b3);border-radius:6px;border:2px solid var(--bg)}*::-webkit-scrollbar-thumb:hover{background:var(--b4)}html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',system-ui,sans-serif}body{overflow:hidden;background:radial-gradient(1100px 620px at 22% -12%,#191410 0%,#0c0a08 58%)}button,input,select,textarea{font:inherit}button{cursor:pointer}.app-shell{height:100vh;display:flex}.workspace-rail{width:216px;flex:0 0 216px;border-right:1px solid var(--b1);display:flex;flex-direction:column;padding:18px 14px;background:rgba(12,10,8,.72)}.brand{display:flex;flex-direction:column;align-items:center;gap:9px;padding:14px 8px 26px}.brand-logo{width:100%;max-width:168px;height:auto;object-fit:contain;filter:drop-shadow(0 0 14px rgba(227,181,127,.4))}.brand-sub{font:12px 'IBM Plex Mono';letter-spacing:.16em;color:var(--label)}.nav-item{width:100%;display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;margin-bottom:3px;border:1px solid transparent;background:transparent;color:var(--muted);text-align:left}.nav-item:hover{color:var(--text);border-color:var(--b3)}.nav-item.active{background:rgba(227,181,127,.1);border-color:rgba(227,181,127,.22);color:#f0d9bb;font-weight:600}.nav-glyph{width:9px;height:9px;border:1.5px solid var(--disabled);border-radius:2px}.nav-item.active .nav-glyph{border-color:var(--amber);background:var(--amber)}.output-card{margin-top:auto;border:1px solid var(--b1);background:var(--panel);border-radius:12px;padding:13px}.eyebrow{font:12px 'IBM Plex Mono';letter-spacing:.14em;color:var(--label)}.output-btn{width:100%;margin-top:8px;padding:8px 11px;border-radius:8px;border:1px solid var(--b3);background:var(--ghost);color:var(--secondary);text-align:left}.output-btn:hover{border-color:var(--amber);color:var(--text);background:var(--ghost)}.main-shell{flex:1;min-width:0;height:100vh}.workspace-view{height:100%;display:none;flex-direction:column;min-width:0}.workspace-view.active{display:flex}.view-header{height:60px;flex:0 0 60px;display:flex;align-items:center;padding:0 24px;border-bottom:1px solid var(--b1);gap:14px}.view-title{font-size:18px;font-weight:600}.view-sub{font:12px 'IBM Plex Mono';letter-spacing:.08em;color:var(--label);margin-top:2px}.header-actions{margin-left:auto;display:flex;align-items:center;gap:10px}.online-pill{display:flex;align-items:center;gap:9px;padding:7px 15px;border-radius:20px;border:1px solid var(--b2);background:var(--panel);font-size:14px;color:var(--secondary)}.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px rgba(143,209,138,.6)}.dot.offline{background:var(--coral);box-shadow:0 0 8px rgba(224,139,122,.6)}.status-row{display:flex;align-items:center;gap:9px;margin-bottom:4px}.status-row:last-child{margin-bottom:0}.scroll{overflow:auto;min-height:0}.studio-body{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 372px;min-height:0}.studio-main{padding:22px;display:flex;flex-direction:column;gap:18px;overflow:auto}.studio-side{border-left:1px solid var(--b1);padding:20px;overflow:auto}.panel{border:1px solid var(--b1);background:var(--panel);border-radius:14px;padding:16px}.panel-title{font-size:16px;font-weight:600;margin-bottom:12px}.hero-canvas{width:min(100%,81.7778vh);height:auto;aspect-ratio:16/9;max-height:none;margin-inline:auto;border-radius:16px;background:#05070a;border:1px solid var(--b1);box-shadow:0 30px 70px -30px rgba(0,0,0,.8);display:block}.two-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.active-visual-display{width:100%;aspect-ratio:16/9;min-height:180px;background:#05070a;border:1px solid var(--b2);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--label)}.active-visual-display img{max-width:100%;max-height:100%;object-fit:contain}.active-meta,.record-meta,.image-meta,.subtitle{font:13px 'IBM Plex Mono';color:var(--label);line-height:1.5}.field{margin-top:12px}.field-title,label{display:block;font-size:14px;color:var(--muted);margin-bottom:7px}input,select,textarea{width:100%;background:var(--input);color:var(--text);border:1px solid var(--b2);border-radius:8px;padding:9px 11px;outline:none}input:focus,select:focus,textarea:focus{border-color:var(--amber);box-shadow:0 0 0 2px rgba(227,181,127,.12)}input[type=range]{accent-color:var(--amber);padding:0}.button-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}button{padding:9px 13px;border-radius:8px;border:1px solid var(--b4);background:var(--amber);color:#1a1206;font-weight:600}button:hover{background:var(--amber2)}button.secondary{background:var(--ghost);border-color:var(--b3);color:var(--secondary);font-weight:400}button.secondary:hover{border-color:var(--amber);color:var(--text);background:var(--ghost)}button.danger,.delete-button{background:rgba(224,139,122,.1);border-color:#5a3a34;color:var(--coral)}button:disabled{opacity:.45;cursor:not-allowed}.status-box,.field-content,#audioStatus,#manualStatus,#livePlayStatus,#rollingTranscript{background:var(--input);border:1px solid var(--b2);border-radius:8px;padding:11px;white-space:pre-wrap;min-height:42px;color:var(--secondary)}
-.log-view{background:var(--input);border:1px solid var(--b2);border-radius:8px;padding:11px;margin:0 0 10px;height:340px;overflow:auto;white-space:pre;font:12px 'IBM Plex Mono';color:var(--secondary);tab-size:4}#activePlayMatch{background:transparent;border:0;padding:0;min-height:0}.terminal-label{font:12px 'IBM Plex Mono';letter-spacing:.12em;color:var(--label);margin:14px 0 7px}.activity-footer{height:176px;flex:0 0 176px;border-top:1px solid var(--b1);display:grid;grid-template-columns:1fr 400px;background:rgba(12,10,8,.5)}.activity-log-wrap{padding:14px 22px;min-width:0}.system-wrap{border-left:1px solid var(--b1);padding:14px 22px;display:flex;flex-direction:column;min-height:0}#auraActivityLog{height:120px;overflow:auto;white-space:pre-wrap;font:14px/1.8 'IBM Plex Mono';color:var(--secondary)}#systemStatus{flex:1;min-height:0;overflow:auto;font:14px/1.4 'IBM Plex Mono';color:var(--secondary)}.library-layout{flex:1;display:grid;grid-template-columns:236px 1fr;min-height:0}.filter-rail{border-right:1px solid var(--b1);padding:18px 14px;overflow:auto}.library-content{padding:22px;overflow:auto}.records-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}.record-card{border:1px solid var(--b1);background:var(--panel);border-radius:14px;padding:14px;min-width:0}.record-card h3{margin:6px 0 10px;font-size:16px}.record-status-badge{display:inline-flex;padding:3px 9px;border-radius:20px;font:12px 'IBM Plex Mono';letter-spacing:.06em}.record-status-complete{background:#12301d;color:#7ee7a5;border:1px solid #2e7d4f}.record-status-draft{background:#3a2a12;color:#e0b15c;border:1px solid #7d5a1f}.image-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}.image-tile{background:var(--input);border:1px solid var(--b2);border-radius:9px;padding:8px}.generated-image{width:100%;aspect-ratio:16/9;object-fit:contain;background:#05070a;border-radius:7px}.image-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.image-actions button{padding:6px 8px;font-size:13px}.edit-icon{padding:2px 7px;margin-left:6px}.edit-actions{display:flex;gap:8px;margin-top:8px}.edit-textarea{min-height:100px}.capture-body,.import-body,.settings-body{padding:22px;overflow:auto;min-height:0}.capture-grid{display:grid;grid-template-columns:minmax(280px,1fr) minmax(320px,1.4fr) minmax(280px,1fr);gap:20px;align-items:start}.stack{display:flex;flex-direction:column;gap:16px}.pipeline{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}.pipe-step{font:13px 'IBM Plex Mono';padding:6px 13px;border-radius:20px;border:1px solid var(--b3);color:var(--label)}.pipe-step.active{background:#2a2016;border-color:var(--b4);color:var(--amber)}.pipe-step.pulsing{background:#2a2016;border-color:var(--amber);color:var(--amber);animation:auraPulse 1.1s ease-in-out infinite}@keyframes auraSpin{to{transform:rotate(360deg)}}.aura-spinner{display:inline-block;width:15px;height:15px;border:2px solid var(--b3);border-top-color:var(--amber);border-radius:50%;animation:auraSpin .8s linear infinite;vertical-align:middle;margin-left:10px}.gen-image-card{margin-top:4px}.gen-image-card img{width:100%;aspect-ratio:16/9;object-fit:contain;background:#05070a;border:1px solid var(--b2);border-radius:10px;display:block}.file-chip{display:inline-flex;align-items:center;gap:7px;margin-top:8px;padding:5px 10px;background:var(--input);border:1px solid var(--b2);border-radius:8px;font:13px 'IBM Plex Mono';color:var(--secondary);max-width:100%}.file-chip .file-chip-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.file-chip .file-chip-x{cursor:pointer;border:0;background:transparent;color:var(--coral);font-weight:700;padding:0 2px;font-size:15px;line-height:1}.aura-toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(8px);background:#12301d;color:#7ee7a5;border:1px solid #2e7d4f;border-radius:10px;padding:11px 18px;font:14px 'IBM Plex Sans',sans-serif;box-shadow:0 12px 30px -10px rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:2000}.aura-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}.aura-toast.warn{background:#3a2a12;color:#e0b15c;border-color:#7d5a1f}.import-grid{display:grid;grid-template-columns:1fr 300px;min-height:0;flex:1}.import-main{padding:22px;overflow:auto}.import-side{border-left:1px solid var(--b1);padding:22px;background:rgba(12,10,8,.4)}.db-manager-overlay{position:static;inset:auto;background:transparent;padding:0;z-index:auto}.db-manager-overlay[hidden]{display:none!important}.db-manager-window{height:100%;background:transparent;border:0;border-radius:0;display:flex;flex-direction:column;gap:14px;padding:22px;box-shadow:none}.db-manager-header{display:flex;align-items:flex-start;gap:16px}.db-manager-header button{margin-left:auto}.db-manager-toolbar{display:flex;gap:10px;flex-wrap:wrap}.db-toolbar-section{background:var(--panel);border:1px solid var(--b1);border-radius:12px;padding:12px;min-width:220px}.db-manager-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}.db-stat-card{background:var(--panel);border:1px solid var(--b1);border-radius:12px;padding:14px}.db-stat-value{font-size:24px;font-weight:700}.db-stat-label{font-size:13px;color:var(--label)}.db-manager-table-area{min-height:0;overflow:auto;border:1px solid var(--b1);border-radius:12px;background:#100c07}.db-table{width:100%;border-collapse:collapse;font-size:15px}.db-table th,.db-table td{padding:10px 12px;border-bottom:1px solid #1a1611;text-align:left;white-space:nowrap}.db-table th{position:sticky;top:0;background:var(--input);font:12px 'IBM Plex Mono';letter-spacing:.1em;color:var(--label)}.db-manager-record-checkbox{width:auto}.db-thumbnail{width:56px;height:32px;object-fit:cover;border-radius:5px}.db-move-select-wrap{min-width:220px}.settings-card{max-width:760px;margin-bottom:20px}.hidden{display:none!important}@keyframes auraPulse{0%,100%{opacity:1}50%{opacity:.32}}@media(max-width:1100px){.studio-body{grid-template-columns:1fr}.studio-side{border-left:0;border-top:1px solid var(--b1)}.capture-grid{grid-template-columns:1fr}.activity-footer{grid-template-columns:1fr;height:auto}.system-wrap{border-left:0;border-top:1px solid var(--b1)}}
+.log-view{background:var(--input);border:1px solid var(--b2);border-radius:8px;padding:11px;margin:0 0 10px;height:340px;overflow:auto;white-space:pre;font:12px 'IBM Plex Mono';color:var(--secondary);tab-size:4}#activePlayMatch{background:transparent;border:0;padding:0;min-height:0}.terminal-label{font:12px 'IBM Plex Mono';letter-spacing:.12em;color:var(--label);margin:14px 0 7px}.activity-footer{height:176px;flex:0 0 176px;border-top:1px solid var(--b1);display:grid;grid-template-columns:1fr 400px;background:rgba(12,10,8,.5)}.activity-log-wrap{padding:14px 22px;min-width:0}.system-wrap{border-left:1px solid var(--b1);padding:14px 22px;display:flex;flex-direction:column;min-height:0}#auraActivityLog{height:120px;overflow:auto;white-space:pre-wrap;font:14px/1.8 'IBM Plex Mono';color:var(--secondary)}#systemStatus{flex:1;min-height:0;overflow:auto;font:14px/1.4 'IBM Plex Mono';color:var(--secondary)}.library-layout{flex:1;display:grid;grid-template-columns:236px 1fr;min-height:0}.filter-rail{border-right:1px solid var(--b1);padding:18px 14px;overflow:auto}.library-content{padding:22px;overflow:auto}.records-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}.record-card{border:1px solid var(--b1);background:var(--panel);border-radius:14px;padding:14px;min-width:0}.record-card h3{margin:6px 0 10px;font-size:16px}.record-status-badge{display:inline-flex;padding:3px 9px;border-radius:20px;font:12px 'IBM Plex Mono';letter-spacing:.06em}.record-status-complete{background:#12301d;color:#7ee7a5;border:1px solid #2e7d4f}.record-status-draft{background:#3a2a12;color:#e0b15c;border:1px solid #7d5a1f}.image-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}.image-tile{background:var(--input);border:1px solid var(--b2);border-radius:9px;padding:8px}.generated-image{width:100%;aspect-ratio:16/9;object-fit:contain;background:#05070a;border-radius:7px}.image-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.image-actions button{padding:6px 8px;font-size:13px}.edit-icon{padding:2px 7px;margin-left:6px}.edit-actions{display:flex;gap:8px;margin-top:8px}.edit-textarea{min-height:100px}.capture-body,.import-body,.settings-body{padding:22px;overflow:auto;min-height:0}.capture-grid{display:grid;grid-template-columns:minmax(280px,1fr) minmax(320px,1.4fr) minmax(280px,1fr);gap:20px;align-items:start}.stack{display:flex;flex-direction:column;gap:16px}.pipeline{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}.pipe-step{font:13px 'IBM Plex Mono';padding:6px 13px;border-radius:20px;border:1px solid var(--b3);color:var(--label)}.pipe-step.active{background:#2a2016;border-color:var(--b4);color:var(--amber)}.pipe-step.pulsing{background:#2a2016;border-color:var(--amber);color:var(--amber);animation:auraPulse 1.1s ease-in-out infinite}@keyframes auraSpin{to{transform:rotate(360deg)}}.aura-spinner{display:inline-block;width:15px;height:15px;border:2px solid var(--b3);border-top-color:var(--amber);border-radius:50%;animation:auraSpin .8s linear infinite;vertical-align:middle;margin-left:10px}.mic-indicator{color:var(--amber);vertical-align:middle;animation:auraPulse 1.1s ease-in-out infinite}.gen-image-card{margin-top:4px}.gen-image-card img{width:100%;aspect-ratio:16/9;object-fit:contain;background:#05070a;border:1px solid var(--b2);border-radius:10px;display:block}.file-chip{display:inline-flex;align-items:center;gap:7px;margin-top:8px;padding:5px 10px;background:var(--input);border:1px solid var(--b2);border-radius:8px;font:13px 'IBM Plex Mono';color:var(--secondary);max-width:100%}.file-chip .file-chip-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.file-chip .file-chip-x{cursor:pointer;border:0;background:transparent;color:var(--coral);font-weight:700;padding:0 2px;font-size:15px;line-height:1}.aura-toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(8px);background:#12301d;color:#7ee7a5;border:1px solid #2e7d4f;border-radius:10px;padding:11px 18px;font:14px 'IBM Plex Sans',sans-serif;box-shadow:0 12px 30px -10px rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:2000}.aura-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}.aura-toast.warn{background:#3a2a12;color:#e0b15c;border-color:#7d5a1f}.import-grid{display:grid;grid-template-columns:1fr 300px;min-height:0;flex:1}.import-main{padding:22px;overflow:auto}.import-side{border-left:1px solid var(--b1);padding:22px;background:rgba(12,10,8,.4)}.db-manager-overlay{position:static;inset:auto;background:transparent;padding:0;z-index:auto}.db-manager-overlay[hidden]{display:none!important}.db-manager-window{height:100%;background:transparent;border:0;border-radius:0;display:flex;flex-direction:column;gap:14px;padding:22px;box-shadow:none}.db-manager-header{display:flex;align-items:flex-start;gap:16px}.db-manager-header button{margin-left:auto}.db-manager-toolbar{display:flex;gap:10px;flex-wrap:wrap}.db-toolbar-section{background:var(--panel);border:1px solid var(--b1);border-radius:12px;padding:12px;min-width:220px}.db-manager-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}.db-stat-card{background:var(--panel);border:1px solid var(--b1);border-radius:12px;padding:14px}.db-stat-value{font-size:24px;font-weight:700}.db-stat-label{font-size:13px;color:var(--label)}.db-manager-table-area{min-height:0;overflow:auto;border:1px solid var(--b1);border-radius:12px;background:#100c07}.db-table{width:100%;border-collapse:collapse;font-size:15px}.db-table th,.db-table td{padding:10px 12px;border-bottom:1px solid #1a1611;text-align:left;white-space:nowrap}.db-table th{position:sticky;top:0;background:var(--input);font:12px 'IBM Plex Mono';letter-spacing:.1em;color:var(--label)}.db-manager-record-checkbox{width:auto}.db-thumbnail{width:56px;height:32px;object-fit:cover;border-radius:5px}.db-move-select-wrap{min-width:220px}.settings-card{max-width:760px;margin-bottom:20px}.hidden{display:none!important}@keyframes auraPulse{0%,100%{opacity:1}50%{opacity:.32}}@media(max-width:1100px){.studio-body{grid-template-columns:1fr}.studio-side{border-left:0;border-top:1px solid var(--b1)}.capture-grid{grid-template-columns:1fr}.activity-footer{grid-template-columns:1fr;height:auto}.system-wrap{border-left:0;border-top:1px solid var(--b1)}}
 
 /* 1080p full-screen Studio fit: keep all primary controls visible without scrolling. */
 @media (min-width:1101px) and (min-height:800px){
@@ -78,7 +78,7 @@
    <div class="panel"><div class="eyebrow" data-i18n="transcript.rolling">ROLLING TRANSCRIPT</div><div id="rollingTranscript" style="margin-top:10px">No speech captured yet.</div></div>
   </div>
   <aside class="studio-side">
-   <div class="panel"><div class="panel-title" data-i18n="play.title">Play Mode</div><label data-i18n="play.group">Active Play Mode Group</label><select id="activeGroupSelect" onchange="setActiveGroupFromSelect()"><option value="" data-i18n="play.allComplete">All Complete Records</option></select><label data-i18n="play.mic">Microphone</label><select id="microphoneDeviceSelect"></select>
+   <div class="panel"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><div class="panel-title" style="margin:0" data-i18n="play.title">Play Mode</div><svg id="playModeMicIndicator" class="mic-indicator" style="display:none" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title data-i18n="play.listening">Play Mode is listening</title><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg></div><label data-i18n="play.group">Active Play Mode Group</label><select id="activeGroupSelect" onchange="setActiveGroupFromSelect()"><option value="" data-i18n="play.allComplete">All Complete Records</option></select><label data-i18n="play.mic">Microphone</label><select id="microphoneDeviceSelect"></select>
     <div class="button-row"><button id="localWhisperStartBtn" onclick="startLocalWhisperPlayMode()" data-i18n="play.start">Start Play Mode</button><button id="localWhisperStopBtn" class="danger" onclick="stopLocalWhisperPlayMode()" disabled data-i18n="play.stop">Stop</button></div>
     <div class="terminal-label" data-i18n="play.status">LIVE PLAY STATUS</div><div id="livePlayStatus">Play Mode is stopped.</div>
    </div>
@@ -86,9 +86,9 @@
    <div class="panel"><div class="panel-title" data-i18n="disp.title">Display &amp; Transition</div>
     <label data-i18n="disp.mode">Display Mode</label><select id="displayMode" onchange="handleDisplaySettingsChanged()"><option value="single" data-i18n="disp.img1">1 Image</option><option value="dual" data-i18n="disp.img2">2 Images</option><option value="triple" data-i18n="disp.img3">3 Images</option><option value="aura" data-i18n="disp.aura">Aura Mode</option></select>
     <label data-i18n="disp.transition">Transition Type</label><select id="transitionType" onchange="handleDisplaySettingsChanged()"><option value="instant" data-i18n="disp.instant">Instant</option><option value="fade" data-i18n="disp.fade">Fade</option><option value="crossfade" data-i18n="disp.crossfade">Crossfade</option></select>
-    <label><span data-i18n="disp.duration">Transition Duration</span> <span id="transitionDurationValue">600</span>ms</label><input id="transitionDurationMs" type="range" min="100" max="2000" value="600" step="100" oninput="transitionDurationValue.textContent=this.value;handleDisplaySettingsChanged()">
+    <label><span data-i18n="disp.duration">Transition Duration</span> <span id="transitionDurationValue">1800</span>ms</label><input id="transitionDurationMs" type="range" min="100" max="2000" value="1800" step="100" oninput="transitionDurationValue.textContent=this.value;handleDisplaySettingsChanged()">
     <label><span data-i18n="disp.minDisplay">Minimum Display Time</span> <span id="minimumDisplayValue">3000</span>ms</label><input id="minimumDisplayMs" type="range" min="0" max="15000" value="3000" step="500" oninput="minimumDisplayValue.textContent=this.value;handleDisplaySettingsChanged()">
-    <label><span data-i18n="disp.minScore">Minimum Match Score</span> <span id="minimumMatchScoreValue">0.15</span></label><input id="minimumMatchScore" type="range" min="0" max="1" value="0.15" step=".05" oninput="minimumMatchScoreValue.textContent=this.value;handleDisplaySettingsChanged()">
+    <label><span data-i18n="disp.minScore">Minimum Match Score</span> <span id="minimumMatchScoreValue">0.45</span></label><input id="minimumMatchScore" type="range" min="0" max="1" value="0.45" step=".05" oninput="minimumMatchScoreValue.textContent=this.value;handleDisplaySettingsChanged()">
    </div>
   </aside>
  </div>
@@ -305,7 +305,6 @@ let cameraSceneFollowTimer = null;
 let lastCameraSceneKey = '';
 let cameraSceneSyncInProgress = false;
 let cameraSceneSyncStartedAt = 0;
-let lastCameraSceneImage = null;
 let auraBroadcastMirrorStarted = false;
 let auraBroadcastMirrorRunning = false;
 let auraOutputChannel = null;
@@ -625,7 +624,7 @@ function saveDisplaySettings() {
 
     const transitionDurationMs =
         Number(
-            document.getElementById('transitionDurationMs')?.value || 600
+            document.getElementById('transitionDurationMs')?.value || 1800
         );
 
     const minimumDisplayMs =
@@ -635,7 +634,7 @@ function saveDisplaySettings() {
 
     const minimumMatchScore =
         Number(
-            document.getElementById('minimumMatchScore')?.value || 0.15
+            document.getElementById('minimumMatchScore')?.value || 0.45
         );
 
     patchAuraConfig({
@@ -971,7 +970,7 @@ function setActiveVisual(imageUrl, metaText) {
     const display = document.getElementById('activeVisualDisplay');
     const meta = document.getElementById('activeVisualMeta');
     const transitionType = document.getElementById('transitionType').value;
-    const duration = Number(document.getElementById('transitionDurationMs').value || 600);
+    const duration = Number(document.getElementById('transitionDurationMs').value || 1800);
 
     display.style.transition = `opacity ${duration}ms ease`;
     display.style.opacity = 1;
@@ -2064,16 +2063,6 @@ window.startAuraCamera = async function () {
             'success'
         );
 
-        if (
-            window.auraElectron.openOutputWindow
-        ) {
-            updateAuraActivity(
-                'Opening Aura Output window...'
-            );
-
-            await window.auraElectron.openOutputWindow();
-        }
-
         const video =
             document.getElementById(
                 'auraLiveVideo'
@@ -2357,14 +2346,32 @@ async function renderActiveSceneToCameraImage(scene) {
 }
 
 async function imageFromCanvas(canvas) {
+    // canvas.toDataURL() synchronously encodes the whole frame to a base64
+    // PNG string on the main thread, then assigning it to img.src makes the
+    // browser decode that PNG right back into pixels -- a blocking
+    // encode-then-decode round trip. Before per-record image rotation and
+    // the all-slots rotation fix, this rarely ran (a repeated match kept the
+    // same scene, so a dedup check upstream skipped re-rendering). Now that
+    // a live conversation legitimately rotates slots every ~3s, this runs
+    // continuously, and toDataURL's blocking encode was stalling the main
+    // thread often enough to make dropdowns/text fields feel unresponsive.
+    // canvas.toBlob() encodes off the synchronous call stack, avoiding the
+    // stall, and object URLs skip the base64 overhead entirely.
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    const objectUrl = URL.createObjectURL(blob);
+
     const image =
         new Image();
 
-    await new Promise((resolve, reject) => {
-        image.onload = resolve;
-        image.onerror = reject;
-        image.src = canvas.toDataURL('image/png');
-    });
+    try {
+        await new Promise((resolve, reject) => {
+            image.onload = resolve;
+            image.onerror = reject;
+            image.src = objectUrl;
+        });
+    } finally {
+        URL.revokeObjectURL(objectUrl);
+    }
 
     return image;
 }
@@ -2416,7 +2423,7 @@ function getCameraTransitionSettings(scene) {
 
     const durationMs =
         transitionDurationInput
-            ? Number(transitionDurationInput.value || 600)
+            ? Number(transitionDurationInput.value || 1800)
             : Number(scene?.transition?.durationMs || 600);
 
     return {
@@ -2427,7 +2434,6 @@ function getCameraTransitionSettings(scene) {
 }
 
 async function transitionCameraBackground(
-    fromImage,
     toImage,
     scene,
     sceneKey
@@ -2442,9 +2448,13 @@ async function transitionCameraBackground(
         the Aura Output window all show the identical transition -- previously
         only the separate output window faded, so the actual camera output
         just hard-cut. No loop restart is used, so there is no strobing.
+
+        No fromImage (the very first scene of a session) is NOT a reason to
+        skip animating -- the provider treats a missing "from" as black, so
+        this is what makes the first image fade in from black instead of
+        flashing straight to the screen.
     */
     const animate =
-        Boolean(fromImage) &&
         settings.type !== 'instant' &&
         settings.durationMs > 0;
 
@@ -2454,7 +2464,6 @@ async function transitionCameraBackground(
         settings.type
     );
 
-    lastCameraSceneImage = toImage;
     lastCameraSceneKey = sceneKey;
 }
 
@@ -2528,7 +2537,6 @@ async function syncCameraToActiveScene(scene = null) {
             await renderActiveSceneToCameraImage(displayScene);
 
         await transitionCameraBackground(
-            lastCameraSceneImage,
             sceneImage,
             displayScene,
             sceneKey
@@ -2617,14 +2625,13 @@ async function replaceAuraBackground(imageUrl) {
     });
 
     await transitionCameraBackground(
-        lastCameraSceneImage,
         image,
         {
             sceneMode: 'single',
             slots: [],
             transition: {
                 type: document.getElementById('transitionType')?.value || 'crossfade',
-                durationMs: Number(document.getElementById('transitionDurationMs')?.value || 600)
+                durationMs: Number(document.getElementById('transitionDurationMs')?.value || 1800)
             }
         },
         `direct:${imageUrl}`
@@ -2772,6 +2779,7 @@ localWhisperStream = await navigator.mediaDevices.getUserMedia({
 
     document.getElementById('localWhisperStartBtn').disabled = true;
     document.getElementById('localWhisperStopBtn').disabled = false;
+    document.getElementById('playModeMicIndicator').style.display = 'inline-block';
 
     statusBox.textContent = t('play.listening');
 
@@ -2804,6 +2812,7 @@ window.stopLocalWhisperPlayMode = function () {
 
     document.getElementById('localWhisperStartBtn').disabled = false;
     document.getElementById('localWhisperStopBtn').disabled = true;
+    document.getElementById('playModeMicIndicator').style.display = 'none';
 
     window.stopCameraSceneFollow();
 
