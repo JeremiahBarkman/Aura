@@ -272,6 +272,14 @@ app.get('/api/records/full', (req, res) => {
             ? null
             : Number(rawGroupId);
 
+    // Optional additional filter (e.g. 'image_search_import') so a page like
+    // Image Search can show only the records it created, using the exact
+    // same query/response shape the Library page already relies on.
+    const sourceType =
+        req.query.sourceType
+            ? String(req.query.sourceType)
+            : null;
+
     // The record limit must apply BEFORE the image join: a LIMIT on the
     // joined result counts rows (one per image), so a plain LIMIT 500 both
     // returns fewer than 500 records and can truncate the last record's
@@ -289,6 +297,15 @@ app.get('/api/records/full', (req, res) => {
         recordFilter = `WHERE record_status IS NULL OR record_status != 'complete'`;
     } else if (view === 'all-records') {
         // no filter
+    }
+
+    if (sourceType) {
+        recordFilter +=
+            recordFilter
+                ? ' AND source_type = ?'
+                : 'WHERE source_type = ?';
+
+        params.push(sourceType);
     }
 
     const sql = `

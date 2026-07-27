@@ -57,6 +57,7 @@ en: {
     'imp.title': 'Image Search', 'imp.searchImport': 'Search and Import', 'imp.query': 'Search Query', 'imp.queryPh': 'Example: transformer architecture diagram', 'imp.batch': 'Batch Size',
     'imp.import': 'Import Images', 'imp.status': 'IMAGE SEARCH IMPORT STATUS', 'imp.target': 'Import Target', 'imp.targetGroup': 'Target Group', 'imp.onImport': 'ON IMPORT',
     'imp.onImportHint': 'Each downloaded image becomes a new draft record. Source metadata is retained and the record can be completed in Capture or Library.',
+    'imp.imported': 'Imported Records',
     'db.title': 'DB Manager', 'db.sub': 'SPREADSHEET RECORD MANAGEMENT', 'db.close': 'Close', 'db.view': 'View', 'db.refresh': 'Refresh', 'db.filterGroup': 'Filter Group', 'db.allGroups': 'All Groups',
     'db.deleteGroup': 'Delete Current Group', 'db.cancel': 'Cancel', 'db.selection': 'Selection', 'db.selectAll': 'Select All', 'db.clear': 'Clear', 'db.bulk': 'Bulk Actions', 'db.moveTo': 'Move To',
     'db.moveSelected': 'Move Selected', 'db.markComplete': 'Mark Complete', 'db.delete': 'Delete', 'db.portability': 'Portability', 'db.exportSelected': 'Export Selected', 'db.exportGroup': 'Export Group',
