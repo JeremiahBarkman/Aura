@@ -60,7 +60,7 @@ en: {
     'imp.imported': 'Imported Records',
     'db.title': 'DB Manager', 'db.sub': 'SPREADSHEET RECORD MANAGEMENT', 'db.close': 'Close', 'db.view': 'View', 'db.refresh': 'Refresh', 'db.filterGroup': 'Filter Group', 'db.allGroups': 'All Groups',
     'db.deleteGroup': 'Delete Current Group', 'db.cancel': 'Cancel', 'db.selection': 'Selection', 'db.selectAll': 'Select All', 'db.clear': 'Clear', 'db.bulk': 'Bulk Actions', 'db.moveTo': 'Move To',
-    'db.moveSelected': 'Move Selected', 'db.markComplete': 'Mark Complete', 'db.delete': 'Delete', 'db.portability': 'Portability', 'db.exportSelected': 'Export Selected', 'db.exportGroup': 'Export Group',
+    'db.moveSelected': 'Move Selected', 'db.markComplete': 'Mark Complete', 'db.delete': 'Delete', 'db.portability': 'Portability', 'db.exportSelected': 'Export Selected', 'db.exportGroup': 'Export Group', 'db.exportAll': 'Export Database',
     'db.importPackage': 'Import Package', 'db.maintenance': 'Maintenance', 'db.trash': 'View Trash', 'db.purge': 'Purge Deleted Images',
     'db.statTotal': 'Total Records', 'db.statComplete': 'Complete', 'db.statDrafts': 'Drafts', 'db.statGroups': 'Groups', 'db.statImages': 'Images',
     'set.title': 'Settings', 'set.sub': 'DEVICES · DISPLAY · PRESENTATION', 'set.devices': 'Devices', 'set.camera': 'Camera', 'set.mic': 'Microphone', 'set.presentation': 'Presentation',

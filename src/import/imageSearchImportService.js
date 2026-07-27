@@ -29,6 +29,8 @@ const {
     generateImageImportProducts
 } = require('./imageEnrichmentService');
 
+const stopwordService = require('../text/stopwordService');
+
 /**
  * Local directory for imported internet images.
  *
@@ -209,6 +211,7 @@ async function importImageSearchResult({
 
 let summaryText;
 let imagePrompt;
+let rawTriggerText;
 let cleanedTriggerText;
 let detectedLanguage = null;
 let enrichmentModelUsed = 'metadata-import-v1';
@@ -236,7 +239,7 @@ try {
             result
         });
 
-    cleanedTriggerText =
+    rawTriggerText =
         enrichment.trigger_candidate_text ||
         buildCleanedTriggerText({
             searchQuery,
@@ -263,12 +266,17 @@ try {
             result
         });
 
-    cleanedTriggerText =
+    rawTriggerText =
         buildCleanedTriggerText({
             searchQuery,
             result
         });
 }
+
+// Play Mode trigger matching depends on the top-50 stopwords being
+// stripped from every record's trigger text, same as the capture/draft
+// flow (recordModeService). Imported records must not skip this step.
+cleanedTriggerText = stopwordService.removeTop50StopWords(rawTriggerText);
 
     /**
      * Insert source item as DRAFT.
@@ -333,7 +341,7 @@ try {
         VALUES (?, ?, ?)
     `).run(
         sourceItemId,
-        cleanedTriggerText,
+        rawTriggerText,
         cleanedTriggerText
     );
 

@@ -29,6 +29,7 @@ const multer = require('multer');
 const db = require('../db/connection');
 const paths = require('../config/paths');
 const recordModeService = require('../record/recordModeService');
+const stopwordService = require('../text/stopwordService');
 
 const playModeService = require('../play/playModeService');
 
@@ -448,11 +449,15 @@ app.patch('/api/trigger-texts/:sourceItemId/cleaned-trigger-text', (req, res) =>
     const sourceItemId = Number(req.params.sourceItemId);
     const value = req.body.value || '';
 
+    // This field must never contain top-50 stopwords, same as the
+    // capture/draft flow (recordModeService) -- manual edits are no exception.
+    const cleanedValue = stopwordService.removeTop50StopWords(value.trim());
+
     db.prepare(`
         UPDATE trigger_texts
         SET cleaned_trigger_text = ?
         WHERE source_item_id = ?
-    `).run(value.trim(), sourceItemId);
+    `).run(cleanedValue, sourceItemId);
 
     // The cached trigger embedding no longer matches the edited text;
     // Play Mode re-embeds lazily on the next match.
@@ -516,6 +521,12 @@ app.post('/record/manual', manualImageUpload.single('image'), (req, res) => {
 
     const summaryId = summaryResult.lastInsertRowid;
 
+    // Same top-50 stopword strip applied by the capture/draft flow
+    // (recordModeService) -- manual records must match Play Mode's
+    // trigger matching expectations too.
+    const rawTriggerText = cleanedTriggerText.trim();
+    const strippedTriggerText = stopwordService.removeTop50StopWords(rawTriggerText);
+
     db.prepare(`
         INSERT INTO trigger_texts (
             source_item_id,
@@ -525,8 +536,8 @@ app.post('/record/manual', manualImageUpload.single('image'), (req, res) => {
         VALUES (?, ?, ?)
     `).run(
         sourceItemId,
-        cleanedTriggerText.trim(),
-        cleanedTriggerText.trim()
+        rawTriggerText,
+        strippedTriggerText
     );
 
     let generatedImageId = null;
@@ -1473,6 +1484,22 @@ app.post('/api/db-manager/export/selected', (req, res) => {
               AND deleted_at IS NULL
         `).all(...recordIds);
 
+        // Selected records may span several groups. Every group touched by
+        // the selection has to travel with the package so import can
+        // recreate those containers -- not just stamp the group's name onto
+        // each record's denormalized columns.
+        const groupIds = [...new Set(
+            records.map(record => record.group_id).filter(Boolean)
+        )];
+
+        const groups = groupIds.length
+            ? db.prepare(`
+                SELECT *
+                FROM library_groups
+                WHERE id IN (${groupIds.map(() => '?').join(',')})
+            `).all(...groupIds)
+            : [];
+
         const zip = new AdmZip();
 
         zip.addFile(
@@ -1480,6 +1507,7 @@ app.post('/api/db-manager/export/selected', (req, res) => {
             Buffer.from(JSON.stringify({
                 exportType: 'selected-records',
                 exportedAt: new Date().toISOString(),
+                groupCount: groups.length,
                 recordCount: records.length,
                 imageCount: images.length
             }, null, 2), 'utf8')
@@ -1488,6 +1516,7 @@ app.post('/api/db-manager/export/selected', (req, res) => {
         zip.addFile(
             'records.json',
             Buffer.from(JSON.stringify({
+                groups,
                 records,
                 summaries,
                 triggerTexts,
@@ -1613,6 +1642,7 @@ app.post('/api/db-manager/export/group', (req, res) => {
                 exportType: 'group',
                 exportedAt: new Date().toISOString(),
                 group,
+                groupCount: 1,
                 recordCount: records.length,
                 imageCount: images.length
             }, null, 2), 'utf8')
@@ -1622,6 +1652,7 @@ app.post('/api/db-manager/export/group', (req, res) => {
             'records.json',
             Buffer.from(JSON.stringify({
                 group,
+                groups: [group],
                 records,
                 summaries,
                 triggerTexts,
@@ -1665,6 +1696,123 @@ app.post('/api/db-manager/export/group', (req, res) => {
 
     } catch (error) {
         console.error('Export group failed:', error);
+
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// Exports every record, its images, and every library group in the
+// database as one portable package -- the same shape as export/selected
+// and export/group, just unfiltered. Only images still referenced by a
+// generated_images row are included, so orphaned files sitting in the
+// images folder (e.g. left behind by an interrupted operation) never
+// make it into the package.
+app.post('/api/db-manager/export/all', (req, res) => {
+    try {
+        const groups = db.prepare(`
+            SELECT *
+            FROM library_groups
+            ORDER BY id ASC
+        `).all();
+
+        const records = db.prepare(`
+            SELECT
+                si.*,
+                lg.name AS group_name,
+                lg.description AS group_description
+            FROM source_items si
+            LEFT JOIN library_groups lg
+                ON lg.id = si.group_id
+            ORDER BY si.id ASC
+        `).all();
+
+        if (!records.length) {
+            return res.status(400).json({
+                success: false,
+                error: 'There are no records to export.'
+            });
+        }
+
+        const recordIds = records.map(record => record.id);
+        const placeholders = recordIds.map(() => '?').join(',');
+
+        const summaries = db.prepare(`
+            SELECT *
+            FROM summaries
+            WHERE source_item_id IN (${placeholders})
+        `).all(...recordIds);
+
+        const triggerTexts = db.prepare(`
+            SELECT *
+            FROM trigger_texts
+            WHERE source_item_id IN (${placeholders})
+        `).all(...recordIds);
+
+        const images = db.prepare(`
+            SELECT *
+            FROM generated_images
+            WHERE source_item_id IN (${placeholders})
+              AND deleted_at IS NULL
+        `).all(...recordIds);
+
+        const zip = new AdmZip();
+
+        zip.addFile(
+            'manifest.json',
+            Buffer.from(JSON.stringify({
+                exportType: 'full-database',
+                exportedAt: new Date().toISOString(),
+                groupCount: groups.length,
+                recordCount: records.length,
+                imageCount: images.length
+            }, null, 2), 'utf8')
+        );
+
+        zip.addFile(
+            'records.json',
+            Buffer.from(JSON.stringify({
+                groups,
+                records,
+                summaries,
+                triggerTexts,
+                images
+            }, null, 2), 'utf8')
+        );
+
+        for (const image of images) {
+            if (!image.image_path || !fs.existsSync(image.image_path)) {
+                continue;
+            }
+
+            const imageFileName = path.basename(image.image_path);
+
+            zip.addLocalFile(
+                image.image_path,
+                'images',
+                `${image.id}-${imageFileName}`
+            );
+        }
+
+        const zipBuffer = zip.toBuffer();
+
+        const timestamp =
+            new Date().toISOString().replace(/[:.]/g, '-');
+
+        const fileName = `aura-export-full-${timestamp}.zip`;
+
+        res.setHeader('Content-Type', 'application/zip');
+        res.setHeader(
+            'Content-Disposition',
+            `attachment; filename="${fileName}"`
+        );
+
+        res.send(zipBuffer);
+
+    } catch (error) {
+        console.error('Export full database failed:', error);
 
         res.status(500).json({
             success: false,
@@ -1900,7 +2048,14 @@ app.post('/api/db-manager/import/package', importPackageUpload.single('package')
         const summaries = packageData.summaries || [];
         const triggerTexts = packageData.triggerTexts || [];
         const images = packageData.images || [];
-        const exportedGroup = packageData.group || null;
+
+        // packageData.groups (plural) is the current package format --
+        // export/selected and export/all can each carry several groups.
+        // packageData.group (singular) is kept for packages exported by
+        // the older single-group export before this existed.
+        const exportedGroups = Array.isArray(packageData.groups) && packageData.groups.length
+            ? packageData.groups
+            : (packageData.group && packageData.group.name ? [packageData.group] : []);
 
         if (!sourceRecords.length) {
             return res.status(400).json({
@@ -1909,48 +2064,12 @@ app.post('/api/db-manager/import/package', importPackageUpload.single('package')
             });
         }
 
-        let importedGroupId = null;
-        let importedGroupName = null;
-
-        if (exportedGroup && exportedGroup.name) {
-    const originalGroupName = exportedGroup.name;
-    const importDate = new Date().toISOString().slice(0, 10);
-
-    let groupName = originalGroupName;
-
-    const groupNameExists = (name) => {
-        return db.prepare(`
-            SELECT id
-            FROM library_groups
-            WHERE name = ?
-        `).get(name);
-    };
-
-    if (groupNameExists(groupName)) {
-        const baseName =
-            `${originalGroupName} (Imported ${importDate})`;
-
-        groupName = baseName;
-
-        let counter = 2;
-
-        while (groupNameExists(groupName)) {
-            groupName = `${baseName} ${counter}`;
-            counter++;
-        }
-    }
-
-    const groupResult = db.prepare(`
-        INSERT INTO library_groups (name, description)
-        VALUES (?, ?)
-    `).run(
-        groupName,
-        exportedGroup.description || ''
-    );
-
-    importedGroupId = groupResult.lastInsertRowid;
-    importedGroupName = groupName;
-}
+        // Maps each group's ORIGINAL id (from the exporting database) to
+        // the newly inserted group's id here, so every record can be
+        // reattached to its own group instead of one group being stamped
+        // onto the whole package.
+        const oldToNewGroupIds = new Map();
+        const importedGroupNames = [];
 
         const oldToNewSourceItemIds = new Map();
         const oldToNewSummaryIds = new Map();
@@ -1964,8 +2083,64 @@ app.post('/api/db-manager/import/package', importPackageUpload.single('package')
 
         let importedImageCount = 0;
 
+        // Everything below -- groups, records, summaries, trigger texts,
+        // images -- runs in one transaction. A package is one unit: if
+        // anything in it fails partway through, groups created for it
+        // must not survive as orphaned leftovers either.
         const importTransaction = db.transaction(() => {
+            const groupNameExists = (name) => {
+                return db.prepare(`
+                    SELECT id
+                    FROM library_groups
+                    WHERE name = ?
+                `).get(name);
+            };
+
+            const importDate = new Date().toISOString().slice(0, 10);
+
+            for (const sourceGroup of exportedGroups) {
+                if (!sourceGroup || !sourceGroup.name) {
+                    continue;
+                }
+
+                const originalGroupName = sourceGroup.name;
+                let groupName = originalGroupName;
+
+                if (groupNameExists(groupName)) {
+                    const baseName =
+                        `${originalGroupName} (Imported ${importDate})`;
+
+                    groupName = baseName;
+
+                    let counter = 2;
+
+                    while (groupNameExists(groupName)) {
+                        groupName = `${baseName} ${counter}`;
+                        counter++;
+                    }
+                }
+
+                const groupResult = db.prepare(`
+                    INSERT INTO library_groups (name, description)
+                    VALUES (?, ?)
+                `).run(
+                    groupName,
+                    sourceGroup.description || ''
+                );
+
+                if (sourceGroup.id !== undefined && sourceGroup.id !== null) {
+                    oldToNewGroupIds.set(Number(sourceGroup.id), groupResult.lastInsertRowid);
+                }
+
+                importedGroupNames.push(groupName);
+            }
+
             for (const record of sourceRecords) {
+                const newGroupId =
+                    record.group_id && oldToNewGroupIds.has(Number(record.group_id))
+                        ? oldToNewGroupIds.get(Number(record.group_id))
+                        : null;
+
                 const result = db.prepare(`
                     INSERT INTO source_items (
                         source_type,
@@ -1982,7 +2157,7 @@ app.post('/api/db-manager/import/package', importPackageUpload.single('package')
                     record.source_path || null,
                     record.duration_ms || null,
                     record.record_status || 'draft',
-                    importedGroupId
+                    newGroupId
                 );
 
                 oldToNewSourceItemIds.set(
@@ -2112,8 +2287,8 @@ app.post('/api/db-manager/import/package', importPackageUpload.single('package')
             importedSummaries: summaries.length,
             importedTriggerTexts: triggerTexts.length,
             importedImages: importedImageCount,
-            importedGroupId,
-            importedGroupName
+            importedGroupCount: importedGroupNames.length,
+            importedGroupNames
         });
 
     } catch (error) {

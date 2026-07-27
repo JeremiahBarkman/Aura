@@ -2,8 +2,8 @@
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Aura Studio</title><link rel="icon" type="image/png" href="/assets/favicon.png"><style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
 :root{--bg:#0c0a08;--panel:#141009;--input:#0e0b07;--ghost:#1c150d;--b1:#221d19;--b2:#2a2420;--b3:#33291f;--b4:#4a3a22;--amber:#e3b57f;--amber2:#eec596;--text:#efe9e2;--secondary:#c4b8aa;--muted:#a1968a;--label:#8a7e70;--disabled:#5a4f44;--green:#8fd18a;--coral:#e08b7a}
-*{box-sizing:border-box}html{scrollbar-color:var(--b3) var(--bg);scrollbar-width:thin}*::-webkit-scrollbar{width:10px;height:10px}*::-webkit-scrollbar-track{background:var(--bg)}*::-webkit-scrollbar-thumb{background:var(--b3);border-radius:6px;border:2px solid var(--bg)}*::-webkit-scrollbar-thumb:hover{background:var(--b4)}html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',system-ui,sans-serif}body{overflow:hidden;background:radial-gradient(1100px 620px at 22% -12%,#191410 0%,#0c0a08 58%)}button,input,select,textarea{font:inherit}button{cursor:pointer}.app-shell{height:100vh;display:flex}.workspace-rail{width:216px;flex:0 0 216px;border-right:1px solid var(--b1);display:flex;flex-direction:column;padding:18px 14px;background:rgba(12,10,8,.72)}.brand{display:flex;flex-direction:column;align-items:center;gap:9px;padding:14px 8px 26px}.brand-logo{width:100%;max-width:168px;height:auto;object-fit:contain;filter:drop-shadow(0 0 14px rgba(227,181,127,.4))}.brand-sub{font:12px 'IBM Plex Mono';letter-spacing:.16em;color:var(--label)}.nav-item{width:100%;display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;margin-bottom:3px;border:1px solid transparent;background:transparent;color:var(--muted);text-align:left}.nav-item:hover{color:var(--text);border-color:var(--b3)}.nav-item.active{background:rgba(227,181,127,.1);border-color:rgba(227,181,127,.22);color:#f0d9bb;font-weight:600}.nav-glyph{width:9px;height:9px;border:1.5px solid var(--disabled);border-radius:2px}.nav-item.active .nav-glyph{border-color:var(--amber);background:var(--amber)}.output-card{margin-top:auto;border:1px solid var(--b1);background:var(--panel);border-radius:12px;padding:13px}.eyebrow{font:12px 'IBM Plex Mono';letter-spacing:.14em;color:var(--label)}.output-btn{width:100%;margin-top:8px;padding:8px 11px;border-radius:8px;border:1px solid var(--b3);background:var(--ghost);color:var(--secondary);text-align:left}.output-btn:hover{border-color:var(--amber);color:var(--text);background:var(--ghost)}.main-shell{flex:1;min-width:0;height:100vh}.workspace-view{height:100%;display:none;flex-direction:column;min-width:0}.workspace-view.active{display:flex}.view-header{height:60px;flex:0 0 60px;display:flex;align-items:center;padding:0 24px;border-bottom:1px solid var(--b1);gap:14px}.view-title{font-size:18px;font-weight:600}.view-sub{font:12px 'IBM Plex Mono';letter-spacing:.08em;color:var(--label);margin-top:2px}.header-actions{margin-left:auto;display:flex;align-items:center;gap:10px}.online-pill{display:flex;align-items:center;gap:9px;padding:7px 15px;border-radius:20px;border:1px solid var(--b2);background:var(--panel);font-size:14px;color:var(--secondary)}.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px rgba(143,209,138,.6)}.dot.offline{background:var(--coral);box-shadow:0 0 8px rgba(224,139,122,.6)}.status-row{display:flex;align-items:center;gap:9px;margin-bottom:4px}.status-row:last-child{margin-bottom:0}.scroll{overflow:auto;min-height:0}.studio-body{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 372px;min-height:0}.studio-main{padding:22px;display:flex;flex-direction:column;gap:18px;overflow:auto}.studio-side{border-left:1px solid var(--b1);padding:20px;overflow:auto}.panel{border:1px solid var(--b1);background:var(--panel);border-radius:14px;padding:16px}.panel-title{font-size:16px;font-weight:600;margin-bottom:12px}.hero-canvas{width:min(100%,81.7778vh);height:auto;aspect-ratio:16/9;max-height:none;margin-inline:auto;border-radius:16px;background:#05070a;border:1px solid var(--b1);box-shadow:0 30px 70px -30px rgba(0,0,0,.8);display:block}.two-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.active-visual-display{width:100%;aspect-ratio:16/9;min-height:180px;background:#05070a;border:1px solid var(--b2);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--label)}.active-visual-display img{max-width:100%;max-height:100%;object-fit:contain}.active-meta,.record-meta,.image-meta,.subtitle{font:13px 'IBM Plex Mono';color:var(--label);line-height:1.5}.field{margin-top:12px}.field-title,label{display:block;font-size:14px;color:var(--muted);margin-bottom:7px}input,select,textarea{width:100%;background:var(--input);color:var(--text);border:1px solid var(--b2);border-radius:8px;padding:9px 11px;outline:none}input:focus,select:focus,textarea:focus{border-color:var(--amber);box-shadow:0 0 0 2px rgba(227,181,127,.12)}input[type=range]{accent-color:var(--amber);padding:0}.button-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}button{padding:9px 13px;border-radius:8px;border:1px solid var(--b4);background:var(--amber);color:#1a1206;font-weight:600}button:hover{background:var(--amber2)}button.secondary{background:var(--ghost);border-color:var(--b3);color:var(--secondary);font-weight:400}button.secondary:hover{border-color:var(--amber);color:var(--text);background:var(--ghost)}button.danger,.delete-button{background:rgba(224,139,122,.1);border-color:#5a3a34;color:var(--coral)}button:disabled{opacity:.45;cursor:not-allowed}.status-box,.field-content,#audioStatus,#manualStatus,#livePlayStatus,#rollingTranscript{background:var(--input);border:1px solid var(--b2);border-radius:8px;padding:11px;white-space:pre-wrap;min-height:42px;color:var(--secondary)}
-.log-view{background:var(--input);border:1px solid var(--b2);border-radius:8px;padding:11px;margin:0 0 10px;height:340px;overflow:auto;white-space:pre;font:12px 'IBM Plex Mono';color:var(--secondary);tab-size:4}#activePlayMatch{background:transparent;border:0;padding:0;min-height:0}.terminal-label{font:12px 'IBM Plex Mono';letter-spacing:.12em;color:var(--label);margin:14px 0 7px}.activity-footer{height:192px;flex:0 0 192px;border-top:1px solid var(--b1);display:grid;grid-template-columns:1fr 400px;background:rgba(12,10,8,.5)}.activity-log-wrap{padding:14px 22px;min-width:0}.system-wrap{border-left:1px solid var(--b1);padding:14px 22px;display:flex;flex-direction:column;min-height:0}#auraActivityLog{height:120px;overflow:auto;white-space:pre-wrap;font:14px/1.8 'IBM Plex Mono';color:var(--secondary)}#systemStatus{flex:1;min-height:0;overflow:auto;font:14px/1.4 'IBM Plex Mono';color:var(--secondary)}.library-layout{flex:1;display:grid;grid-template-columns:236px 1fr;min-height:0}.filter-rail{border-right:1px solid var(--b1);padding:18px 14px;overflow:auto}.library-content{padding:22px;overflow:auto}.records-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}.record-card{border:1px solid var(--b1);background:var(--panel);border-radius:14px;padding:14px;min-width:0}.record-card h3{margin:6px 0 10px;font-size:16px}.record-status-badge{display:inline-flex;padding:3px 9px;border-radius:20px;font:12px 'IBM Plex Mono';letter-spacing:.06em}.record-status-complete{background:#12301d;color:#7ee7a5;border:1px solid #2e7d4f}.record-status-draft{background:#3a2a12;color:#e0b15c;border:1px solid #7d5a1f}.image-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}.image-tile{background:var(--input);border:1px solid var(--b2);border-radius:9px;padding:8px}.generated-image{width:100%;aspect-ratio:16/9;object-fit:contain;background:#05070a;border-radius:7px}.image-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.image-actions button{padding:6px 8px;font-size:13px}.edit-icon{padding:2px 7px;margin-left:6px}.edit-actions{display:flex;gap:8px;margin-top:8px}.edit-textarea{min-height:100px}.capture-body,.import-body,.settings-body{padding:22px;overflow:auto;min-height:0}.capture-grid{display:grid;grid-template-columns:minmax(280px,1fr) minmax(320px,1.4fr) minmax(280px,1fr);gap:20px;align-items:start}.stack{display:flex;flex-direction:column;gap:16px}.pipeline{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}.pipe-step{font:13px 'IBM Plex Mono';padding:6px 13px;border-radius:20px;border:1px solid var(--b3);color:var(--label)}.pipe-step.active{background:#2a2016;border-color:var(--b4);color:var(--amber)}.pipe-step.pulsing{background:#2a2016;border-color:var(--amber);color:var(--amber);animation:auraPulse 1.1s ease-in-out infinite}@keyframes auraSpin{to{transform:rotate(360deg)}}.aura-spinner{display:inline-block;width:15px;height:15px;border:2px solid var(--b3);border-top-color:var(--amber);border-radius:50%;animation:auraSpin .8s linear infinite;vertical-align:middle;margin-left:10px}.mic-indicator{color:var(--amber);vertical-align:middle;animation:auraPulse 1.1s ease-in-out infinite}.gen-image-card{margin-top:4px}.gen-image-card img{width:100%;aspect-ratio:16/9;object-fit:contain;background:#05070a;border:1px solid var(--b2);border-radius:10px;display:block}.file-chip{display:inline-flex;align-items:center;gap:7px;margin-top:8px;padding:5px 10px;background:var(--input);border:1px solid var(--b2);border-radius:8px;font:13px 'IBM Plex Mono';color:var(--secondary);max-width:100%}.file-chip .file-chip-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.file-chip .file-chip-x{cursor:pointer;border:0;background:transparent;color:var(--coral);font-weight:700;padding:0 2px;font-size:15px;line-height:1}.aura-toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(8px);background:#12301d;color:#7ee7a5;border:1px solid #2e7d4f;border-radius:10px;padding:11px 18px;font:14px 'IBM Plex Sans',sans-serif;box-shadow:0 12px 30px -10px rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:2000;white-space:pre-wrap;max-width:480px;text-align:left}.aura-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}.aura-toast.warn{background:#3a2a12;color:#e0b15c;border-color:#7d5a1f}.import-grid{display:grid;grid-template-columns:1fr 300px;min-height:0;flex:1}.import-main{padding:22px;overflow:auto}.import-side{border-left:1px solid var(--b1);padding:22px;background:rgba(12,10,8,.4)}.db-manager-overlay{position:static;inset:auto;background:transparent;padding:0;z-index:auto}.db-manager-overlay[hidden]{display:none!important}.db-manager-window{height:100%;background:transparent;border:0;border-radius:0;display:flex;flex-direction:column;gap:14px;padding:22px;box-shadow:none}.db-manager-header{display:flex;align-items:flex-start;gap:16px}.db-manager-header button{margin-left:auto}.db-manager-toolbar{display:flex;gap:10px;flex-wrap:wrap}.db-toolbar-section{background:var(--panel);border:1px solid var(--b1);border-radius:12px;padding:12px;min-width:220px}.db-manager-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}.db-stat-card{background:var(--panel);border:1px solid var(--b1);border-radius:12px;padding:14px}.db-stat-value{font-size:24px;font-weight:700}.db-stat-label{font-size:13px;color:var(--label)}.db-manager-table-area{min-height:0;overflow:auto;border:1px solid var(--b1);border-radius:12px;background:#100c07}.db-table{width:100%;border-collapse:collapse;font-size:15px}.db-table th,.db-table td{padding:10px 12px;border-bottom:1px solid #1a1611;text-align:left;white-space:nowrap}.db-table th{position:sticky;top:0;background:var(--input);font:12px 'IBM Plex Mono';letter-spacing:.1em;color:var(--label)}.db-manager-record-checkbox{width:auto}.db-thumbnail{width:56px;height:32px;object-fit:cover;border-radius:5px}.db-move-select-wrap{min-width:220px}.settings-card{max-width:760px;margin-bottom:20px}.hidden{display:none!important}@keyframes auraPulse{0%,100%{opacity:1}50%{opacity:.32}}@media(max-width:1100px){.studio-body{grid-template-columns:1fr}.studio-side{border-left:0;border-top:1px solid var(--b1)}.capture-grid{grid-template-columns:1fr}.activity-footer{grid-template-columns:1fr;height:auto}.system-wrap{border-left:0;border-top:1px solid var(--b1)}}.aura-confirm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:3000;align-items:center;justify-content:center}.aura-confirm-overlay.show{display:flex}.aura-confirm-box{background:var(--panel);border:1px solid var(--b1);border-radius:14px;padding:22px;max-width:420px;box-shadow:0 20px 50px -15px rgba(0,0,0,.7)}.aura-confirm-message{color:var(--text);font:15px/1.5 'IBM Plex Sans',sans-serif;margin-bottom:18px}.aura-confirm-actions{justify-content:flex-end}
+*{box-sizing:border-box}html{scrollbar-color:var(--b3) var(--bg);scrollbar-width:thin}*::-webkit-scrollbar{width:10px;height:10px}*::-webkit-scrollbar-track{background:var(--bg)}*::-webkit-scrollbar-thumb{background:var(--b3);border-radius:6px;border:2px solid var(--bg)}*::-webkit-scrollbar-thumb:hover{background:var(--b4)}html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',system-ui,sans-serif}body{overflow:hidden;background:radial-gradient(1100px 620px at 22% -12%,#191410 0%,#0c0a08 58%)}button,input,select,textarea{font:inherit}button{cursor:pointer}.app-shell{height:100vh;display:flex}.workspace-rail{width:216px;flex:0 0 216px;border-right:1px solid var(--b1);display:flex;flex-direction:column;padding:18px 14px;background:rgba(12,10,8,.72)}.brand{display:flex;flex-direction:column;align-items:center;gap:9px;padding:14px 8px 26px}.brand-logo{width:100%;max-width:168px;height:auto;object-fit:contain;filter:drop-shadow(0 0 14px rgba(227,181,127,.4))}.brand-sub{font:12px 'IBM Plex Mono';letter-spacing:.16em;color:var(--label)}.nav-item{width:100%;display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;margin-bottom:3px;border:1px solid transparent;background:transparent;color:var(--muted);text-align:left}.nav-item:hover{color:var(--text);border-color:var(--b3)}.nav-item.active{background:rgba(227,181,127,.1);border-color:rgba(227,181,127,.22);color:#f0d9bb;font-weight:600}.nav-glyph{width:9px;height:9px;border:1.5px solid var(--disabled);border-radius:2px}.nav-item.active .nav-glyph{border-color:var(--amber);background:var(--amber)}.output-card{margin-top:auto;border:1px solid var(--b1);background:var(--panel);border-radius:12px;padding:13px}.eyebrow{font:12px 'IBM Plex Mono';letter-spacing:.14em;color:var(--label)}.output-btn{width:100%;margin-top:8px;padding:8px 11px;border-radius:8px;border:1px solid var(--b3);background:var(--ghost);color:var(--secondary);text-align:left}.output-btn:hover{border-color:var(--amber);color:var(--text);background:var(--ghost)}.main-shell{flex:1;min-width:0;height:100vh}.workspace-view{height:100%;display:none;flex-direction:column;min-width:0}.workspace-view.active{display:flex}.view-header{height:60px;flex:0 0 60px;display:flex;align-items:center;padding:0 24px;border-bottom:1px solid var(--b1);gap:14px}.view-title{font-size:18px;font-weight:600}.view-sub{font:12px 'IBM Plex Mono';letter-spacing:.08em;color:var(--label);margin-top:2px}.header-actions{margin-left:auto;display:flex;align-items:center;gap:10px}.online-pill{display:flex;align-items:center;gap:9px;padding:7px 15px;border-radius:20px;border:1px solid var(--b2);background:var(--panel);font-size:14px;color:var(--secondary)}.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px rgba(143,209,138,.6)}.dot.offline{background:var(--coral);box-shadow:0 0 8px rgba(224,139,122,.6)}.status-row{display:flex;align-items:center;gap:9px;margin-bottom:4px}.status-row:last-child{margin-bottom:0}.scroll{overflow:auto;min-height:0}.studio-body{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 372px;min-height:0}.studio-main{padding:22px;display:flex;flex-direction:column;gap:18px;overflow:auto}.studio-side{border-left:1px solid var(--b1);padding:20px;overflow:auto}.panel{border:1px solid var(--b1);background:var(--panel);border-radius:14px;padding:16px}.panel-title{font-size:16px;font-weight:600;margin-bottom:12px}.hero-canvas{width:min(100%,81.7778vh);height:auto;aspect-ratio:16/9;max-height:none;margin-inline:auto;border-radius:16px;background:#05070a;border:1px solid var(--b1);box-shadow:0 30px 70px -30px rgba(0,0,0,.8);display:block}.two-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.active-visual-display{width:100%;aspect-ratio:16/9;min-height:180px;background:#05070a;border:1px solid var(--b2);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--label)}.active-visual-display img{max-width:100%;max-height:100%;object-fit:contain}.active-meta,.record-meta,.image-meta,.subtitle{font:13px 'IBM Plex Mono';color:var(--label);line-height:1.5}.field{margin-top:12px}.field-title,label{display:block;font-size:14px;color:var(--muted);margin-bottom:7px}input,select,textarea{width:100%;background:var(--input);color:var(--text);border:1px solid var(--b2);border-radius:8px;padding:9px 11px;outline:none}input:focus,select:focus,textarea:focus{border-color:var(--amber);box-shadow:0 0 0 2px rgba(227,181,127,.12)}input[type=range]{accent-color:var(--amber);padding:0}.button-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}button{padding:9px 13px;border-radius:8px;border:1px solid var(--b4);background:var(--amber);color:#1a1206;font-weight:600}button:hover{background:var(--amber2)}button.secondary{background:var(--ghost);border-color:var(--b3);color:var(--secondary);font-weight:400}button.secondary:hover{border-color:var(--amber);color:var(--text);background:var(--ghost)}button.danger,.delete-button{background:rgba(224,139,122,.1);border-color:#5a3a34;color:var(--coral)}button:disabled{opacity:.45;cursor:not-allowed}.status-box,.field-content,#audioStatus,#manualStatus,#livePlayStatus,#rollingTranscript{background:var(--input);border:1px solid var(--b2);border-radius:8px;padding:11px;white-space:pre-wrap;overflow-wrap:anywhere;min-height:42px;color:var(--secondary)}
+.log-view{background:var(--input);border:1px solid var(--b2);border-radius:8px;padding:11px;margin:0 0 10px;height:340px;overflow:auto;white-space:pre;font:12px 'IBM Plex Mono';color:var(--secondary);tab-size:4}#activePlayMatch{background:transparent;border:0;padding:0;min-height:0}.terminal-label{font:12px 'IBM Plex Mono';letter-spacing:.12em;color:var(--label);margin:14px 0 7px}.activity-footer{height:192px;flex:0 0 192px;border-top:1px solid var(--b1);display:grid;grid-template-columns:1fr 400px;background:rgba(12,10,8,.5)}.activity-log-wrap{padding:14px 22px;min-width:0}.system-wrap{border-left:1px solid var(--b1);padding:14px 22px;display:flex;flex-direction:column;min-height:0}#auraActivityLog{height:120px;overflow:auto;white-space:pre-wrap;font:14px/1.8 'IBM Plex Mono';color:var(--secondary)}#systemStatus{flex:1;min-height:0;overflow:auto;font:14px/1.4 'IBM Plex Mono';color:var(--secondary)}.library-layout{flex:1;display:grid;grid-template-columns:236px 1fr;min-height:0}.filter-rail{border-right:1px solid var(--b1);padding:18px 14px;overflow:auto}.library-content{padding:22px;overflow:auto}.records-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}.record-card{border:1px solid var(--b1);background:var(--panel);border-radius:14px;padding:14px;min-width:0}.record-card h3{margin:6px 0 10px;font-size:16px}.record-status-badge{display:inline-flex;padding:3px 9px;border-radius:20px;font:12px 'IBM Plex Mono';letter-spacing:.06em}.record-status-complete{background:#12301d;color:#7ee7a5;border:1px solid #2e7d4f}.record-status-draft{background:#3a2a12;color:#e0b15c;border:1px solid #7d5a1f}.image-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}.image-tile{background:var(--input);border:1px solid var(--b2);border-radius:9px;padding:8px}.generated-image{width:100%;aspect-ratio:16/9;object-fit:contain;background:#05070a;border-radius:7px}.image-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.image-actions button{padding:6px 8px;font-size:13px}.image-actions button:disabled{opacity:1;cursor:default;background:rgba(227,181,127,.15);border-color:var(--amber);color:var(--amber2)}.edit-icon{padding:2px 7px;margin-left:6px}.edit-actions{display:flex;gap:8px;margin-top:8px}.edit-textarea{min-height:100px}.capture-body,.import-body,.settings-body{padding:22px;overflow:auto;min-height:0}.capture-grid{display:grid;grid-template-columns:minmax(280px,1fr) minmax(320px,1.4fr) minmax(280px,1fr);gap:20px;align-items:start}.stack{display:flex;flex-direction:column;gap:16px}.pipeline{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}.pipe-step{font:13px 'IBM Plex Mono';padding:6px 13px;border-radius:20px;border:1px solid var(--b3);color:var(--label)}.pipe-step.active{background:#2a2016;border-color:var(--b4);color:var(--amber)}.pipe-step.pulsing{background:#2a2016;border-color:var(--amber);color:var(--amber);animation:auraPulse 1.1s ease-in-out infinite}@keyframes auraSpin{to{transform:rotate(360deg)}}.aura-spinner{display:inline-block;width:15px;height:15px;border:2px solid var(--b3);border-top-color:var(--amber);border-radius:50%;animation:auraSpin .8s linear infinite;vertical-align:middle;margin-left:10px}.mic-indicator{color:var(--amber);vertical-align:middle;animation:auraPulse 1.1s ease-in-out infinite}.gen-image-card{margin-top:4px}.gen-image-card img{width:100%;aspect-ratio:16/9;object-fit:contain;background:#05070a;border:1px solid var(--b2);border-radius:10px;display:block}.file-chip{display:inline-flex;align-items:center;gap:7px;margin-top:8px;padding:5px 10px;background:var(--input);border:1px solid var(--b2);border-radius:8px;font:13px 'IBM Plex Mono';color:var(--secondary);max-width:100%}.file-chip .file-chip-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.file-chip .file-chip-x{cursor:pointer;border:0;background:transparent;color:var(--coral);font-weight:700;padding:0 2px;font-size:15px;line-height:1}.aura-toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(8px);background:#12301d;color:#7ee7a5;border:1px solid #2e7d4f;border-radius:10px;padding:11px 18px;font:14px 'IBM Plex Sans',sans-serif;box-shadow:0 12px 30px -10px rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:2000;white-space:pre-wrap;max-width:480px;text-align:left}.aura-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}.aura-toast.warn{background:#3a2a12;color:#e0b15c;border-color:#7d5a1f}.import-grid{display:grid;grid-template-columns:1fr 300px;min-height:0;flex:1}.import-main{padding:22px;overflow:auto}.import-side{border-left:1px solid var(--b1);padding:22px;background:rgba(12,10,8,.4)}.db-manager-overlay{position:static;inset:auto;background:transparent;padding:0;z-index:auto}.db-manager-overlay[hidden]{display:none!important}.db-manager-window{height:100%;overflow-y:auto;background:transparent;border:0;border-radius:0;display:flex;flex-direction:column;gap:14px;padding:22px;box-shadow:none}.db-manager-header{display:flex;align-items:flex-start;gap:16px}.db-manager-header button{margin-left:auto}.db-manager-toolbar{display:flex;gap:10px;flex-wrap:wrap}.db-toolbar-section{background:var(--panel);border:1px solid var(--b1);border-radius:12px;padding:12px;min-width:220px}.db-manager-table-area{flex:1;min-height:0;overflow:auto;border:1px solid var(--b1);border-radius:12px;background:#100c07}.db-manager-toolbar .button-row{align-items:flex-end}.db-sortable-header{cursor:pointer;user-select:none}.db-sortable-header:hover{color:var(--text)}.db-table{width:100%;border-collapse:collapse;font-size:15px}.db-table th,.db-table td{padding:10px 12px;border-bottom:1px solid #1a1611;text-align:left;white-space:nowrap}.db-table th{position:sticky;top:0;background:var(--input);font:12px 'IBM Plex Mono';letter-spacing:.1em;color:var(--label)}.db-manager-record-checkbox,#dbManagerSelectAllCheckbox{width:auto}.db-thumbnail{width:56px;height:32px;object-fit:cover;border-radius:5px}.db-move-select-wrap{min-width:220px}.settings-card{max-width:760px;margin-bottom:20px}.hidden{display:none!important}@keyframes auraPulse{0%,100%{opacity:1}50%{opacity:.32}}@media(max-width:1100px){.studio-body{grid-template-columns:1fr}.studio-side{border-left:0;border-top:1px solid var(--b1)}.capture-grid{grid-template-columns:1fr}.activity-footer{grid-template-columns:1fr;height:auto}.system-wrap{border-left:0;border-top:1px solid var(--b1)}}.aura-confirm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:3000;align-items:center;justify-content:center}.aura-confirm-overlay.show{display:flex}.aura-confirm-box{background:var(--panel);border:1px solid var(--b1);border-radius:14px;padding:22px;max-width:420px;box-shadow:0 20px 50px -15px rgba(0,0,0,.7)}.aura-confirm-message{color:var(--text);font:15px/1.5 'IBM Plex Sans',sans-serif;margin-bottom:18px}.aura-confirm-actions{justify-content:flex-end}
 
 /* 1080p full-screen Studio fit: keep all primary controls visible without scrolling. */
 @media (min-width:1101px) and (min-height:800px){
@@ -156,16 +156,14 @@
 </section>
 
 <div id="dbManagerOverlay" class="workspace-view db-manager-overlay" hidden>
- <header class="view-header"><div><div class="view-title" data-i18n="db.title">DB Manager</div><div class="view-sub" data-i18n="db.sub">SPREADSHEET RECORD MANAGEMENT</div></div><div class="header-actions"><button class="secondary" onclick="closeDbManager();showWorkspaceView('studio')" data-i18n="db.close">Close</button></div></header>
+ <header class="view-header"><div><div class="view-title" data-i18n="db.title">DB Manager</div><div class="view-sub" data-i18n="db.sub">SPREADSHEET RECORD MANAGEMENT</div></div></header>
  <div class="db-manager-window">
   <div class="db-manager-toolbar">
    <div class="db-toolbar-section"><div class="field-title" data-i18n="db.view">View</div><div class="button-row"><button class="secondary" onclick="loadDbManager()" data-i18n="db.refresh">Refresh</button><div class="db-move-select-wrap"><label data-i18n="db.filterGroup">Filter Group</label><select id="dbManagerGroupFilterSelect" onchange="setDbManagerGroupFilter()"><option value="" data-i18n="db.allGroups">All Groups</option></select></div><button id="deleteCurrentGroupButton" class="danger" onclick="deleteCurrentDbManagerGroup()" data-i18n="db.deleteGroup">Delete Current Group</button><button id="cancelDeleteCurrentGroupButton" class="secondary" onclick="cancelDeleteCurrentDbManagerGroup()" hidden data-i18n="db.cancel">Cancel</button></div></div>
-   <div class="db-toolbar-section"><div class="field-title" data-i18n="db.selection">Selection</div><div class="button-row"><button class="secondary" onclick="toggleDbManagerSelectAll(true)" data-i18n="db.selectAll">Select All</button><button class="secondary" onclick="toggleDbManagerSelectAll(false)" data-i18n="db.clear">Clear</button><span id="dbManagerSelectedCount" class="record-meta">0 selected</span></div></div>
    <div class="db-toolbar-section"><div class="field-title" data-i18n="db.bulk">Bulk Actions</div><div class="button-row"><div class="db-move-select-wrap"><label data-i18n="db.moveTo">Move To</label><select id="dbManagerMoveGroupSelect"><option value="" data-i18n="rec.noGroup">No Specific Group</option></select></div><button id="moveSelectedRecordsButton" onclick="bulkMoveDbManagerRecords()" data-i18n="db.moveSelected">Move Selected</button><button id="cancelMoveSelectedRecordsButton" class="secondary" onclick="cancelMoveSelectedRecords()" hidden data-i18n="db.cancel">Cancel</button><button id="completeSelectedRecordsButton" class="secondary" onclick="bulkCompleteDbManagerRecords()" data-i18n="db.markComplete">Mark Complete</button><button id="cancelCompleteSelectedRecordsButton" class="secondary" onclick="cancelCompleteSelectedRecords()" hidden data-i18n="db.cancel">Cancel</button><button id="deleteSelectedRecordsButton" class="danger" onclick="bulkDeleteDbManagerRecords()" data-i18n="db.delete">Delete</button><button id="cancelDeleteSelectedRecordsButton" class="secondary" onclick="cancelDeleteSelectedRecords()" hidden data-i18n="db.cancel">Cancel</button></div></div>
-   <div class="db-toolbar-section"><div class="field-title" data-i18n="db.portability">Portability</div><div class="button-row"><button class="secondary" onclick="exportSelectedDbManagerRecords()" data-i18n="db.exportSelected">Export Selected</button><button class="secondary" onclick="exportCurrentDbManagerGroup()" data-i18n="db.exportGroup">Export Group</button><input id="dbManagerImportPackageFile" type="file" accept=".zip" style="display:none" onchange="stageImportDbManagerPackage()"><button id="importPackageButton" class="secondary" onclick="handleImportPackageButtonClick()" data-i18n="db.importPackage">Import Package</button><button id="cancelImportPackageButton" class="secondary" onclick="cancelImportDbManagerPackage()" hidden data-i18n="db.cancel">Cancel</button></div></div>
+   <div class="db-toolbar-section"><div class="field-title" data-i18n="db.portability">Portability</div><div class="button-row"><button class="secondary" onclick="exportSelectedDbManagerRecords()" data-i18n="db.exportSelected">Export Selected</button><button class="secondary" onclick="exportCurrentDbManagerGroup()" data-i18n="db.exportGroup">Export Group</button><button class="secondary" onclick="exportFullDbManagerDatabase()" data-i18n="db.exportAll">Export Database</button><input id="dbManagerImportPackageFile" type="file" accept=".zip" style="display:none" onchange="stageImportDbManagerPackage()"><button id="importPackageButton" class="secondary" onclick="handleImportPackageButtonClick()" data-i18n="db.importPackage">Import Package</button><button id="cancelImportPackageButton" class="secondary" onclick="cancelImportDbManagerPackage()" hidden data-i18n="db.cancel">Cancel</button></div></div>
    <div class="db-toolbar-section"><div class="field-title" data-i18n="db.maintenance">Maintenance</div><div class="button-row"><button class="secondary" onclick="loadDbManagerTrash()" data-i18n="db.trash">View Trash</button><button id="purgeDeletedImagesButton" class="danger" onclick="purgeDeletedDbManagerImages()" data-i18n="db.purge">Purge Deleted Images</button><button id="cancelPurgeDeletedImagesButton" class="secondary" onclick="cancelPurgeDeletedImages()" hidden data-i18n="db.cancel">Cancel</button></div></div>
   </div>
-  <div id="dbManagerStats" class="db-manager-stats"><div class="empty">DB stats not loaded.</div></div>
   <div class="db-manager-table-area"><div id="dbManagerRecords" class="db-table-wrap"><div class="empty">Click Refresh to load records.</div></div></div>
  </div>
 </div>
@@ -337,6 +335,11 @@ let auraFrameExportService = null;
 let activeLibraryGroupId = '';
 let activeLibraryView = 'all-complete';
 let dbManagerGroupFilterId = '';
+// Records currently shown in the DB Manager table, kept client-side so
+// clicking a column heading can re-sort in place without a re-fetch.
+let dbManagerRecordsCache = [];
+let dbManagerSortField = null;
+let dbManagerSortDirection = 'asc';
 /**
  * source_item_ids imported via the Image Search page during this browser
  * session. Not persisted -- the Imported Records grid only ever shows what
@@ -1702,7 +1705,7 @@ function renderImageGrid(images, sourceItemId, primaryImageId) {
                             </button>
 
                             ${isPrimary
-                                ? `<button type="button" class="secondary" disabled>★ Primary</button>`
+                                ? `<button type="button" class="secondary" disabled title="This is the primary image">★ Primary</button>`
                                 : `<button
                                     type="button"
                                     class="secondary"
@@ -2117,8 +2120,15 @@ async function loadCameraDevices() {
     const devices =
         await navigator.mediaDevices.enumerateDevices();
 
+    // "Aura Camera" is Aura's own virtual camera output (registered under
+    // that exact friendly name -- see IDS_APP_TITLE in VCamSample.rc), not
+    // a physical webcam. Selecting it as the input feeds the output back
+    // into itself and breaks capture, so it must never appear as a choice.
     const cameras =
-        devices.filter(device => device.kind === 'videoinput');
+        devices.filter(device =>
+            device.kind === 'videoinput' &&
+            !device.label.toLowerCase().includes('aura camera')
+        );
 
     populateDeviceSelects(
         ['cameraDeviceSelect', 'settingsCameraDeviceSelect'],
@@ -3301,40 +3311,7 @@ function closeDbManager() {
 }
 
 async function loadDbManager() {
-    await Promise.all([
-        loadDbManagerStats(),
-        loadDbManagerRecords()
-    ]);
-}
-
-async function loadDbManagerStats() {
-    const statsBox =
-        document.getElementById('dbManagerStats');
-
-    try {
-        const response = await fetch('/api/db-manager/stats');
-        const stats = await response.json();
-
-        statsBox.innerHTML = `
-            ${renderDbStatCard(t('db.statTotal'), stats.totalRecords)}
-            ${renderDbStatCard(t('db.statComplete'), stats.completeRecords)}
-            ${renderDbStatCard(t('db.statDrafts'), stats.draftRecords)}
-            ${renderDbStatCard(t('db.statGroups'), stats.groups)}
-            ${renderDbStatCard(t('db.statImages'), stats.images)}
-        `;
-    } catch (error) {
-        statsBox.innerHTML =
-            `<div class="empty">ERROR loading DB stats: ${escapeHtml(error.message)}</div>`;
-    }
-}
-
-function renderDbStatCard(label, value) {
-    return `
-        <div class="db-stat-card">
-            <div class="db-stat-value">${escapeHtml(value)}</div>
-            <div class="db-stat-label">${escapeHtml(label)}</div>
-        </div>
-    `;
+    await loadDbManagerRecords();
 }
 
 async function loadDbManagerRecords() {
@@ -3359,13 +3336,15 @@ async function loadDbManagerRecords() {
         const response = await fetch(`/api/db-manager/records${query}`);
         const records = await response.json();
 
+        dbManagerRecordsCache = records;
+
         if (!records.length) {
             recordsBox.innerHTML = `<div class="empty">${t('lib.none')}</div>`;
             updateDbManagerSelectedCount();
             return;
         }
 
-        recordsBox.innerHTML = renderDbManagerTable(records);
+        recordsBox.innerHTML = renderDbManagerTable(sortDbManagerRecordsForDisplay(records));
         updateDbManagerSelectedCount();
     } catch (error) {
         recordsBox.innerHTML =
@@ -3373,19 +3352,76 @@ async function loadDbManagerRecords() {
     }
 }
 
+// Column -> record field. Only columns with plain, comparable values are
+// sortable; Select and Preview aren't data columns.
+const DB_MANAGER_SORT_FIELDS = {
+    id: { key: 'id', type: 'number' },
+    status: { key: 'record_status', type: 'string' },
+    group: { key: 'group_name', type: 'string' },
+    images: { key: 'image_count', type: 'number' },
+    sourceType: { key: 'source_type', type: 'string' },
+    created: { key: 'created_at', type: 'string' }
+};
+
+function sortDbManagerRecordsForDisplay(records) {
+    const field = DB_MANAGER_SORT_FIELDS[dbManagerSortField];
+
+    if (!field) {
+        return records;
+    }
+
+    const sorted = [...records].sort((a, b) => {
+        const aValue = a[field.key];
+        const bValue = b[field.key];
+
+        const comparison = field.type === 'number'
+            ? (Number(aValue) || 0) - (Number(bValue) || 0)
+            : String(aValue || '').localeCompare(String(bValue || ''));
+
+        return dbManagerSortDirection === 'asc' ? comparison : -comparison;
+    });
+
+    return sorted;
+}
+
+function sortDbManagerTableBy(fieldName) {
+    if (!DB_MANAGER_SORT_FIELDS[fieldName]) {
+        return;
+    }
+
+    dbManagerSortDirection =
+        dbManagerSortField === fieldName && dbManagerSortDirection === 'asc'
+            ? 'desc'
+            : 'asc';
+
+    dbManagerSortField = fieldName;
+
+    document.getElementById('dbManagerRecords').innerHTML =
+        renderDbManagerTable(sortDbManagerRecordsForDisplay(dbManagerRecordsCache));
+
+    updateDbManagerSelectedCount();
+}
+
+function dbManagerSortHeader(fieldName, label) {
+    const isActive = dbManagerSortField === fieldName;
+    const arrow = isActive ? (dbManagerSortDirection === 'asc' ? ' ▲' : ' ▼') : '';
+
+    return `<th class="db-sortable-header" onclick="sortDbManagerTableBy('${fieldName}')">${escapeHtml(label)}${arrow}</th>`;
+}
+
 function renderDbManagerTable(records) {
     return `
         <table class="db-table">
             <thead>
                 <tr>
-                    <th>Select</th>
-                    <th>ID</th>
+                    <th><input type="checkbox" id="dbManagerSelectAllCheckbox" onchange="toggleDbManagerSelectAll(this.checked)" title="Select all"></th>
+                    ${dbManagerSortHeader('id', 'ID')}
                     <th>Preview</th>
-                    <th>Status</th>
-                    <th>Group</th>
-                    <th>Images</th>
-                    <th>Source Type</th>
-                    <th>Created</th>
+                    ${dbManagerSortHeader('status', 'Status')}
+                    ${dbManagerSortHeader('group', 'Group')}
+                    ${dbManagerSortHeader('images', 'Images')}
+                    ${dbManagerSortHeader('sourceType', 'Source Type')}
+                    ${dbManagerSortHeader('created', 'Created')}
                 </tr>
             </thead>
 
@@ -3454,12 +3490,24 @@ function getSelectedDbManagerRecordIds() {
     ).map(checkbox => Number(checkbox.value));
 }
 
+// Keeps the header "select all" checkbox in sync with the row checkboxes:
+// checked once every row is checked, indeterminate for a partial selection.
 function updateDbManagerSelectedCount() {
-    const count = getSelectedDbManagerRecordIds().length;
-    const countBox = document.getElementById('dbManagerSelectedCount');
+    const rowCheckboxes =
+        Array.from(document.querySelectorAll('.db-manager-record-checkbox'));
 
-    if (countBox) {
-        countBox.textContent = `${count} selected`;
+    const selectedCount =
+        rowCheckboxes.filter(checkbox => checkbox.checked).length;
+
+    const selectAllCheckbox =
+        document.getElementById('dbManagerSelectAllCheckbox');
+
+    if (selectAllCheckbox) {
+        selectAllCheckbox.checked =
+            rowCheckboxes.length > 0 && selectedCount === rowCheckboxes.length;
+
+        selectAllCheckbox.indeterminate =
+            selectedCount > 0 && selectedCount < rowCheckboxes.length;
     }
 }
 
@@ -4065,6 +4113,31 @@ async function exportCurrentDbManagerGroup() {
     URL.revokeObjectURL(downloadUrl);
 }
 
+async function exportFullDbManagerDatabase() {
+    const response = await fetch('/api/db-manager/export/all', {
+        method: 'POST'
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        showToast('Export database failed:\n\n' + errorText, true);
+        return;
+    }
+
+    const blob = await response.blob();
+    const downloadUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = downloadUrl;
+    link.download = `aura-export-full-${Date.now()}.zip`;
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    URL.revokeObjectURL(downloadUrl);
+}
+
 function handleImportPackageButtonClick() {
     const importButton =
         document.getElementById('importPackageButton');
@@ -4164,6 +4237,14 @@ async function importDbManagerPackage() {
     }
 
     cancelImportDbManagerPackage();
+
+    const groupSummary = result.importedGroupCount
+        ? `, ${result.importedGroupCount} group(s)`
+        : '';
+
+    showToast(
+        `Imported ${result.importedRecords} record(s), ${result.importedImages} image(s)${groupSummary}.`
+    );
 
     await loadLibraryGroups();
     await loadDbManager();
