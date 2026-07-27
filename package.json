@@ -1,6 +1,6 @@
 {
   "name": "aura",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "description": "",
   "main": "electron-main.js",
   "scripts": {
