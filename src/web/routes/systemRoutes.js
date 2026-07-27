@@ -40,11 +40,10 @@ function createSystemRoutes({
             process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
 
         try {
-            await fetch(`${whisperUrl}/transcribe`, {
-                method: 'GET'
-            });
+            const whisperResponse =
+                await fetch(`${whisperUrl}/health`);
 
-            status.whisper = true;
+            status.whisper = whisperResponse.ok;
         } catch {}
 
         try {

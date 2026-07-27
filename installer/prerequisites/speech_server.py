@@ -47,6 +47,10 @@ model = WhisperModel(
 
 print("Whisper model loaded.")
 
+@app.route("/health", methods=["GET"])
+def health():
+    return jsonify({"status": "ok"})
+
 @app.route("/transcribe", methods=["POST"])
 def transcribe_audio():
     if "audio" not in request.files:
