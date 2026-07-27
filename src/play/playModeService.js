@@ -129,6 +129,57 @@ function semanticScoreFromCosine(cosine) {
     return Math.max(0, (cosine - 0.5) * 2);
 }
 
+// -----------------------------------------------------------------------------
+// Per-record Image Rotation
+// -----------------------------------------------------------------------------
+// A record's primary image always shows first. If the SAME record wins the
+// best-match slot again while its image is still the one on screen, advance
+// to that record's next active image (ordered by id, after the primary)
+// instead of repeating the primary -- once every image has been shown, wrap
+// back around to the primary. A match for a DIFFERENT record (or no match at
+// all) resets the rotation, so reactivating a trigger later always starts
+// from the primary again.
+const recordRotationIndex = new Map(); // source_item_id -> last-shown index
+let lastActiveSourceItemId = null;
+
+function resolveRotatedImage(record) {
+    const images = prepareCached(`
+        SELECT id, image_path
+        FROM generated_images
+        WHERE source_item_id = ?
+          AND deleted_at IS NULL
+          AND is_active = 1
+        ORDER BY
+            CASE WHEN id = ? THEN 0 ELSE 1 END,
+            id ASC
+    `).all(record.source_item_id, record.primary_image_id);
+
+    if (images.length <= 1) {
+        return record;
+    }
+
+    const wasActive =
+        lastActiveSourceItemId === record.source_item_id;
+
+    const previousIndex =
+        recordRotationIndex.get(record.source_item_id) || 0;
+
+    const nextIndex =
+        wasActive
+            ? (previousIndex + 1) % images.length
+            : 0;
+
+    recordRotationIndex.set(record.source_item_id, nextIndex);
+
+    const chosen = images[nextIndex];
+
+    return {
+        ...record,
+        image_id: chosen.id,
+        image_path: chosen.image_path
+    };
+}
+
 /**
  * Finds the best matching images for a spoken phrase.
  *
@@ -297,6 +348,20 @@ async function findBestImageMatches(
             );
         })
         .slice(0, limit);
+
+    // Only the top match is ever actually displayed (playRoutes.js only acts
+    // on matches[0]), and only if its score clears the UI's minimumMatchScore
+    // threshold (checked client-side) -- a below-threshold top match never
+    // reaches the screen, so it must not consume a rotation step either.
+    const minimumMatchScore =
+        Number(auraConfig.readConfig().minimumMatchScore ?? 0);
+
+    if (scored.length && scored[0].score >= minimumMatchScore) {
+        scored[0] = resolveRotatedImage(scored[0]);
+        lastActiveSourceItemId = scored[0].source_item_id;
+    } else {
+        lastActiveSourceItemId = null;
+    }
 
     return scored;
 }
