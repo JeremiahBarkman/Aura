@@ -3,7 +3,7 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
 :root{--bg:#0c0a08;--panel:#141009;--input:#0e0b07;--ghost:#1c150d;--b1:#221d19;--b2:#2a2420;--b3:#33291f;--b4:#4a3a22;--amber:#e3b57f;--amber2:#eec596;--text:#efe9e2;--secondary:#c4b8aa;--muted:#a1968a;--label:#8a7e70;--disabled:#5a4f44;--green:#8fd18a;--coral:#e08b7a}
 *{box-sizing:border-box}html{scrollbar-color:var(--b3) var(--bg);scrollbar-width:thin}*::-webkit-scrollbar{width:10px;height:10px}*::-webkit-scrollbar-track{background:var(--bg)}*::-webkit-scrollbar-thumb{background:var(--b3);border-radius:6px;border:2px solid var(--bg)}*::-webkit-scrollbar-thumb:hover{background:var(--b4)}html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',system-ui,sans-serif}body{overflow:hidden;background:radial-gradient(1100px 620px at 22% -12%,#191410 0%,#0c0a08 58%)}button,input,select,textarea{font:inherit}button{cursor:pointer}.app-shell{height:100vh;display:flex}.workspace-rail{width:216px;flex:0 0 216px;border-right:1px solid var(--b1);display:flex;flex-direction:column;padding:18px 14px;background:rgba(12,10,8,.72)}.brand{display:flex;flex-direction:column;align-items:center;gap:9px;padding:14px 8px 26px}.brand-logo{width:100%;max-width:168px;height:auto;object-fit:contain;filter:drop-shadow(0 0 14px rgba(227,181,127,.4))}.brand-sub{font:12px 'IBM Plex Mono';letter-spacing:.16em;color:var(--label)}.nav-item{width:100%;display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;margin-bottom:3px;border:1px solid transparent;background:transparent;color:var(--muted);text-align:left}.nav-item:hover{color:var(--text);border-color:var(--b3)}.nav-item.active{background:rgba(227,181,127,.1);border-color:rgba(227,181,127,.22);color:#f0d9bb;font-weight:600}.nav-glyph{width:9px;height:9px;border:1.5px solid var(--disabled);border-radius:2px}.nav-item.active .nav-glyph{border-color:var(--amber);background:var(--amber)}.output-card{margin-top:auto;border:1px solid var(--b1);background:var(--panel);border-radius:12px;padding:13px}.eyebrow{font:12px 'IBM Plex Mono';letter-spacing:.14em;color:var(--label)}.output-btn{width:100%;margin-top:8px;padding:8px 11px;border-radius:8px;border:1px solid var(--b3);background:var(--ghost);color:var(--secondary);text-align:left}.output-btn:hover{border-color:var(--amber);color:var(--text);background:var(--ghost)}.main-shell{flex:1;min-width:0;height:100vh}.workspace-view{height:100%;display:none;flex-direction:column;min-width:0}.workspace-view.active{display:flex}.view-header{height:60px;flex:0 0 60px;display:flex;align-items:center;padding:0 24px;border-bottom:1px solid var(--b1);gap:14px}.view-title{font-size:18px;font-weight:600}.view-sub{font:12px 'IBM Plex Mono';letter-spacing:.08em;color:var(--label);margin-top:2px}.header-actions{margin-left:auto;display:flex;align-items:center;gap:10px}.online-pill{display:flex;align-items:center;gap:9px;padding:7px 15px;border-radius:20px;border:1px solid var(--b2);background:var(--panel);font-size:14px;color:var(--secondary)}.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px rgba(143,209,138,.6)}.dot.offline{background:var(--coral);box-shadow:0 0 8px rgba(224,139,122,.6)}.status-row{display:flex;align-items:center;gap:9px;margin-bottom:4px}.status-row:last-child{margin-bottom:0}.scroll{overflow:auto;min-height:0}.studio-body{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 372px;min-height:0}.studio-main{padding:22px;display:flex;flex-direction:column;gap:18px;overflow:auto}.studio-side{border-left:1px solid var(--b1);padding:20px;overflow:auto}.panel{border:1px solid var(--b1);background:var(--panel);border-radius:14px;padding:16px}.panel-title{font-size:16px;font-weight:600;margin-bottom:12px}.hero-canvas{width:min(100%,81.7778vh);height:auto;aspect-ratio:16/9;max-height:none;margin-inline:auto;border-radius:16px;background:#05070a;border:1px solid var(--b1);box-shadow:0 30px 70px -30px rgba(0,0,0,.8);display:block}.two-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.active-visual-display{width:100%;aspect-ratio:16/9;min-height:180px;background:#05070a;border:1px solid var(--b2);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--label)}.active-visual-display img{max-width:100%;max-height:100%;object-fit:contain}.active-meta,.record-meta,.image-meta,.subtitle{font:13px 'IBM Plex Mono';color:var(--label);line-height:1.5}.field{margin-top:12px}.field-title,label{display:block;font-size:14px;color:var(--muted);margin-bottom:7px}input,select,textarea{width:100%;background:var(--input);color:var(--text);border:1px solid var(--b2);border-radius:8px;padding:9px 11px;outline:none}input:focus,select:focus,textarea:focus{border-color:var(--amber);box-shadow:0 0 0 2px rgba(227,181,127,.12)}input[type=range]{accent-color:var(--amber);padding:0}.button-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}button{padding:9px 13px;border-radius:8px;border:1px solid var(--b4);background:var(--amber);color:#1a1206;font-weight:600}button:hover{background:var(--amber2)}button.secondary{background:var(--ghost);border-color:var(--b3);color:var(--secondary);font-weight:400}button.secondary:hover{border-color:var(--amber);color:var(--text);background:var(--ghost)}button.danger,.delete-button{background:rgba(224,139,122,.1);border-color:#5a3a34;color:var(--coral)}button:disabled{opacity:.45;cursor:not-allowed}.status-box,.field-content,#audioStatus,#manualStatus,#livePlayStatus,#rollingTranscript{background:var(--input);border:1px solid var(--b2);border-radius:8px;padding:11px;white-space:pre-wrap;overflow-wrap:anywhere;min-height:42px;color:var(--secondary)}
-.log-view{background:var(--input);border:1px solid var(--b2);border-radius:8px;padding:11px;margin:0 0 10px;height:340px;overflow:auto;white-space:pre;font:12px 'IBM Plex Mono';color:var(--secondary);tab-size:4}#activePlayMatch{background:transparent;border:0;padding:0;min-height:0}.terminal-label{font:12px 'IBM Plex Mono';letter-spacing:.12em;color:var(--label);margin:14px 0 7px}.activity-footer{height:192px;flex:0 0 192px;border-top:1px solid var(--b1);display:grid;grid-template-columns:1fr 400px;background:rgba(12,10,8,.5)}.activity-log-wrap{padding:14px 22px;min-width:0}.system-wrap{border-left:1px solid var(--b1);padding:14px 22px;display:flex;flex-direction:column;min-height:0}#auraActivityLog{height:120px;overflow:auto;white-space:pre-wrap;font:14px/1.8 'IBM Plex Mono';color:var(--secondary)}#systemStatus{flex:1;min-height:0;overflow:auto;font:14px/1.4 'IBM Plex Mono';color:var(--secondary)}.library-layout{flex:1;display:grid;grid-template-columns:236px 1fr;min-height:0}.filter-rail{border-right:1px solid var(--b1);padding:18px 14px;overflow:auto}.library-content{padding:22px;overflow:auto}.records-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}.record-card{border:1px solid var(--b1);background:var(--panel);border-radius:14px;padding:14px;min-width:0}.record-card h3{margin:6px 0 10px;font-size:16px}.record-status-badge{display:inline-flex;padding:3px 9px;border-radius:20px;font:12px 'IBM Plex Mono';letter-spacing:.06em}.record-status-complete{background:#12301d;color:#7ee7a5;border:1px solid #2e7d4f}.record-status-draft{background:#3a2a12;color:#e0b15c;border:1px solid #7d5a1f}.image-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}.image-tile{background:var(--input);border:1px solid var(--b2);border-radius:9px;padding:8px}.generated-image{width:100%;aspect-ratio:16/9;object-fit:contain;background:#05070a;border-radius:7px}.image-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.image-actions button{padding:6px 8px;font-size:13px}.image-actions button:disabled{opacity:1;cursor:default;background:rgba(227,181,127,.15);border-color:var(--amber);color:var(--amber2)}.edit-icon{padding:2px 7px;margin-left:6px}.edit-actions{display:flex;gap:8px;margin-top:8px}.edit-textarea{min-height:100px}.capture-body,.import-body,.settings-body{padding:22px;overflow:auto;min-height:0}.capture-grid{display:grid;grid-template-columns:minmax(280px,1fr) minmax(320px,1.4fr) minmax(280px,1fr);gap:20px;align-items:start}.stack{display:flex;flex-direction:column;gap:16px}.pipeline{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}.pipe-step{font:13px 'IBM Plex Mono';padding:6px 13px;border-radius:20px;border:1px solid var(--b3);color:var(--label)}.pipe-step.active{background:#2a2016;border-color:var(--b4);color:var(--amber)}.pipe-step.pulsing{background:#2a2016;border-color:var(--amber);color:var(--amber);animation:auraPulse 1.1s ease-in-out infinite}@keyframes auraSpin{to{transform:rotate(360deg)}}.aura-spinner{display:inline-block;width:15px;height:15px;border:2px solid var(--b3);border-top-color:var(--amber);border-radius:50%;animation:auraSpin .8s linear infinite;vertical-align:middle;margin-left:10px}.mic-indicator{color:var(--amber);vertical-align:middle;animation:auraPulse 1.1s ease-in-out infinite}.gen-image-card{margin-top:4px}.gen-image-card img{width:100%;aspect-ratio:16/9;object-fit:contain;background:#05070a;border:1px solid var(--b2);border-radius:10px;display:block}.file-chip{display:inline-flex;align-items:center;gap:7px;margin-top:8px;padding:5px 10px;background:var(--input);border:1px solid var(--b2);border-radius:8px;font:13px 'IBM Plex Mono';color:var(--secondary);max-width:100%}.file-chip .file-chip-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.file-chip .file-chip-x{cursor:pointer;border:0;background:transparent;color:var(--coral);font-weight:700;padding:0 2px;font-size:15px;line-height:1}.aura-toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(8px);background:#12301d;color:#7ee7a5;border:1px solid #2e7d4f;border-radius:10px;padding:11px 18px;font:14px 'IBM Plex Sans',sans-serif;box-shadow:0 12px 30px -10px rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:2000;white-space:pre-wrap;max-width:480px;text-align:left}.aura-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}.aura-toast.warn{background:#3a2a12;color:#e0b15c;border-color:#7d5a1f}.import-grid{display:grid;grid-template-columns:1fr 300px;min-height:0;flex:1}.import-main{padding:22px;overflow:auto}.import-side{border-left:1px solid var(--b1);padding:22px;background:rgba(12,10,8,.4)}.db-manager-overlay{position:static;inset:auto;background:transparent;padding:0;z-index:auto}.db-manager-overlay[hidden]{display:none!important}.db-manager-window{height:100%;overflow-y:auto;background:transparent;border:0;border-radius:0;display:flex;flex-direction:column;gap:14px;padding:22px;box-shadow:none}.db-manager-header{display:flex;align-items:flex-start;gap:16px}.db-manager-header button{margin-left:auto}.db-manager-toolbar{display:flex;gap:10px;flex-wrap:wrap}.db-toolbar-section{background:var(--panel);border:1px solid var(--b1);border-radius:12px;padding:12px;min-width:220px}.db-manager-table-area{flex:1;min-height:0;overflow:auto;border:1px solid var(--b1);border-radius:12px;background:#100c07}.db-manager-toolbar .button-row{align-items:flex-end}.db-sortable-header{cursor:pointer;user-select:none}.db-sortable-header:hover{color:var(--text)}.db-table{width:100%;border-collapse:collapse;font-size:15px}.db-table th,.db-table td{padding:10px 12px;border-bottom:1px solid #1a1611;text-align:left;white-space:nowrap}.db-table th{position:sticky;top:0;background:var(--input);font:12px 'IBM Plex Mono';letter-spacing:.1em;color:var(--label)}.db-manager-record-checkbox,#dbManagerSelectAllCheckbox{width:auto}.db-thumbnail{width:56px;height:32px;object-fit:cover;border-radius:5px}.db-move-select-wrap{min-width:220px}.settings-card{max-width:760px;margin-bottom:20px}.hidden{display:none!important}@keyframes auraPulse{0%,100%{opacity:1}50%{opacity:.32}}@media(max-width:1100px){.studio-body{grid-template-columns:1fr}.studio-side{border-left:0;border-top:1px solid var(--b1)}.capture-grid{grid-template-columns:1fr}.activity-footer{grid-template-columns:1fr;height:auto}.system-wrap{border-left:0;border-top:1px solid var(--b1)}}.aura-confirm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:3000;align-items:center;justify-content:center}.aura-confirm-overlay.show{display:flex}.aura-confirm-box{background:var(--panel);border:1px solid var(--b1);border-radius:14px;padding:22px;max-width:420px;box-shadow:0 20px 50px -15px rgba(0,0,0,.7)}.aura-confirm-message{color:var(--text);font:15px/1.5 'IBM Plex Sans',sans-serif;margin-bottom:18px}.aura-confirm-actions{justify-content:flex-end}
+.log-view{background:var(--input);border:1px solid var(--b2);border-radius:8px;padding:11px;margin:0 0 10px;height:340px;overflow:auto;white-space:pre;font:12px 'IBM Plex Mono';color:var(--secondary);tab-size:4}#activePlayMatch{background:transparent;border:0;padding:0;min-height:0}.terminal-label{font:12px 'IBM Plex Mono';letter-spacing:.12em;color:var(--label);margin:14px 0 7px}.activity-footer{height:192px;flex:0 0 192px;border-top:1px solid var(--b1);display:grid;grid-template-columns:1fr 400px;background:rgba(12,10,8,.5)}.activity-log-wrap{padding:14px 22px;min-width:0}.system-wrap{border-left:1px solid var(--b1);padding:14px 22px;display:flex;flex-direction:column;min-height:0}#auraActivityLog{height:120px;overflow:auto;white-space:pre-wrap;font:14px/1.8 'IBM Plex Mono';color:var(--secondary)}#systemStatus{flex:1;min-height:0;overflow:auto;font:14px/1.4 'IBM Plex Mono';color:var(--secondary)}.library-layout{flex:1;display:grid;grid-template-columns:236px 1fr;min-height:0}.filter-rail{border-right:1px solid var(--b1);padding:18px 14px;overflow:auto}.library-content{padding:22px;overflow:auto}.records-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}.record-card{border:1px solid var(--b1);background:var(--panel);border-radius:14px;padding:14px;min-width:0}.record-card h3{margin:6px 0 10px;font-size:16px}.record-status-badge{display:inline-flex;padding:3px 9px;border-radius:20px;font:12px 'IBM Plex Mono';letter-spacing:.06em}.record-status-complete{background:#12301d;color:#7ee7a5;border:1px solid #2e7d4f}.record-status-draft{background:#3a2a12;color:#e0b15c;border:1px solid #7d5a1f}.image-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}.image-tile{background:var(--input);border:1px solid var(--b2);border-radius:9px;padding:8px}.generated-image{width:100%;aspect-ratio:16/9;object-fit:contain;background:#05070a;border-radius:7px}.record-card,.image-tile{position:relative}.card-menu-btn{position:absolute;width:26px;height:26px;padding:0;border-radius:50%;background:rgba(12,10,8,.6);border:1px solid var(--b3);color:var(--text);font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center;font-weight:700;z-index:6}.card-menu-btn:hover{background:rgba(12,10,8,.88);border-color:var(--amber);color:var(--amber2)}.record-menu-btn{top:14px;right:14px}.image-menu-btn{top:6px;right:6px}.card-dropdown-menu{display:none;position:absolute;min-width:150px;background:var(--panel);border:1px solid var(--b2);border-radius:10px;box-shadow:0 12px 30px -10px rgba(0,0,0,.6);z-index:20;padding:4px}.card-dropdown-menu.show{display:block}.record-menu-btn+.card-dropdown-menu{top:44px;right:14px}.image-menu-btn+.card-dropdown-menu{top:36px;right:6px}.card-dropdown-menu button{display:block;width:100%;text-align:left;padding:8px 10px;border:0;border-radius:6px;background:transparent;color:var(--secondary);font-weight:400;font-size:14px}.card-dropdown-menu button:hover{background:var(--ghost);color:var(--text)}.card-dropdown-menu button.danger-item{color:var(--coral)}.card-dropdown-menu button.danger-item:hover{background:rgba(224,139,122,.12)}.primary-badge{position:absolute;top:6px;left:6px;background:rgba(227,181,127,.92);color:#1a1206;font:11px 'IBM Plex Mono';font-weight:700;padding:2px 7px;border-radius:20px;letter-spacing:.03em;z-index:4}.edit-icon{padding:2px 7px;margin-left:6px}.edit-actions{display:flex;gap:8px;margin-top:8px}.edit-textarea{min-height:100px}.capture-body,.import-body,.settings-body{padding:22px;overflow:auto;min-height:0}.capture-grid{display:grid;grid-template-columns:minmax(280px,1fr) minmax(320px,1.4fr) minmax(280px,1fr);gap:20px;align-items:start}.stack{display:flex;flex-direction:column;gap:16px}.pipeline{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}.pipe-step{font:13px 'IBM Plex Mono';padding:6px 13px;border-radius:20px;border:1px solid var(--b3);color:var(--label)}.pipe-step.active{background:#2a2016;border-color:var(--b4);color:var(--amber)}.pipe-step.pulsing{background:#2a2016;border-color:var(--amber);color:var(--amber);animation:auraPulse 1.1s ease-in-out infinite}@keyframes auraSpin{to{transform:rotate(360deg)}}.aura-spinner{display:inline-block;width:15px;height:15px;border:2px solid var(--b3);border-top-color:var(--amber);border-radius:50%;animation:auraSpin .8s linear infinite;vertical-align:middle;margin-left:10px}.mic-indicator{color:var(--amber);vertical-align:middle;animation:auraPulse 1.1s ease-in-out infinite}.gen-image-card{margin-top:4px}.gen-image-card img{width:100%;aspect-ratio:16/9;object-fit:contain;background:#05070a;border:1px solid var(--b2);border-radius:10px;display:block}.file-chip{display:inline-flex;align-items:center;gap:7px;margin-top:8px;padding:5px 10px;background:var(--input);border:1px solid var(--b2);border-radius:8px;font:13px 'IBM Plex Mono';color:var(--secondary);max-width:100%}.file-chip .file-chip-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.file-chip .file-chip-x{cursor:pointer;border:0;background:transparent;color:var(--coral);font-weight:700;padding:0 2px;font-size:15px;line-height:1}.aura-toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(8px);background:#12301d;color:#7ee7a5;border:1px solid #2e7d4f;border-radius:10px;padding:11px 18px;font:14px 'IBM Plex Sans',sans-serif;box-shadow:0 12px 30px -10px rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:2000;white-space:pre-wrap;max-width:480px;text-align:left}.aura-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}.aura-toast.warn{background:#3a2a12;color:#e0b15c;border-color:#7d5a1f}.import-grid{display:grid;grid-template-columns:1fr 300px;min-height:0;flex:1}.import-main{padding:22px;overflow:auto}.import-side{border-left:1px solid var(--b1);padding:22px;background:rgba(12,10,8,.4)}.db-manager-overlay{position:static;inset:auto;background:transparent;padding:0;z-index:auto}.db-manager-overlay[hidden]{display:none!important}.db-manager-window{height:100%;overflow-y:auto;background:transparent;border:0;border-radius:0;display:flex;flex-direction:column;gap:14px;padding:22px;box-shadow:none}.db-manager-header{display:flex;align-items:flex-start;gap:16px}.db-manager-header button{margin-left:auto}.db-manager-toolbar{display:flex;gap:10px;flex-wrap:wrap}.db-toolbar-section{background:var(--panel);border:1px solid var(--b1);border-radius:12px;padding:12px;min-width:220px}.db-manager-table-area{flex:1;min-height:0;overflow:auto;border:1px solid var(--b1);border-radius:12px;background:#100c07}.db-manager-toolbar .button-row{align-items:flex-end}.db-sortable-header{cursor:pointer;user-select:none}.db-sortable-header:hover{color:var(--text)}.db-table{width:100%;border-collapse:collapse;font-size:15px}.db-table th,.db-table td{padding:10px 12px;border-bottom:1px solid #1a1611;text-align:left;white-space:nowrap}.db-table th{position:sticky;top:0;background:var(--input);font:12px 'IBM Plex Mono';letter-spacing:.1em;color:var(--label)}.db-manager-record-checkbox,#dbManagerSelectAllCheckbox{width:auto}.db-thumbnail{width:56px;height:32px;object-fit:cover;border-radius:5px}.db-move-select-wrap{min-width:220px}.settings-card{max-width:760px;margin-bottom:20px}.hidden{display:none!important}@keyframes auraPulse{0%,100%{opacity:1}50%{opacity:.32}}@media(max-width:1100px){.studio-body{grid-template-columns:1fr}.studio-side{border-left:0;border-top:1px solid var(--b1)}.capture-grid{grid-template-columns:1fr}.activity-footer{grid-template-columns:1fr;height:auto}.system-wrap{border-left:0;border-top:1px solid var(--b1)}}.aura-confirm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:3000;align-items:center;justify-content:center}.aura-confirm-overlay.show{display:flex}.aura-confirm-box{background:var(--panel);border:1px solid var(--b1);border-radius:14px;padding:22px;max-width:420px;box-shadow:0 20px 50px -15px rgba(0,0,0,.7)}.aura-confirm-message{color:var(--text);font:15px/1.5 'IBM Plex Sans',sans-serif;margin-bottom:18px}.aura-confirm-actions{justify-content:flex-end}
 
 /* 1080p full-screen Studio fit: keep all primary controls visible without scrolling. */
 @media (min-width:1101px) and (min-height:800px){
@@ -179,6 +179,17 @@
   <div class="button-row aura-confirm-actions">
    <button type="button" class="secondary" id="auraConfirmCancelBtn">Cancel</button>
    <button type="button" class="danger" id="auraConfirmOkBtn">Delete</button>
+  </div>
+ </div>
+</div>
+
+<div id="moveImageOverlay" class="aura-confirm-overlay">
+ <div class="aura-confirm-box">
+  <div class="aura-confirm-message">Move image #<span id="moveImageIdLabel"></span> to record:</div>
+  <input type="number" id="moveImageTargetInput" placeholder="Destination record ID">
+  <div class="button-row aura-confirm-actions">
+   <button type="button" class="secondary" onclick="closeMoveImageModal()">Cancel</button>
+   <button type="button" onclick="confirmMoveImage()">Move</button>
   </div>
  </div>
 </div>
@@ -1435,6 +1446,14 @@ async function loadFullRecords() {
 
     const recordsBox = document.getElementById('records');
 
+    // Every edit/delete/move re-renders the whole grid from scratch, which
+    // briefly shrinks it down to a one-line "Loading..." placeholder. If we
+    // don't pin the scroll position back afterward, that momentary collapse
+    // clamps the scroll container's scrollTop toward 0 and the page jumps
+    // to the top -- annoying when you're mid-edit several records down.
+    const scrollContainer = recordsBox.parentElement;
+    const savedScrollTop = scrollContainer.scrollTop;
+
     blurFocusedElementWithin(recordsBox);
     recordsBox.innerHTML = `<div class="empty">${t('lib.loading')}</div>`;
 
@@ -1467,6 +1486,8 @@ async function loadFullRecords() {
         blurFocusedElementWithin(recordsBox);
         recordsBox.innerHTML =
             `<div class="empty">ERROR: Could not load records.<br>${escapeHtml(error.message)}</div>`;
+    } finally {
+        scrollContainer.scrollTop = savedScrollTop;
     }
 
     // Keep the Image Search page's own record list in sync -- every mutation
@@ -1498,13 +1519,19 @@ async function loadImageSearchRecords() {
         return;
     }
 
-    if (!sessionImageSearchRecordIds.size) {
-        blurFocusedElementWithin(recordsBox);
-        recordsBox.innerHTML = '<div class="empty">No image search imports yet this session.</div>';
-        return;
-    }
+    // See loadFullRecords for why this is saved/restored: re-rendering
+    // briefly collapses the grid to a placeholder, which otherwise clamps
+    // scroll back to the top.
+    const scrollContainer = recordsBox.parentElement;
+    const savedScrollTop = scrollContainer.scrollTop;
 
     try {
+        if (!sessionImageSearchRecordIds.size) {
+            blurFocusedElementWithin(recordsBox);
+            recordsBox.innerHTML = '<div class="empty">No image search imports yet this session.</div>';
+            return;
+        }
+
         const response =
             await fetch('/api/records/full?view=all-records&sourceType=image_search_import');
 
@@ -1527,6 +1554,8 @@ async function loadImageSearchRecords() {
         blurFocusedElementWithin(recordsBox);
         recordsBox.innerHTML =
             `<div class="empty">ERROR: Could not load image search records.<br>${escapeHtml(error.message)}</div>`;
+    } finally {
+        scrollContainer.scrollTop = savedScrollTop;
     }
 }
 
@@ -1589,6 +1618,31 @@ function renderRecordGroupSelector(record) {
     `;
 }
 
+// Generic "..." menu shared by record cards and image tiles. The menu is
+// always the trigger button's next sibling in the markup, so no per-card
+// unique ids are needed to find it -- the same renderRecordCard/
+// renderImageGrid output can appear in both the Library and Image Search
+// grids at once.
+function toggleCardMenu(event, buttonEl) {
+    event.stopPropagation();
+
+    const menu = buttonEl.nextElementSibling;
+    const isOpen = menu.classList.contains('show');
+
+    closeAllCardMenus();
+
+    if (!isOpen) {
+        menu.classList.add('show');
+    }
+}
+
+function closeAllCardMenus() {
+    document.querySelectorAll('.card-dropdown-menu.show')
+        .forEach(menu => menu.classList.remove('show'));
+}
+
+document.addEventListener('click', closeAllCardMenus);
+
 function renderRecordCard(record, idPrefix = 'record-card-') {
     return `
         <div class="record-card" id="${idPrefix}${escapeHtml(record.source_item_id)}">
@@ -1611,6 +1665,12 @@ function renderRecordCard(record, idPrefix = 'record-card-') {
     }
 </div>
 
+<button type="button" class="card-menu-btn record-menu-btn" onclick="toggleCardMenu(event, this)" title="Record options">⋯</button>
+<div class="card-dropdown-menu">
+    <button type="button" onclick="markRecordComplete(${record.source_item_id})">Mark Complete</button>
+    <button type="button" class="danger-item" onclick="deleteRecord(${record.source_item_id})">Delete Entire Record</button>
+</div>
+
 <h3>Record #${escapeHtml(record.source_item_id)}</h3>
 
             <div class="field">
@@ -1620,29 +1680,7 @@ function renderRecordCard(record, idPrefix = 'record-card-') {
                 ${renderImageGrid(record.images || [], record.source_item_id, record.primary_image_id)}
             </div>
 
-            <div class="record-meta">
-                id=${escapeHtml(record.source_item_id)}
-                | type=${escapeHtml(record.source_type)}
-                | status=${escapeHtml(record.record_status || 'draft')}
-                | group_id=${escapeHtml(record.group_id || 'none')}
-                | images=${escapeHtml((record.images || []).length)}
-                | duration_ms=${escapeHtml(record.duration_ms)}
-                | created_at=${escapeHtml(record.created_at)}
-            </div>
             ${renderRecordGroupSelector(record)}
-            <div class="button-row">
-                <button type="button" class="delete-button" onclick="deleteRecord(${record.source_item_id})">
-                    Delete Entire Record
-                </button>
-            </div>
-
-                        <button
-                type="button"
-                class="secondary"
-                onclick="markRecordComplete(${record.source_item_id})"
-            >
-                Mark Complete
-            </button>
 
             ${editableField('Original Source Text', 'source_raw', record.source_item_id, record.raw_text)}
             ${editableField('Image Summary', 'summary_text', record.source_item_id, record.summary_text)}
@@ -1688,52 +1726,23 @@ function renderImageGrid(images, sourceItemId, primaryImageId) {
 
                 return `
                     <div class="image-tile">
+                        ${isPrimary ? '<div class="primary-badge">★ PRIMARY</div>' : ''}
+
+                        <button type="button" class="card-menu-btn image-menu-btn" onclick="toggleCardMenu(event, this)" title="Image options">⋯</button>
+                        <div class="card-dropdown-menu">
+                            <button type="button" onclick="window.open('${imageUrl}', '_blank')">Open</button>
+                            ${!isPrimary
+                                ? `<button type="button" onclick="setPrimaryImage(${sourceItemId}, ${image.generated_image_id})">Make Primary</button>`
+                                : ''
+                            }
+                            <button type="button" onclick="openMoveImageModal(${image.generated_image_id})">Move</button>
+                            <button type="button" class="danger-item" onclick="deleteImage(${image.generated_image_id})">Delete Image</button>
+                        </div>
+
                         <img class="generated-image" src="${imageUrl}" />
 
                         <div class="image-meta">
                             image_id=${escapeHtml(image.generated_image_id)}
-                            ${isPrimary ? ' | ★ PRIMARY' : ''}
-                        </div>
-
-                        <div class="image-actions">
-                            <button
-                                type="button"
-                                class="secondary"
-                                onclick="window.open('${imageUrl}', '_blank')"
-                            >
-                                Open
-                            </button>
-
-                            ${isPrimary
-                                ? `<button type="button" class="secondary" disabled title="This is the primary image">★ Primary</button>`
-                                : `<button
-                                    type="button"
-                                    class="secondary"
-                                    onclick="setPrimaryImage(${sourceItemId}, ${image.generated_image_id})"
-                                >
-                                    Make Primary
-                                </button>`
-                            }
-                            <input
-                                type="number"
-                                placeholder="Record ID"
-                                style="width:90px;"
-                            >
-                            <button
-                                type="button"
-                                class="secondary"
-                                onclick="moveImageToRecord(${image.generated_image_id}, this)"
-                            >
-                                Move
-                            </button>
-
-                            <button
-                                type="button"
-                                class="delete-button"
-                                onclick="deleteImage(${image.generated_image_id})"
-                            >
-                                Delete Image
-                            </button>
                         </div>
                     </div>
                 `;
@@ -1874,23 +1883,45 @@ async function setPrimaryImage(sourceItemId, generatedImageId) {
     await loadFullRecords();
 }
 
-function moveImageToRecord(imageId, buttonEl) {
-    // Looked up relative to the clicked button, not by an image-keyed DOM
-    // id -- the same image can be rendered in more than one grid at once
-    // (Library and Image Search both use renderImageGrid), and an id lookup
-    // would always resolve to the first grid's input.
-    const destinationSourceItemId =
-        buttonEl.previousElementSibling?.value;
+// Target image for the Move modal below -- set when the modal opens,
+// cleared when it closes.
+let moveImageSourceId = null;
+
+function openMoveImageModal(imageId) {
+    closeAllCardMenus();
+
+    moveImageSourceId = imageId;
+    document.getElementById('moveImageIdLabel').textContent = imageId;
+
+    const input = document.getElementById('moveImageTargetInput');
+    input.value = '';
+
+    document.getElementById('moveImageOverlay').classList.add('show');
+    input.focus();
+}
+
+function closeMoveImageModal() {
+    document.getElementById('moveImageOverlay').classList.remove('show');
+    moveImageSourceId = null;
+}
+
+async function confirmMoveImage() {
+    const input = document.getElementById('moveImageTargetInput');
+    const destinationSourceItemId = Number(input.value);
 
     if (!destinationSourceItemId) {
         showToast('Enter a destination record ID first.', true);
         return;
     }
 
-    moveImageToRecordId(
-        imageId,
-        Number(destinationSourceItemId)
-    ).catch(console.error);
+    const imageId = moveImageSourceId;
+    closeMoveImageModal();
+
+    try {
+        await moveImageToRecordId(imageId, destinationSourceItemId);
+    } catch (error) {
+        showToast(error.message, true);
+    }
 }
 
 async function moveImageToRecordId(imageId, destinationSourceItemId) {
@@ -3325,6 +3356,12 @@ async function loadDbManagerRecords() {
         document.activeElement.blur();
     }
 
+    // See loadFullRecords for why this is saved/restored: the "Loading..."
+    // placeholder briefly collapses the table area, which otherwise clamps
+    // scroll back to the top on every bulk action/edit.
+    const scrollContainer = recordsBox.parentElement;
+    const savedScrollTop = scrollContainer.scrollTop;
+
     recordsBox.innerHTML = '<div class="empty">Loading DB records...</div>';
 
     try {
@@ -3349,6 +3386,8 @@ async function loadDbManagerRecords() {
     } catch (error) {
         recordsBox.innerHTML =
             `<div class="empty">ERROR loading DB records: ${escapeHtml(error.message)}</div>`;
+    } finally {
+        scrollContainer.scrollTop = savedScrollTop;
     }
 }
 
