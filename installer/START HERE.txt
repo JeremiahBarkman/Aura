@@ -69,7 +69,7 @@ you're done here.
 ------------------------------------------------------------------------
 Double-click:
 
-      Aura Setup 1.5.4.exe
+      Aura Setup 1.5.5.exe
 
 If "Windows protected your PC" appears, click "More info" -> "Run anyway"
 (expected for an unsigned tester build).
