@@ -8,7 +8,7 @@ WHAT THIS IS
   Aura's configuration file (.env).
 
   This is NOT the Aura application itself. Install the Aura app separately
-  by running "Aura Setup x.y.z.exe" (sent to you alongside this folder).
+  by running "Aura Installer vx.y.z.exe" (sent to you alongside this folder).
   Order does not matter, but nothing in Aura will work until BOTH the app
   is installed AND these prerequisites are satisfied.
 

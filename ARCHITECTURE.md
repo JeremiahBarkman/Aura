@@ -58,6 +58,10 @@ Two separate, non-overlapping systems:
 - **`.env`** — deployment/machine config and secrets (PsySeg license/keys, SerpAPI key, service URLs/ports, Python interpreter paths, Whisper model size). Loaded via `dotenv` in `server.js`; `electron-main.js` resolves a different path per environment (dev: next to `electron-main.js`; packaged: `<userData>/.env`, auto-seeded from `.env.example` on first run) and validates required keys at startup.
 - **`data/config/aura-config.json`** (via `src/config/auraConfig.js`) — end-user app preferences edited through in-app Settings, gated by the `allowedKeys` allowlist.
 
+## Shared frontend rendering logic
+
+`public/rendering/DisplaySceneMapper.js` is a plain ES module (loaded via `<script type="module">` and exposed as `window.DisplaySceneMapper`) holding the scene-slot placement logic (`getEffectiveSceneMode`, `getDisplaySlotsForMode`, `applyDisplayModeToScene`, etc.) shared between the Studio camera compositor (`public/index.html`) and Slide Output (`public/aura-slide-output/index.html`). It replaced two near-identical inline copies of the same logic — this is the one piece of `public/` frontend code with its own module boundary; everything else UI-side is inline `<script>` in the HTML files themselves (see "Known duplication" below for what's still copy-pasted).
+
 ## Known duplication in the codebase
 
 - **Segmentation provider** exists in three near-identical copies: `src/segmentation/*` (unused), `public/segmentation/*`, and `public/js/PsySegBrowserProvider.js` (the two `public/` copies are what's actually live).

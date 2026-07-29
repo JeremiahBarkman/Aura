@@ -39,12 +39,12 @@ This is also what gets sent to the **Aura Camera** virtual webcam device, so
 what you see here is what shows up in Zoom/Teams/OBS/etc. once you select
 "Aura Camera" as your camera source in those apps.
 
-**Webcam Live View** controls:
+**Webcam Live View** controls, left to right:
 - **Camera Device** — pick which physical webcam to use.
 - **Start Camera / Stop Camera** — begin or end the live feed.
-- **Blur** — blur your real background instead of replacing it.
 - **Remove BG** — cut your background to transparent/black with no
   replacement image.
+- **Blur** — blur your real background instead of replacing it.
 - **Reset** — clear whatever effect is active and show the raw camera feed.
 
 Your last-used camera mode (Blur, Remove BG, or an active semantic
@@ -53,23 +53,27 @@ start the camera.
 
 ### Active Visual
 
-A small preview of whichever image Play Mode most recently matched, along
-with its match score. This is a **status readout**, not the composited
-output — it updates the moment a new match is chosen, slightly ahead of
-the camera transition finishing.
+A small preview of whichever image Play Mode most recently matched. This is
+a **status readout**, not the composited output — it updates the moment a
+new match is chosen, slightly ahead of the camera transition finishing.
 
-### Rolling Transcript
+### Right-hand panel: Play Mode, Rolling Transcript, Active Background Match
 
-Shows the last few seconds of what Aura heard while Play Mode is running.
-Useful for confirming your microphone is picking up speech correctly.
-
-### Play Mode panel
-
-- **Active Play Mode Group** — restrict matching to one Library Group, or
-  leave it on "All Complete Records" to match against everything.
-- **Microphone** — which mic to listen on.
-- **Start Play Mode / Stop** — begin or end live speech matching.
-- **Live Play Status** — shows whether Play Mode is listening.
+- **Play Mode panel**:
+  - **Active Play Mode Group** — restrict matching to one Library Group, or
+    leave it on "All Complete Records" to match against everything.
+  - **Microphone** — which mic to listen on.
+  - **Start Play Mode / Stop** — begin or end live speech matching. The mic
+    icon next to the panel title lights up while Play Mode is actively
+    listening.
+- **Rolling Transcript** — shows the last few seconds of what Aura heard
+  while Play Mode is running. Useful for confirming your microphone is
+  picking up speech correctly.
+- **Active Background Match** — the full match details for whatever Play
+  Mode most recently selected: match score, the matched record's id/status,
+  what Aura heard you say ("Spoken"), and the record's trigger text that
+  matched it. More detailed than the Active Visual readout above; useful
+  when tuning trigger phrases or Minimum Match Score.
 
 See [section 5](#5-play-mode--how-live-matching-works) for how matching
 actually works and how to tune it.
@@ -164,38 +168,50 @@ configure anything for it.
 
 The Semantic Visual Library is where every record lives, complete or draft.
 
-### Filtering
+### Filtering and search
 
 The **View** dropdown on the left switches between **All Complete
 Records**, **All Draft Records**, **All Records**, or any specific **Group**
 you've created.
 
+Next to **Refresh Records** in the header, the search box filters the
+visible cards by matching your search term against each record's **Cleaned
+Play Mode Trigger Text** — handy for jumping straight to the record behind
+a specific trigger phrase in a large library.
+
 ### Groups
 
 Groups let you organize records into named sets (e.g. "Space," "Music,"
 "Philosophy") and restrict Play Mode to just one set at a time via the
-Studio panel's "Active Play Mode Group" selector. To create one, enter a
-**Group name** (and optional description) under **New Group** and click
-**Create Group**.
+Studio panel's "Active Play Mode Group" selector (hover the ⓘ next to either
+group dropdown for a reminder of exactly how that matching rule works). To
+create one, enter a **Group name** (and optional description) under **New
+Group** and click **Create Group**.
 
 ### Record cards
 
-Each card shows:
-- A **COMPLETE** or **DRAFT** status badge. Only complete records are
-  eligible to trigger in Play Mode.
-- All images attached to the record, with **Open** (view full-size),
-  **Make Primary** (choose which image displays by default for this
-  record), **Record** (jump to the parent record — used from other views),
-  **Move** (reassign this image to a different record), and **Delete
-  Image** (soft-delete it — see [Trash](#trash--purge)).
-- Editable fields — click the **✎** icon next to **Original Source Text**,
-  **Image Summary**, **Image Prompt**, or **Cleaned Play Mode Trigger
-  Text** to edit any of them inline. Editing the trigger text is
-  particularly useful for tuning what phrases will match this record in
-  Play Mode.
-- A **Library Group** dropdown to assign or reassign the record's group.
-- **Upload Image to This Record** to attach an additional image without
-  creating a new record.
+Cards default to a **minimized** view to keep a full library scannable: a
+**COMPLETE**/**DRAFT** status badge (only complete records are eligible to
+trigger in Play Mode), the card's "⋯" menu, the record title, its image
+grid, the **Library Group** dropdown, and the **Cleaned Play Mode Trigger
+Text** field with its **✎** edit icon — everything else is collapsed.
+
+The image grid stays visible either way. Each image has its own "⋯" menu:
+**Open** (view full-size), **Make Primary** (choose which image displays by
+default for this record), **Move** (reassign this image to a different
+record), and **Delete Image** (soft-delete it — see
+[Trash](#trash--purge)).
+
+Click **⋯ → Edit Record** to expand a card to show every field:
+**Original Source Text**, **Image Summary**, **Image Prompt**, **Cleaned
+Play Mode Trigger Text**, and **Upload Image to This Record** (attach an
+additional image without creating a new record). Each text field has its
+own **✎** icon for inline editing — editing the trigger text is
+particularly useful for tuning what phrases will match this record in Play
+Mode. Click **Done** (next to the status badge) to collapse the card back
+down once you're finished.
+
+The **⋯** menu also has:
 - **Mark Complete** — promotes a draft to complete. Aura checks that the
   record has source text, a summary, an image prompt, trigger text, and at
   least one active image before allowing this; it'll tell you what's
@@ -263,27 +279,46 @@ The chosen image is composited into the Aura Camera output using whichever
 ## 6. DB Manager — bulk record management
 
 A spreadsheet-style view for managing many records at once, separate from
-the card-based Library view.
+the card-based Library view. Everything beyond Refresh and search lives in
+one of three dropdown menus in the header.
 
-- **View** — Refresh, filter by group, or delete the currently-filtered
-  group (records in it become ungrouped, not deleted).
-- **Selection** — Select All / Clear across the visible table, with a live
-  count.
-- **Bulk Actions** — with records selected: **Move Selected** to a
-  different group, **Mark Complete**, or **Delete** (permanent, all
-  selected records at once).
-- **Portability** — **Export Selected** or **Export Group** downloads a
-  `.zip` package (records, metadata, and images) you can back up or move
-  between machines. **Import Package** loads one back in — if the group
-  name already exists, the import is renamed automatically (e.g. "Space
-  (Imported 2026-07-19)") so nothing overwrites your existing data.
-- **Maintenance**:
+- **Search** — next to **Refresh**, filters the table by matching your
+  search term against each record's Cleaned Play Mode Trigger Text, same as
+  the Library search.
+- **Selection** — check individual rows, or use the checkbox in the table's
+  header row to select/clear every visible row at once. Bulk actions below
+  operate on whatever's currently checked, and their confirmation prompt
+  always states how many records are about to be affected.
+- **Filter Group** menu — restrict the table to one Library Group.
+- **Maintenance** menu:
+  - **Move Selected** — opens a dialog to move every checked record into a
+    different group (or out to No Specific Group).
+  - **Mark Complete** — promotes every checked record to complete (same
+    completeness check as the Library's Mark Complete).
+  - **Delete Selected** — permanently deletes every checked record. Cannot
+    be undone.
+  - **Delete Current Group** — deletes whichever group is chosen in the
+    Filter Group menu; records that were in it become ungrouped, not
+    deleted.
   - **View Trash** — shows every soft-deleted image (from "Delete Image" in
     the Library) with the option to **Restore** any of them back to their
     record.
   - **Purge Deleted Images** — permanently erases every soft-deleted image
-    and its file on disk. This cannot be undone; use View Trash first to
-    make sure nothing in there should be restored.
+    and its file on disk. Cannot be undone; use View Trash first to make
+    sure nothing in there should be restored.
+- **Portability** menu:
+  - **Export Selected** / **Export Group** / **Export Database** — each
+    downloads a `.zip` package (records, metadata, and images) you can back
+    up or move between machines, scoped to the checked records, the
+    currently filtered group, or everything.
+  - **Import Package** — loads a previously exported `.zip` back in; if the
+    group name already exists, the import is renamed automatically (e.g.
+    "Space (Imported 2026-07-19)") so nothing overwrites your existing data.
+
+Every action above that can't be undone or affects more than one
+record — Move Selected, Mark Complete, Delete Selected, Delete Current
+Group, Purge Deleted Images, Import Package — asks for confirmation in a
+popup dialog before it runs.
 
 ### Trash & Purge
 
@@ -305,17 +340,20 @@ DB Manager, is immediate and permanent and does not go through Trash.
   Capture).
 - **Devices** — camera and microphone selection, mirrored with the pickers
   in Studio.
-- **Presentation** — informational: display/transition values live in
-  Studio and are shared everywhere, this panel just confirms that.
 - **Matching & Generation**:
   - **Semantic matching (embeddings) in Play Mode** — toggle described in
-    section 5.
+    section 5; hover the ⓘ for the short version.
   - **Ollama Model Override** — use a specific Ollama model for
     summaries/prompts/triggers instead of the built-in default. Must
     already be pulled in Ollama.
   - **Negative Prompt** — applied to every ComfyUI image generation, to
     steer away from unwanted content (default excludes text, watermarks,
-    blur, and distortion).
+    blur, and distortion); hover the ⓘ for a reminder.
+- **Logs** — **Select Log** picks which of the services Aura manages
+  (speech/Whisper, ComfyUI, the Aura server, the virtual-camera bridge) to
+  view; **Refresh Log** reloads it, **Open Log Folder** opens the folder on
+  disk, **Copy Log** copies the current contents to your clipboard. Check
+  here first if a System Status indicator on the Studio page is red.
 
 ---
 

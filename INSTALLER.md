@@ -22,6 +22,7 @@ It's copy-only and non-destructive, skips byte-identical copies to keep git clea
 ## electron-builder config (package.json `build`)
 
 - `appId: com.aura.studio`, `productName: Aura`
+- `artifactName: "Aura Installer v${version}.${ext}"` — overrides electron-builder's default `${productName} Setup ${version}.${ext}` NSIS naming. `package.json`'s version was reset to `0.6.5` to start a fresh, standardized numbering line; the installer file is now always `Aura Installer v<version>.exe`.
 - `asar: false` — explicitly unpacked, because the native `.exe`/`.dll` extraResources and `better-sqlite3`'s native binding need real filesystem paths (Windows can't `CreateProcess` a path inside `app.asar`).
 - `npmRebuild: false` — deliberately does not rebuild native modules for Electron's ABI; the bundled standalone `node.exe` is used instead (see ARCHITECTURE.md).
 - `files`: `electron-main.js`, `electron-preload.js`, `package.json`, `.env.example`, `public/**/*`, `src/**/*`, `comfy/**/*`, `node_modules/**/*`.

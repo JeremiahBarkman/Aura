@@ -1,7 +1,7 @@
 # Aura Installation Guide (Packaged Build)
 
 This guide covers installing Aura from the distributable installer
-(`Aura Setup 1.0.0.exe`) rather than running it from source. It's for
+(`Aura Installer v0.6.5.exe`) rather than running it from source. It's for
 testers who received the installer, not for development setup — see
 `INSTALL.md` for that.
 
@@ -239,7 +239,7 @@ https://serpapi.com and generate an API key.
 
 ## 3. Install Aura
 
-1. Run `Aura Setup 1.0.0.exe`.
+1. Run `Aura Installer v0.6.5.exe`.
 2. Follow the installer (per-user install, no admin prompt). You can change
    the install location if you want; Desktop and Start Menu shortcuts are
    created by default.

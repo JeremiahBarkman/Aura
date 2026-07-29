@@ -7,7 +7,7 @@
     service, and writes Aura's .env configuration file.
 
     This is NOT the Aura application installer. Install the Aura app itself
-    separately (Aura Setup x.y.z.exe). This tool only prepares prerequisites.
+    separately (Aura Installer vx.y.z.exe). This tool only prepares prerequisites.
 
     Usage:
       Double-click "Install Aura Prerequisites.bat", OR
