@@ -1158,6 +1158,7 @@ app.get('/api/db-manager/records', (req, res) => {
                 si.primary_image_id,
                 lg.name AS group_name,
                 si.created_at,
+                tt.cleaned_trigger_text,
                 COUNT(gi.id) AS image_count,
 
                 COALESCE(primary_gi.image_path, fallback_gi.image_path)
@@ -1170,6 +1171,9 @@ app.get('/api/db-manager/records', (req, res) => {
 
             LEFT JOIN library_groups lg
                 ON lg.id = si.group_id
+
+            LEFT JOIN trigger_texts tt
+                ON tt.source_item_id = si.id
 
             LEFT JOIN generated_images gi
                 ON gi.source_item_id = si.id

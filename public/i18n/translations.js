@@ -34,7 +34,7 @@ window.AURA_I18N = {
 en: {
     'nav.studio': 'Studio', 'nav.library': 'Library', 'nav.capture': 'Capture', 'nav.imageSearch': 'Image Search', 'nav.dbManager': 'DB Manager', 'nav.settings': 'Settings',
     'output.title': 'OUTPUT WINDOWS', 'output.auraCamera': 'Aura Camera', 'output.slideOutput': 'Slide Output',
-    'studio.title': 'Studio', 'studio.sub': 'RECORD · PLAY · PRESENT', 'studio.online': 'Local system online',
+    'studio.title': 'Studio', 'studio.sub': 'THINK · SAY · DISPLAY', 'studio.online': 'Local system online',
     'cam.panel': 'Webcam Live View', 'cam.device': 'Camera Device', 'cam.start': 'Start Camera', 'cam.stop': 'Stop Camera', 'cam.blur': 'Blur', 'cam.removeBg': 'Remove BG', 'cam.reset': 'Reset', 'cam.erode': 'Edge Smoothing (Erode)', 'cam.blurLevel': 'Background Blur',
     'visual.active': 'Active Visual', 'transcript.rolling': 'ROLLING TRANSCRIPT', 'log.activity': 'ACTIVITY LOG', 'status.system': 'SYSTEM STATUS',
     'play.title': 'Play Mode', 'play.group': 'Active Play Mode Group', 'play.allComplete': 'All Complete Records', 'play.mic': 'Microphone', 'play.start': 'Start Play Mode', 'play.stop': 'Stop',
@@ -68,7 +68,8 @@ en: {
     'set.matching': 'Matching & Generation', 'set.semantic': 'Semantic matching (embeddings) in Play Mode',
     'set.semanticHint': 'Uses an Ollama embedding model so related phrases match triggers even without exact word overlap. Falls back to keyword matching automatically if the embedding model is unavailable.',
     'set.model': 'Ollama Model Override', 'set.modelHint': 'Model used for summaries, prompts, and trigger text. Must already be pulled in Ollama.',
-    'set.negative': 'Negative Prompt', 'set.negativeHint': 'Applied to every ComfyUI image generation.', 'set.save': 'Save', 'set.status': 'STATUS', 'set.language': 'Language'
+    'set.negative': 'Negative Prompt', 'set.negativeHint': 'Applied to every ComfyUI image generation.', 'set.save': 'Save', 'set.status': 'STATUS', 'set.language': 'Language',
+    'set.logs': 'Logs', 'set.logsSelect': 'Select Log', 'set.logsRefresh': 'Refresh Log', 'set.logsFolder': 'Open Log Folder', 'set.logsCopy': 'Copy Log'
 },
 
 es: {

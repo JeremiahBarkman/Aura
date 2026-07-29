@@ -2,8 +2,8 @@
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Aura Studio</title><link rel="icon" type="image/png" href="/assets/favicon.png"><style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
 :root{--bg:#0c0a08;--panel:#141009;--input:#0e0b07;--ghost:#1c150d;--b1:#221d19;--b2:#2a2420;--b3:#33291f;--b4:#4a3a22;--amber:#e3b57f;--amber2:#eec596;--text:#efe9e2;--secondary:#c4b8aa;--muted:#a1968a;--label:#8a7e70;--disabled:#5a4f44;--green:#8fd18a;--coral:#e08b7a}
-*{box-sizing:border-box}html{scrollbar-color:var(--b3) var(--bg);scrollbar-width:thin}*::-webkit-scrollbar{width:10px;height:10px}*::-webkit-scrollbar-track{background:var(--bg)}*::-webkit-scrollbar-thumb{background:var(--b3);border-radius:6px;border:2px solid var(--bg)}*::-webkit-scrollbar-thumb:hover{background:var(--b4)}html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',system-ui,sans-serif}body{overflow:hidden;background:radial-gradient(1100px 620px at 22% -12%,#191410 0%,#0c0a08 58%)}button,input,select,textarea{font:inherit}button{cursor:pointer}.app-shell{height:100vh;display:flex}.workspace-rail{width:216px;flex:0 0 216px;border-right:1px solid var(--b1);display:flex;flex-direction:column;padding:18px 14px;background:rgba(12,10,8,.72)}.brand{display:flex;flex-direction:column;align-items:center;gap:9px;padding:14px 8px 26px}.brand-logo{width:100%;max-width:168px;height:auto;object-fit:contain;filter:drop-shadow(0 0 14px rgba(227,181,127,.4))}.brand-sub{font:12px 'IBM Plex Mono';letter-spacing:.16em;color:var(--label)}.nav-item{width:100%;display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;margin-bottom:3px;border:1px solid transparent;background:transparent;color:var(--muted);text-align:left}.nav-item:hover{color:var(--text);border-color:var(--b3)}.nav-item.active{background:rgba(227,181,127,.1);border-color:rgba(227,181,127,.22);color:#f0d9bb;font-weight:600}.nav-glyph{width:9px;height:9px;border:1.5px solid var(--disabled);border-radius:2px}.nav-item.active .nav-glyph{border-color:var(--amber);background:var(--amber)}.output-card{margin-top:auto;border:1px solid var(--b1);background:var(--panel);border-radius:12px;padding:13px}.eyebrow{font:12px 'IBM Plex Mono';letter-spacing:.14em;color:var(--label)}.output-btn{width:100%;margin-top:8px;padding:8px 11px;border-radius:8px;border:1px solid var(--b3);background:var(--ghost);color:var(--secondary);text-align:left}.output-btn:hover{border-color:var(--amber);color:var(--text);background:var(--ghost)}.main-shell{flex:1;min-width:0;height:100vh}.workspace-view{height:100%;display:none;flex-direction:column;min-width:0}.workspace-view.active{display:flex}.view-header{height:60px;flex:0 0 60px;display:flex;align-items:center;padding:0 24px;border-bottom:1px solid var(--b1);gap:14px}.view-title{font-size:18px;font-weight:600}.view-sub{font:12px 'IBM Plex Mono';letter-spacing:.08em;color:var(--label);margin-top:2px}.header-actions{margin-left:auto;display:flex;align-items:center;gap:10px}.online-pill{display:flex;align-items:center;gap:9px;padding:7px 15px;border-radius:20px;border:1px solid var(--b2);background:var(--panel);font-size:14px;color:var(--secondary)}.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px rgba(143,209,138,.6)}.dot.offline{background:var(--coral);box-shadow:0 0 8px rgba(224,139,122,.6)}.status-row{display:flex;align-items:center;gap:9px;margin-bottom:4px}.status-row:last-child{margin-bottom:0}.scroll{overflow:auto;min-height:0}.studio-body{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 372px;min-height:0}.studio-main{padding:22px;display:flex;flex-direction:column;gap:18px;overflow:auto}.studio-side{border-left:1px solid var(--b1);padding:20px;overflow:auto}.panel{border:1px solid var(--b1);background:var(--panel);border-radius:14px;padding:16px}.panel-title{font-size:16px;font-weight:600;margin-bottom:12px}.hero-canvas{width:min(100%,81.7778vh);height:auto;aspect-ratio:16/9;max-height:none;margin-inline:auto;border-radius:16px;background:#05070a;border:1px solid var(--b1);box-shadow:0 30px 70px -30px rgba(0,0,0,.8);display:block}.two-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.active-visual-display{width:100%;aspect-ratio:16/9;min-height:180px;background:#05070a;border:1px solid var(--b2);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--label)}.active-visual-display img{max-width:100%;max-height:100%;object-fit:contain}.active-meta,.record-meta,.image-meta,.subtitle{font:13px 'IBM Plex Mono';color:var(--label);line-height:1.5}.field{margin-top:12px}.field-title,label{display:block;font-size:14px;color:var(--muted);margin-bottom:7px}input,select,textarea{width:100%;background:var(--input);color:var(--text);border:1px solid var(--b2);border-radius:8px;padding:9px 11px;outline:none}input:focus,select:focus,textarea:focus{border-color:var(--amber);box-shadow:0 0 0 2px rgba(227,181,127,.12)}input[type=range]{accent-color:var(--amber);padding:0}.button-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}button{padding:9px 13px;border-radius:8px;border:1px solid var(--b4);background:var(--amber);color:#1a1206;font-weight:600}button:hover{background:var(--amber2)}button.secondary{background:var(--ghost);border-color:var(--b3);color:var(--secondary);font-weight:400}button.secondary:hover{border-color:var(--amber);color:var(--text);background:var(--ghost)}button.danger,.delete-button{background:rgba(224,139,122,.1);border-color:#5a3a34;color:var(--coral)}button:disabled{opacity:.45;cursor:not-allowed}.status-box,.field-content,#audioStatus,#manualStatus,#livePlayStatus,#rollingTranscript{background:var(--input);border:1px solid var(--b2);border-radius:8px;padding:11px;white-space:pre-wrap;overflow-wrap:anywhere;min-height:42px;color:var(--secondary)}
-.log-view{background:var(--input);border:1px solid var(--b2);border-radius:8px;padding:11px;margin:0 0 10px;height:340px;overflow:auto;white-space:pre;font:12px 'IBM Plex Mono';color:var(--secondary);tab-size:4}#activePlayMatch{background:transparent;border:0;padding:0;min-height:0}.terminal-label{font:12px 'IBM Plex Mono';letter-spacing:.12em;color:var(--label);margin:14px 0 7px}.activity-footer{height:192px;flex:0 0 192px;border-top:1px solid var(--b1);display:grid;grid-template-columns:1fr 400px;background:rgba(12,10,8,.5)}.activity-log-wrap{padding:14px 22px;min-width:0}.system-wrap{border-left:1px solid var(--b1);padding:14px 22px;display:flex;flex-direction:column;min-height:0}#auraActivityLog{height:120px;overflow:auto;white-space:pre-wrap;font:14px/1.8 'IBM Plex Mono';color:var(--secondary)}#systemStatus{flex:1;min-height:0;overflow:auto;font:14px/1.4 'IBM Plex Mono';color:var(--secondary)}.library-layout{flex:1;display:grid;grid-template-columns:236px 1fr;min-height:0}.filter-rail{border-right:1px solid var(--b1);padding:18px 14px;overflow:auto}.library-content{padding:22px;overflow:auto}.records-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}.record-card{border:1px solid var(--b1);background:var(--panel);border-radius:14px;padding:14px;min-width:0}.record-card h3{margin:6px 0 10px;font-size:16px}.record-status-badge{display:inline-flex;padding:3px 9px;border-radius:20px;font:12px 'IBM Plex Mono';letter-spacing:.06em}.record-status-complete{background:#12301d;color:#7ee7a5;border:1px solid #2e7d4f}.record-status-draft{background:#3a2a12;color:#e0b15c;border:1px solid #7d5a1f}.image-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}.image-tile{background:var(--input);border:1px solid var(--b2);border-radius:9px;padding:8px}.generated-image{width:100%;aspect-ratio:16/9;object-fit:contain;background:#05070a;border-radius:7px}.record-card,.image-tile{position:relative}.card-menu-btn{position:absolute;width:26px;height:26px;padding:0;border-radius:50%;background:rgba(12,10,8,.6);border:1px solid var(--b3);color:var(--text);font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center;font-weight:700;z-index:6}.card-menu-btn:hover{background:rgba(12,10,8,.88);border-color:var(--amber);color:var(--amber2)}.record-menu-btn{top:14px;right:14px}.image-menu-btn{top:6px;right:6px}.card-dropdown-menu{display:none;position:absolute;min-width:150px;background:var(--panel);border:1px solid var(--b2);border-radius:10px;box-shadow:0 12px 30px -10px rgba(0,0,0,.6);z-index:20;padding:4px}.card-dropdown-menu.show{display:block}.record-menu-btn+.card-dropdown-menu{top:44px;right:14px}.image-menu-btn+.card-dropdown-menu{top:36px;right:6px}.card-dropdown-menu button{display:block;width:100%;text-align:left;padding:8px 10px;border:0;border-radius:6px;background:transparent;color:var(--secondary);font-weight:400;font-size:14px}.card-dropdown-menu button:hover{background:var(--ghost);color:var(--text)}.card-dropdown-menu button.danger-item{color:var(--coral)}.card-dropdown-menu button.danger-item:hover{background:rgba(224,139,122,.12)}.primary-badge{position:absolute;top:6px;left:6px;background:rgba(227,181,127,.92);color:#1a1206;font:11px 'IBM Plex Mono';font-weight:700;padding:2px 7px;border-radius:20px;letter-spacing:.03em;z-index:4}.edit-icon{padding:2px 7px;margin-left:6px}.edit-actions{display:flex;gap:8px;margin-top:8px}.edit-textarea{min-height:100px}.capture-body,.import-body,.settings-body{padding:22px;overflow:auto;min-height:0}.capture-grid{display:grid;grid-template-columns:minmax(280px,1fr) minmax(320px,1.4fr) minmax(280px,1fr);gap:20px;align-items:start}.stack{display:flex;flex-direction:column;gap:16px}.pipeline{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}.pipe-step{font:13px 'IBM Plex Mono';padding:6px 13px;border-radius:20px;border:1px solid var(--b3);color:var(--label)}.pipe-step.active{background:#2a2016;border-color:var(--b4);color:var(--amber)}.pipe-step.pulsing{background:#2a2016;border-color:var(--amber);color:var(--amber);animation:auraPulse 1.1s ease-in-out infinite}@keyframes auraSpin{to{transform:rotate(360deg)}}.aura-spinner{display:inline-block;width:15px;height:15px;border:2px solid var(--b3);border-top-color:var(--amber);border-radius:50%;animation:auraSpin .8s linear infinite;vertical-align:middle;margin-left:10px}.mic-indicator{color:var(--amber);vertical-align:middle;animation:auraPulse 1.1s ease-in-out infinite}.gen-image-card{margin-top:4px}.gen-image-card img{width:100%;aspect-ratio:16/9;object-fit:contain;background:#05070a;border:1px solid var(--b2);border-radius:10px;display:block}.file-chip{display:inline-flex;align-items:center;gap:7px;margin-top:8px;padding:5px 10px;background:var(--input);border:1px solid var(--b2);border-radius:8px;font:13px 'IBM Plex Mono';color:var(--secondary);max-width:100%}.file-chip .file-chip-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.file-chip .file-chip-x{cursor:pointer;border:0;background:transparent;color:var(--coral);font-weight:700;padding:0 2px;font-size:15px;line-height:1}.aura-toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(8px);background:#12301d;color:#7ee7a5;border:1px solid #2e7d4f;border-radius:10px;padding:11px 18px;font:14px 'IBM Plex Sans',sans-serif;box-shadow:0 12px 30px -10px rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:2000;white-space:pre-wrap;max-width:480px;text-align:left}.aura-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}.aura-toast.warn{background:#3a2a12;color:#e0b15c;border-color:#7d5a1f}.import-grid{display:grid;grid-template-columns:1fr 300px;min-height:0;flex:1}.import-main{padding:22px;overflow:auto}.import-side{border-left:1px solid var(--b1);padding:22px;background:rgba(12,10,8,.4)}.db-manager-overlay{position:static;inset:auto;background:transparent;padding:0;z-index:auto}.db-manager-overlay[hidden]{display:none!important}.db-manager-window{height:100%;overflow-y:auto;background:transparent;border:0;border-radius:0;display:flex;flex-direction:column;gap:14px;padding:22px;box-shadow:none}.db-manager-header{display:flex;align-items:flex-start;gap:16px}.db-manager-header button{margin-left:auto}.db-manager-toolbar{display:flex;gap:10px;flex-wrap:wrap}.db-toolbar-section{background:var(--panel);border:1px solid var(--b1);border-radius:12px;padding:12px;min-width:220px}.db-manager-table-area{flex:1;min-height:0;overflow:auto;border:1px solid var(--b1);border-radius:12px;background:#100c07}.db-manager-toolbar .button-row{align-items:flex-end}.db-sortable-header{cursor:pointer;user-select:none}.db-sortable-header:hover{color:var(--text)}.db-table{width:100%;border-collapse:collapse;font-size:15px}.db-table th,.db-table td{padding:10px 12px;border-bottom:1px solid #1a1611;text-align:left;white-space:nowrap}.db-table th{position:sticky;top:0;background:var(--input);font:12px 'IBM Plex Mono';letter-spacing:.1em;color:var(--label)}.db-manager-record-checkbox,#dbManagerSelectAllCheckbox{width:auto}.db-thumbnail{width:56px;height:32px;object-fit:cover;border-radius:5px}.db-move-select-wrap{min-width:220px}.settings-card{max-width:760px;margin-bottom:20px}.hidden{display:none!important}@keyframes auraPulse{0%,100%{opacity:1}50%{opacity:.32}}@media(max-width:1100px){.studio-body{grid-template-columns:1fr}.studio-side{border-left:0;border-top:1px solid var(--b1)}.capture-grid{grid-template-columns:1fr}.activity-footer{grid-template-columns:1fr;height:auto}.system-wrap{border-left:0;border-top:1px solid var(--b1)}}.aura-confirm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:3000;align-items:center;justify-content:center}.aura-confirm-overlay.show{display:flex}.aura-confirm-box{background:var(--panel);border:1px solid var(--b1);border-radius:14px;padding:22px;max-width:420px;box-shadow:0 20px 50px -15px rgba(0,0,0,.7)}.aura-confirm-message{color:var(--text);font:15px/1.5 'IBM Plex Sans',sans-serif;margin-bottom:18px}.aura-confirm-actions{justify-content:flex-end}
+*{box-sizing:border-box}html{scrollbar-color:var(--b3) var(--bg);scrollbar-width:thin}*::-webkit-scrollbar{width:10px;height:10px}*::-webkit-scrollbar-track{background:var(--bg)}*::-webkit-scrollbar-thumb{background:var(--b3);border-radius:6px;border:2px solid var(--bg)}*::-webkit-scrollbar-thumb:hover{background:var(--b4)}html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',system-ui,sans-serif}body{overflow:hidden;background:radial-gradient(1100px 620px at 22% -12%,#191410 0%,#0c0a08 58%)}button,input,select,textarea{font:inherit}button{cursor:pointer}.app-shell{height:100vh;display:flex}.workspace-rail{width:216px;flex:0 0 216px;border-right:1px solid var(--b1);display:flex;flex-direction:column;padding:18px 14px;background:rgba(12,10,8,.72)}.brand{display:flex;flex-direction:column;align-items:center;gap:9px;padding:14px 8px 26px}.brand-logo{width:100%;max-width:168px;height:auto;object-fit:contain;filter:drop-shadow(0 0 14px rgba(227,181,127,.4))}.brand-sub{font:12px 'IBM Plex Mono';letter-spacing:.16em;color:var(--label)}.nav-item{width:100%;display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;margin-bottom:3px;border:1px solid transparent;background:transparent;color:var(--muted);text-align:left}.nav-item:hover{color:var(--text);border-color:var(--b3)}.nav-item.active{background:rgba(227,181,127,.1);border-color:rgba(227,181,127,.22);color:#f0d9bb;font-weight:600}.nav-glyph{width:9px;height:9px;border:1.5px solid var(--disabled);border-radius:2px}.nav-item.active .nav-glyph{border-color:var(--amber);background:var(--amber)}.output-card{margin-top:auto;border:1px solid var(--b1);background:var(--panel);border-radius:12px;padding:13px}.eyebrow{font:12px 'IBM Plex Mono';letter-spacing:.14em;color:var(--label)}.output-btn{width:100%;margin-top:8px;padding:8px 11px;border-radius:8px;border:1px solid var(--b3);background:var(--ghost);color:var(--secondary);text-align:left}.output-btn:hover{border-color:var(--amber);color:var(--text);background:var(--ghost)}.main-shell{flex:1;min-width:0;height:100vh}.workspace-view{height:100%;display:none;flex-direction:column;min-width:0}.workspace-view.active{display:flex}.view-header{height:60px;flex:0 0 60px;display:flex;align-items:center;padding:0 24px;border-bottom:1px solid var(--b1);gap:14px}.view-title{font-size:18px;font-weight:600}.view-sub{font:12px 'IBM Plex Mono';letter-spacing:.08em;color:var(--label);margin-top:2px}.header-actions{margin-left:auto;display:flex;align-items:center;gap:10px}.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px rgba(143,209,138,.6)}.dot.offline{background:var(--coral);box-shadow:0 0 8px rgba(224,139,122,.6)}.status-row{display:flex;align-items:center;gap:9px;margin-bottom:4px}.status-row:last-child{margin-bottom:0}.scroll{overflow:auto;min-height:0}.studio-body{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 372px;min-height:0}.studio-main{padding:22px;display:flex;flex-direction:column;gap:18px;overflow:auto}.studio-side{border-left:1px solid var(--b1);padding:20px;overflow:auto}.panel{border:1px solid var(--b1);background:var(--panel);border-radius:14px;padding:16px}.panel-title{font-size:16px;font-weight:600;margin-bottom:12px}.hero-canvas{width:min(100%,81.7778vh);height:auto;aspect-ratio:16/9;max-height:none;margin-inline:auto;border-radius:16px;background:#05070a;border:1px solid var(--b1);box-shadow:0 30px 70px -30px rgba(0,0,0,.8);display:block}.two-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.active-visual-display{width:100%;aspect-ratio:16/9;min-height:180px;background:#05070a;border:1px solid var(--b2);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--label)}.active-visual-display img{max-width:100%;max-height:100%;object-fit:contain}.active-meta,.record-meta,.image-meta,.subtitle{font:13px 'IBM Plex Mono';color:var(--label);line-height:1.5}.field{margin-top:12px}.field-title,label{display:block;font-size:14px;color:var(--muted);margin-bottom:7px}input,select,textarea{width:100%;background:var(--input);color:var(--text);border:1px solid var(--b2);border-radius:8px;padding:9px 11px;outline:none}input:focus,select:focus,textarea:focus{border-color:var(--amber);box-shadow:0 0 0 2px rgba(227,181,127,.12)}input[type=range]{accent-color:var(--amber);padding:0}.button-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}button{padding:9px 13px;border-radius:8px;border:1px solid var(--b4);background:var(--amber);color:#1a1206;font-weight:600}button:hover{background:var(--amber2)}button.secondary{background:var(--ghost);border-color:var(--b3);color:var(--secondary);font-weight:400}button.secondary:hover{border-color:var(--amber);color:var(--text);background:var(--ghost)}button.danger,.delete-button{background:rgba(224,139,122,.1);border-color:#5a3a34;color:var(--coral)}button:disabled{opacity:.45;cursor:not-allowed}.status-box,.field-content,#audioStatus,#manualStatus,#livePlayStatus,#rollingTranscript{background:var(--input);border:1px solid var(--b2);border-radius:8px;padding:11px;white-space:pre-wrap;overflow-wrap:anywhere;min-height:42px;color:var(--secondary)}
+.log-view{background:var(--input);border:1px solid var(--b2);border-radius:8px;padding:11px;margin:0 0 10px;height:340px;overflow:auto;white-space:pre;font:12px 'IBM Plex Mono';color:var(--secondary);tab-size:4}#activePlayMatch{background:transparent;border:0;padding:0;min-height:0}.terminal-label{font:12px 'IBM Plex Mono';letter-spacing:.12em;color:var(--label);margin:14px 0 7px}.activity-footer{height:192px;flex:0 0 192px;border-top:1px solid var(--b1);display:grid;grid-template-columns:1fr 400px;background:rgba(12,10,8,.5)}.activity-log-wrap{padding:14px 22px;min-width:0}.system-wrap{border-left:1px solid var(--b1);padding:14px 22px;display:flex;flex-direction:column;min-height:0}#auraActivityLog{height:120px;overflow:auto;white-space:pre-wrap;font:14px/1.8 'IBM Plex Mono';color:var(--secondary)}#systemStatus{flex:1;min-height:0;overflow:auto;font:14px/1.4 'IBM Plex Mono';color:var(--secondary)}.library-layout{flex:1;display:grid;grid-template-columns:236px 1fr;min-height:0}.filter-rail{border-right:1px solid var(--b1);padding:18px 14px;overflow:auto}.library-content{padding:22px;overflow:auto}.records-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}.record-card{border:1px solid var(--b1);background:var(--panel);border-radius:14px;padding:14px;min-width:0}.record-card h3{margin:6px 0 10px;font-size:16px}.record-status-badge{display:inline-flex;padding:3px 9px;border-radius:20px;font:12px 'IBM Plex Mono';letter-spacing:.06em}.record-status-complete{background:#12301d;color:#7ee7a5;border:1px solid #2e7d4f}.record-status-draft{background:#3a2a12;color:#e0b15c;border:1px solid #7d5a1f}.image-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}.image-tile{background:var(--input);border:1px solid var(--b2);border-radius:9px;padding:8px}.generated-image{width:100%;aspect-ratio:16/9;object-fit:contain;background:#05070a;border-radius:7px}.record-card,.image-tile{position:relative}.card-menu-btn{position:absolute;width:26px;height:26px;padding:0;border-radius:50%;background:rgba(12,10,8,.6);border:1px solid var(--b3);color:var(--text);font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center;font-weight:700;z-index:6}.card-menu-btn:hover{background:rgba(12,10,8,.88);border-color:var(--amber);color:var(--amber2)}.record-menu-btn{top:14px;right:14px}.image-menu-btn{top:6px;right:6px}.card-dropdown-menu{display:none;position:absolute;min-width:150px;background:var(--panel);border:1px solid var(--b2);border-radius:10px;box-shadow:0 12px 30px -10px rgba(0,0,0,.6);z-index:20;padding:4px}.card-dropdown-menu.show{display:block}.record-menu-btn+.card-dropdown-menu{top:44px;right:14px}.image-menu-btn+.card-dropdown-menu{top:36px;right:6px}.card-dropdown-menu button{display:block;width:100%;text-align:left;padding:8px 10px;border:0;border-radius:6px;background:transparent;color:var(--secondary);font-weight:400;font-size:14px}.card-dropdown-menu button:hover{background:var(--ghost);color:var(--text)}.card-dropdown-menu button.danger-item{color:var(--coral)}.card-dropdown-menu button.danger-item:hover{background:rgba(224,139,122,.12)}.primary-badge{position:absolute;top:6px;left:6px;background:rgba(227,181,127,.92);color:#1a1206;font:11px 'IBM Plex Mono';font-weight:700;padding:2px 7px;border-radius:20px;letter-spacing:.03em;z-index:4}.edit-icon{padding:2px 7px;margin-left:6px}.info-icon{margin-left:6px;display:inline-flex;vertical-align:middle;color:var(--amber);cursor:help}.info-icon:hover{color:var(--amber2)}.info-icon svg{display:block}.search-box{position:relative;display:inline-flex;align-items:center;width:220px}.search-box svg{position:absolute;left:10px;color:var(--label);pointer-events:none}.search-box input{width:100%;padding-left:32px}.header-menu{position:relative}.header-menu-btn+.card-dropdown-menu{top:100%;right:0;margin-top:6px;min-width:220px;max-height:70vh;overflow-y:auto}.edit-actions{display:flex;gap:8px;margin-top:8px}.edit-textarea{min-height:100px}.capture-body,.import-body,.settings-body{padding:22px;overflow:auto;min-height:0}.capture-grid{display:grid;grid-template-columns:minmax(280px,1fr) minmax(320px,1.4fr) minmax(280px,1fr);gap:20px;align-items:start}.stack{display:flex;flex-direction:column;gap:16px}.pipeline{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}.pipe-step{font:13px 'IBM Plex Mono';padding:6px 13px;border-radius:20px;border:1px solid var(--b3);color:var(--label)}.pipe-step.active{background:#2a2016;border-color:var(--b4);color:var(--amber)}.pipe-step.pulsing{background:#2a2016;border-color:var(--amber);color:var(--amber);animation:auraPulse 1.1s ease-in-out infinite}@keyframes auraSpin{to{transform:rotate(360deg)}}.aura-spinner{display:inline-block;width:15px;height:15px;border:2px solid var(--b3);border-top-color:var(--amber);border-radius:50%;animation:auraSpin .8s linear infinite;vertical-align:middle;margin-left:10px}.mic-indicator{color:var(--amber);vertical-align:middle;animation:auraPulse 1.1s ease-in-out infinite}.gen-image-card{margin-top:4px}.gen-image-card img{width:100%;aspect-ratio:16/9;object-fit:contain;background:#05070a;border:1px solid var(--b2);border-radius:10px;display:block}.file-chip{display:inline-flex;align-items:center;gap:7px;margin-top:8px;padding:5px 10px;background:var(--input);border:1px solid var(--b2);border-radius:8px;font:13px 'IBM Plex Mono';color:var(--secondary);max-width:100%}.file-chip .file-chip-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.file-chip .file-chip-x{cursor:pointer;border:0;background:transparent;color:var(--coral);font-weight:700;padding:0 2px;font-size:15px;line-height:1}.aura-toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(8px);background:#12301d;color:#7ee7a5;border:1px solid #2e7d4f;border-radius:10px;padding:11px 18px;font:14px 'IBM Plex Sans',sans-serif;box-shadow:0 12px 30px -10px rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:2000;white-space:pre-wrap;max-width:480px;text-align:left}.aura-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}.aura-toast.warn{background:#3a2a12;color:#e0b15c;border-color:#7d5a1f}.import-grid{display:grid;grid-template-columns:1fr 300px;min-height:0;flex:1}.import-main{padding:22px;overflow:auto}.import-side{border-left:1px solid var(--b1);padding:22px;background:rgba(12,10,8,.4)}.db-manager-overlay{position:static;inset:auto;background:transparent;padding:0;z-index:auto}.db-manager-overlay[hidden]{display:none!important}.db-manager-window{height:100%;overflow-y:auto;background:transparent;border:0;border-radius:0;display:flex;flex-direction:column;gap:14px;padding:22px;box-shadow:none}.db-manager-header{display:flex;align-items:flex-start;gap:16px}.db-manager-header button{margin-left:auto}.db-manager-table-area{flex:1;min-height:0;overflow:auto;border:1px solid var(--b1);border-radius:12px;background:#100c07}.db-sortable-header{cursor:pointer;user-select:none}.db-sortable-header:hover{color:var(--text)}.db-table{width:100%;border-collapse:collapse;font-size:15px}.db-table th,.db-table td{padding:10px 12px;border-bottom:1px solid #1a1611;text-align:left;white-space:nowrap}.db-table th{position:sticky;top:0;background:var(--input);font:12px 'IBM Plex Mono';letter-spacing:.1em;color:var(--label)}.db-manager-record-checkbox,#dbManagerSelectAllCheckbox{width:auto}.db-thumbnail{width:56px;height:32px;object-fit:cover;border-radius:5px}.db-move-select-wrap{min-width:220px}.settings-card{max-width:760px;margin-bottom:20px}.hidden{display:none!important}.record-done-btn{margin-left:8px}.record-card.minimized .record-hide-when-minimized,.record-card.minimized .record-done-btn{display:none}@keyframes auraPulse{0%,100%{opacity:1}50%{opacity:.32}}@media(max-width:1100px){.studio-body{grid-template-columns:1fr}.studio-side{border-left:0;border-top:1px solid var(--b1)}.capture-grid{grid-template-columns:1fr}.activity-footer{grid-template-columns:1fr;height:auto}.system-wrap{border-left:0;border-top:1px solid var(--b1)}}.aura-confirm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:3000;align-items:center;justify-content:center}.aura-confirm-overlay.show{display:flex}.aura-confirm-box{background:var(--panel);border:1px solid var(--b1);border-radius:14px;padding:22px;max-width:420px;box-shadow:0 20px 50px -15px rgba(0,0,0,.7)}.aura-confirm-message{color:var(--text);font:15px/1.5 'IBM Plex Sans',sans-serif;margin-bottom:18px}.aura-confirm-actions{justify-content:flex-end}
 
 /* 1080p full-screen Studio fit: keep all primary controls visible without scrolling. */
 @media (min-width:1101px) and (min-height:800px){
@@ -38,7 +38,6 @@
   .studio-side .button-row{margin-top:8px}
   .studio-side button{padding:7px 10px;font-size:13px}
   .studio-side .terminal-label{margin:8px 0 5px}
-  .studio-side #livePlayStatus{min-height:36px;padding:8px}
   .studio-side #activePlayMatch{margin-top:7px!important;max-height:116px;overflow:auto}
   .studio-side input[type=range]{height:16px}
 }
@@ -60,28 +59,27 @@
 </nav>
 <main class="main-shell">
 <section id="view-studio" class="workspace-view active">
- <header class="view-header"><div><div class="view-title" data-i18n="studio.title">Studio</div><div class="view-sub" data-i18n="studio.sub">RECORD · PLAY · PRESENT</div></div><div class="header-actions"><div class="online-pill"><span class="dot"></span><span data-i18n="studio.online">Local system online</span></div></div></header>
+ <header class="view-header"><div><div class="view-title" data-i18n="studio.title">Studio</div><div class="view-sub" data-i18n="studio.sub">THINK · SAY · DISPLAY</div></div></header>
  <div class="studio-body">
   <div class="studio-main">
-   <div><div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><div class="panel-title" style="margin:0">Aura Camera</div><span class="subtitle">composited output · camera → PsySeg → semantic background</span></div>
+   <div><div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><div class="panel-title" style="margin:0">Aura Camera</div><span class="subtitle">Composited Video · Camera → Segmentation Processing → Semantic Aura</span></div>
     <video id="auraLiveVideo" autoplay playsinline muted style="display:none"></video>
     <canvas id="auraLiveCanvas" class="hero-canvas"></canvas><canvas id="auraBroadcastCanvas" style="display:none"></canvas>
    </div>
    <div class="two-col">
     <div class="panel"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:12px"><div class="panel-title" style="margin:0;flex-shrink:0" data-i18n="cam.panel">Webcam Live View</div><div id="auraSegmentationStatus" class="active-meta" style="text-align:right;min-width:0">Segmentation not initialized.</div></div><label data-i18n="cam.device">Camera Device</label><select id="cameraDeviceSelect"></select>
-     <div class="button-row"><button onclick="startAuraCamera()" data-i18n="cam.start">Start Camera</button><button class="secondary" onclick="stopAuraCamera()" data-i18n="cam.stop">Stop Camera</button><button class="secondary" onclick="enableAuraBlur()" data-i18n="cam.blur">Blur</button><button class="secondary" onclick="enableAuraRemove()" data-i18n="cam.removeBg">Remove BG</button><button class="danger" onclick="resetAuraSegmentation()" data-i18n="cam.reset">Reset</button></div>
+     <div class="button-row"><button onclick="startAuraCamera()" data-i18n="cam.start">Start Camera</button><button class="secondary" onclick="stopAuraCamera()" data-i18n="cam.stop">Stop Camera</button><button class="secondary" onclick="enableAuraRemove()" data-i18n="cam.removeBg">Remove BG</button><button class="secondary" onclick="enableAuraBlur()" data-i18n="cam.blur">Blur</button><button class="danger" onclick="resetAuraSegmentation()" data-i18n="cam.reset">Reset</button></div>
     <label style="margin-top:16px"><span data-i18n="cam.erode">Edge Smoothing (Erode)</span> <span id="psySegErodeValue">1</span></label><input id="psySegErode" type="range" min="0" max="10" value="1" step="1" oninput="psySegErodeValue.textContent=this.value;handlePsySegParamChanged()">
     <label><span data-i18n="cam.blurLevel">Background Blur</span> <span id="psySegBlurValue">39</span></label><input id="psySegBlur" type="range" min="1" max="60" value="39" step="1" oninput="psySegBlurValue.textContent=this.value;handlePsySegParamChanged()">
     </div>
-    <div class="panel" style="display:flex;flex-direction:column"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:12px"><div class="panel-title" style="margin:0;flex-shrink:0" data-i18n="visual.active">Active Visual</div><div id="activeVisualMeta" class="active-meta" style="text-align:right;min-width:0">Awaiting match.</div></div><div id="activeVisualDisplay" class="active-visual-display" style="flex:1;aspect-ratio:auto">No active visual selected.</div></div>
+    <div class="panel" style="display:flex;flex-direction:column"><div class="panel-title" style="margin:0 0 12px" data-i18n="visual.active">Active Visual</div><div id="activeVisualDisplay" class="active-visual-display" style="flex:1;aspect-ratio:auto">No active visual selected.</div></div>
    </div>
-   <div class="panel"><div class="eyebrow" data-i18n="transcript.rolling">ROLLING TRANSCRIPT</div><div id="rollingTranscript" style="margin-top:10px">No speech captured yet.</div></div>
   </div>
   <aside class="studio-side">
-   <div class="panel"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><div class="panel-title" style="margin:0" data-i18n="play.title">Play Mode</div><svg id="playModeMicIndicator" class="mic-indicator" style="display:none" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title data-i18n="play.listening">Play Mode is listening</title><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg></div><label data-i18n="play.group">Active Play Mode Group</label><select id="activeGroupSelect" onchange="setActiveGroupFromSelect()"><option value="" data-i18n="play.allComplete">All Complete Records</option></select><label data-i18n="play.mic">Microphone</label><select id="microphoneDeviceSelect"></select>
+   <div class="panel"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><div class="panel-title" style="margin:0" data-i18n="play.title">Play Mode</div><svg id="playModeMicIndicator" class="mic-indicator" style="display:none" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title data-i18n="play.listening">Play Mode is listening</title><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg></div><div style="display:flex;align-items:center;gap:6px;margin-bottom:7px"><label data-i18n="play.group" style="margin-bottom:0">Active Play Mode Group</label><span class="info-icon" title="Records only trigger in Play Mode when their group matches the active group, or when All Complete Records is selected."><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.6"></circle><circle cx="8" cy="4.6" r="1.1" fill="currentColor"></circle><rect x="7.1" y="6.8" width="1.8" height="5.3" rx="0.9" fill="currentColor"></rect></svg></span></div><select id="activeGroupSelect" onchange="setActiveGroupFromSelect()"><option value="" data-i18n="play.allComplete">All Complete Records</option></select><label data-i18n="play.mic">Microphone</label><select id="microphoneDeviceSelect"></select>
     <div class="button-row"><button id="localWhisperStartBtn" onclick="startLocalWhisperPlayMode()" data-i18n="play.start">Start Play Mode</button><button id="localWhisperStopBtn" class="danger" onclick="stopLocalWhisperPlayMode()" disabled data-i18n="play.stop">Stop</button></div>
-    <div class="terminal-label" data-i18n="play.status">LIVE PLAY STATUS</div><div id="livePlayStatus">Play Mode is stopped.</div>
    </div>
+   <div class="panel"><div class="eyebrow" data-i18n="transcript.rolling">ROLLING TRANSCRIPT</div><div id="rollingTranscript" style="margin-top:10px">No speech captured yet.</div></div>
    <div class="panel"><div class="eyebrow" data-i18n="play.match">ACTIVE BACKGROUND MATCH</div><div id="activePlayMatch" style="margin-top:12px">No active match yet.</div></div>
    <div class="panel"><div class="panel-title" data-i18n="disp.title">Display &amp; Transition</div>
     <label data-i18n="disp.mode">Display Mode</label><select id="displayMode" onchange="handleDisplaySettingsChanged()"><option value="single" data-i18n="disp.img1">1 Image</option><option value="dual" data-i18n="disp.img2">2 Images</option><option value="triple" data-i18n="disp.img3">3 Images</option><option value="aura" data-i18n="disp.aura">Aura Mode</option></select>
@@ -96,9 +94,9 @@
 </section>
 
 <section id="view-library" class="workspace-view">
- <header class="view-header"><div><div class="view-title" data-i18n="lib.title">Semantic Visual Library</div><div class="view-sub" data-i18n="lib.sub">RECORDS · PROMPTS · TRIGGERS · IMAGES</div></div><div class="header-actions"><button onclick="loadFullRecords()" data-i18n="lib.refresh">Refresh Records</button></div></header>
+ <header class="view-header"><div><div class="view-title" data-i18n="lib.title">Semantic Visual Library</div><div class="view-sub" data-i18n="lib.sub">RECORDS · PROMPTS · TRIGGERS · IMAGES</div></div><div class="header-actions"><div class="search-box"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"></circle><line x1="10.8" y1="10.8" x2="14.5" y2="14.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></line></svg><input type="text" id="librarySearchInput" placeholder="Search triggers..." oninput="filterLibraryRecords(this.value)"></div><button onclick="loadFullRecords()" data-i18n="lib.refresh">Refresh Records</button></div></header>
  <div class="library-layout"><aside class="filter-rail"><div class="eyebrow" data-i18n="lib.view">VIEW</div><select id="libraryViewSelect" onchange="setLibraryViewFromSelect()" style="margin-top:10px"><option value="all-complete" data-i18n="lib.allComplete">All Complete Records</option><option value="all-drafts" data-i18n="lib.allDrafts">All Draft Records</option><option value="all-records" data-i18n="lib.allRecords">All Records</option></select>
-  <div class="eyebrow" style="margin-top:24px" data-i18n="lib.newGroup">NEW GROUP</div><input id="newGroupName" placeholder="Group name" data-i18n-placeholder="lib.groupName"><textarea id="newGroupDescription" rows="3" placeholder="Description" data-i18n-placeholder="lib.description"></textarea><div class="button-row"><button onclick="createLibraryGroup()" data-i18n="lib.createGroup">Create Group</button><button class="secondary" onclick="loadLibraryGroups()" data-i18n="lib.refreshBtn">Refresh</button></div></aside>
+  <div class="eyebrow" style="margin-top:24px" data-i18n="lib.newGroup">NEW GROUP</div><input id="newGroupName" placeholder="Group name" data-i18n-placeholder="lib.groupName"><textarea id="newGroupDescription" rows="3" placeholder="Description" data-i18n-placeholder="lib.description"></textarea><div class="button-row"><button onclick="createLibraryGroup()" data-i18n="lib.createGroup">Create Group</button></div></aside>
   <div class="library-content"><div id="records" class="records-grid"><div class="empty">Loading records...</div></div></div></div>
 </section>
 
@@ -116,39 +114,33 @@
 
 <section id="view-import" class="workspace-view">
  <header class="view-header"><div><div class="view-title" data-i18n="imp.title">Image Search</div><div class="view-sub">SERPAPI · WEB IMAGE IMPORT</div></div></header>
- <div class="import-grid"><div class="import-main"><div class="panel"><div class="panel-title" data-i18n="imp.searchImport">Search and Import</div><label data-i18n="imp.query">Search Query</label><input id="imageImportQuery" placeholder="Example: transformer architecture diagram" data-i18n-placeholder="imp.queryPh"><label><span data-i18n="imp.batch">Batch Size</span>: <span id="imageImportLimitValue">10</span></label><input id="imageImportLimit" type="range" min="1" max="100" value="10" oninput="imageImportLimitValue.textContent=this.value"><div class="button-row" style="align-items:center"><button onclick="importImagesFromSearch()" data-i18n="imp.import">Import Images</button><span id="imageImportSpinner" class="aura-spinner" style="display:none"></span></div><div class="terminal-label" data-i18n="imp.status">IMAGE SEARCH IMPORT STATUS</div><div id="imageImportStatus" class="status-box">No image search import run yet.</div></div>
+ <div class="import-grid"><div class="import-main"><div class="panel"><div class="panel-title" data-i18n="imp.searchImport">Search and Import</div><label data-i18n="imp.query">Search Query</label><input id="imageImportQuery" placeholder="Example: transformer architecture diagram" data-i18n-placeholder="imp.queryPh"><label><span data-i18n="imp.batch">Batch Size</span>: <span id="imageImportLimitValue">10</span></label><input id="imageImportLimit" type="range" min="1" max="100" value="10" oninput="imageImportLimitValue.textContent=this.value"><div class="button-row" style="align-items:center"><button onclick="importImagesFromSearch()" data-i18n="imp.import">Import Images</button><span id="imageImportSpinner" class="aura-spinner" style="display:none"></span></div></div>
   <div class="panel-title" style="margin-top:20px" data-i18n="imp.imported">Imported Records</div>
   <div id="imageSearchRecords" class="records-grid"><div class="empty">Loading...</div></div>
  </div>
- <aside class="import-side"><div class="panel-title" data-i18n="imp.target">Import Target</div><label data-i18n="imp.targetGroup">Target Group</label><select id="imageImportGroupSelect"><option value="" data-i18n="rec.noGroup">No Specific Group</option></select><div class="panel" style="margin-top:18px"><div class="eyebrow" data-i18n="imp.onImport">ON IMPORT</div><p class="subtitle" data-i18n="imp.onImportHint">Each downloaded image becomes a new draft record. Source metadata is retained and the record can be completed in Capture or Library.</p></div></aside></div>
+ <aside class="import-side"><div style="display:flex;align-items:center;gap:6px;margin-bottom:12px"><div class="panel-title" data-i18n="imp.target" style="margin-bottom:0">Import Target</div><span class="info-icon" title="Each downloaded image becomes a new draft record. Source metadata is retained and the record can be completed here or in the Library."><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.6"></circle><circle cx="8" cy="4.6" r="1.1" fill="currentColor"></circle><rect x="7.1" y="6.8" width="1.8" height="5.3" rx="0.9" fill="currentColor"></rect></svg></span></div><label data-i18n="imp.targetGroup">Target Group</label><select id="imageImportGroupSelect"><option value="" data-i18n="rec.noGroup">No Specific Group</option></select></aside></div>
 </section>
 
 <section id="view-settings" class="workspace-view">
  <header class="view-header"><div><div class="view-title" data-i18n="set.title">Settings</div><div class="view-sub" data-i18n="set.sub">DEVICES · DISPLAY · PRESENTATION</div></div></header>
  <div class="settings-body"><div class="panel settings-card"><div class="panel-title" data-i18n="set.language">Language</div><select id="settingsUiLanguage" onchange="setUiLanguageFromSelect()"></select></div>
  <div class="panel settings-card"><div class="panel-title" data-i18n="set.devices">Devices</div><div class="two-col"><div><label data-i18n="set.camera">Camera</label><select id="settingsCameraDeviceSelect"></select></div><div><label data-i18n="set.mic">Microphone</label><select id="settingsMicrophoneDeviceSelect"></select></div></div></div>
- <div class="panel settings-card"><div class="panel-title" data-i18n="set.presentation">Presentation</div><p class="subtitle" data-i18n="set.presentationHint">Display and transition controls are synchronized with Studio. Use the Studio controls to change active values.</p></div>
  <div class="panel settings-card"><div class="panel-title" data-i18n="set.matching">Matching &amp; Generation</div>
-  <label style="display:flex;align-items:center;gap:10px"><input id="settingsSemanticMatching" type="checkbox" style="width:auto" checked><span data-i18n="set.semantic">Semantic matching (embeddings) in Play Mode</span></label>
-  <p class="subtitle" data-i18n="set.semanticHint">Uses an Ollama embedding model so related phrases match triggers even without exact word overlap. Falls back to keyword matching automatically if the embedding model is unavailable.</p>
+  <label style="display:flex;align-items:center;gap:10px"><input id="settingsSemanticMatching" type="checkbox" style="width:auto" checked><span data-i18n="set.semantic">Semantic matching (embeddings) in Play Mode</span><span class="info-icon" title="Uses an Ollama embedding model so related phrases match triggers even without exact word overlap. Falls back to keyword matching automatically if the embedding model is unavailable."><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.6"></circle><circle cx="8" cy="4.6" r="1.1" fill="currentColor"></circle><rect x="7.1" y="6.8" width="1.8" height="5.3" rx="0.9" fill="currentColor"></rect></svg></span></label>
   <label data-i18n="set.model">Ollama Model Override</label><input id="settingsOllamaModel" placeholder="Empty = default from .env / built-in">
-  <p class="subtitle" data-i18n="set.modelHint">Model used for summaries, prompts, and trigger text. Must already be pulled in Ollama.</p>
-  <label data-i18n="set.negative">Negative Prompt</label><textarea id="settingsNegativePrompt" rows="3" placeholder="Empty = default: text, watermark, logo, blurry, distorted, low quality"></textarea>
-  <p class="subtitle" data-i18n="set.negativeHint">Applied to every ComfyUI image generation.</p>
+  <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px"><label data-i18n="set.negative" style="margin-bottom:0">Negative Prompt</label><span class="info-icon" title="Applied to every ComfyUI image generation."><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.6"></circle><circle cx="8" cy="4.6" r="1.1" fill="currentColor"></circle><rect x="7.1" y="6.8" width="1.8" height="5.3" rx="0.9" fill="currentColor"></rect></svg></span></div><textarea id="settingsNegativePrompt" rows="3" placeholder="Empty = default: text, watermark, logo, blurry, distorted, low quality"></textarea>
   <div class="button-row"><button onclick="saveMatchingSettings()" data-i18n="set.save">Save</button></div>
   <div class="terminal-label" data-i18n="set.status">STATUS</div><div id="matchingSettingsStatus" class="status-box">No changes saved yet.</div>
  </div>
- <div class="panel settings-card"><div class="panel-title" data-i18n="set.logs">Diagnostic Logs</div>
-  <p class="subtitle" data-i18n="set.logsHint">Output from the services Aura starts for you (speech/Whisper, ComfyUI, the Aura server, the virtual-camera bridge). If an indicator is red, the reason is almost always in here.</p>
+ <div class="panel settings-card"><div class="panel-title" data-i18n="set.logs">Logs</div>
   <div class="two-col">
-   <div><label data-i18n="set.logsSelect">Log file</label><select id="settingsLogSelect" onchange="loadSelectedDiagnosticLog()"></select></div>
+   <div><label data-i18n="set.logsSelect">Select Log</label><select id="settingsLogSelect" onchange="loadSelectedDiagnosticLog()"></select></div>
    <div><label>&nbsp;</label><div class="button-row">
-    <button class="secondary" onclick="refreshDiagnosticLogs()" data-i18n="set.logsRefresh">Refresh</button>
-    <button class="secondary" onclick="openDiagnosticLogFolder()" data-i18n="set.logsFolder">Open folder</button>
-    <button class="secondary" onclick="copyDiagnosticLog()" data-i18n="set.logsCopy">Copy</button>
+    <button class="secondary" onclick="refreshDiagnosticLogs()" data-i18n="set.logsRefresh">Refresh Log</button>
+    <button class="secondary" onclick="openDiagnosticLogFolder()" data-i18n="set.logsFolder">Open Log Folder</button>
+    <button class="secondary" onclick="copyDiagnosticLog()" data-i18n="set.logsCopy">Copy Log</button>
    </div></div>
   </div>
-  <div class="terminal-label" data-i18n="set.logsView">LOG CONTENTS</div>
   <pre id="settingsLogView" class="log-view">Select a log to view it.</pre>
   <div id="settingsLogStatus" class="status-box">No log loaded.</div>
  </div>
@@ -156,15 +148,20 @@
 </section>
 
 <div id="dbManagerOverlay" class="workspace-view db-manager-overlay" hidden>
- <header class="view-header"><div><div class="view-title" data-i18n="db.title">DB Manager</div><div class="view-sub" data-i18n="db.sub">SPREADSHEET RECORD MANAGEMENT</div></div></header>
+ <header class="view-header"><div><div class="view-title" data-i18n="db.title">DB Manager</div><div class="view-sub" data-i18n="db.sub">SPREADSHEET RECORD MANAGEMENT</div></div><div class="header-actions"><div class="search-box"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"></circle><line x1="10.8" y1="10.8" x2="14.5" y2="14.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></line></svg><input type="text" id="dbManagerSearchInput" placeholder="Search triggers..." oninput="filterDbManagerRecords(this.value)"></div><button class="secondary" onclick="loadDbManager()" data-i18n="db.refresh">Refresh</button><div class="header-menu"><button type="button" class="secondary header-menu-btn" onclick="toggleCardMenu(event, this)">Filter Group &#9662;</button><div class="card-dropdown-menu" onclick="event.stopPropagation()"><div class="db-move-select-wrap"><label data-i18n="db.filterGroup">Filter Group</label><select id="dbManagerGroupFilterSelect" onchange="setDbManagerGroupFilter()"><option value="" data-i18n="db.allGroups">All Groups</option></select></div></div></div><div class="header-menu"><button type="button" class="secondary header-menu-btn" onclick="toggleCardMenu(event, this)">Maintenance &#9662;</button><div class="card-dropdown-menu" onclick="event.stopPropagation()"><button type="button" onclick="openDbManagerMoveModal()" data-i18n="db.moveSelected">Move Selected</button><button type="button" onclick="bulkCompleteDbManagerRecords()" data-i18n="db.markComplete">Mark Complete</button><button type="button" class="danger-item" onclick="bulkDeleteDbManagerRecords()" data-i18n="db.delete">Delete</button><button type="button" class="danger-item" onclick="deleteCurrentDbManagerGroup()" data-i18n="db.deleteGroup">Delete Current Group</button><button type="button" onclick="loadDbManagerTrash()" data-i18n="db.trash">View Trash</button><button type="button" class="danger-item" onclick="purgeDeletedDbManagerImages()" data-i18n="db.purge">Purge Deleted Images</button></div></div><div class="header-menu"><button type="button" class="secondary header-menu-btn" onclick="toggleCardMenu(event, this)">Portability &#9662;</button><div class="card-dropdown-menu" onclick="event.stopPropagation()"><button type="button" onclick="exportSelectedDbManagerRecords()" data-i18n="db.exportSelected">Export Selected</button><button type="button" onclick="exportCurrentDbManagerGroup()" data-i18n="db.exportGroup">Export Group</button><button type="button" onclick="exportFullDbManagerDatabase()" data-i18n="db.exportAll">Export Database</button><input id="dbManagerImportPackageFile" type="file" accept=".zip" style="display:none" onchange="stageImportDbManagerPackage()"><button type="button" onclick="handleImportPackageButtonClick()" data-i18n="db.importPackage">Import Package</button></div></div></div></header>
  <div class="db-manager-window">
-  <div class="db-manager-toolbar">
-   <div class="db-toolbar-section"><div class="field-title" data-i18n="db.view">View</div><div class="button-row"><button class="secondary" onclick="loadDbManager()" data-i18n="db.refresh">Refresh</button><div class="db-move-select-wrap"><label data-i18n="db.filterGroup">Filter Group</label><select id="dbManagerGroupFilterSelect" onchange="setDbManagerGroupFilter()"><option value="" data-i18n="db.allGroups">All Groups</option></select></div><button id="deleteCurrentGroupButton" class="danger" onclick="deleteCurrentDbManagerGroup()" data-i18n="db.deleteGroup">Delete Current Group</button><button id="cancelDeleteCurrentGroupButton" class="secondary" onclick="cancelDeleteCurrentDbManagerGroup()" hidden data-i18n="db.cancel">Cancel</button></div></div>
-   <div class="db-toolbar-section"><div class="field-title" data-i18n="db.bulk">Bulk Actions</div><div class="button-row"><div class="db-move-select-wrap"><label data-i18n="db.moveTo">Move To</label><select id="dbManagerMoveGroupSelect"><option value="" data-i18n="rec.noGroup">No Specific Group</option></select></div><button id="moveSelectedRecordsButton" onclick="bulkMoveDbManagerRecords()" data-i18n="db.moveSelected">Move Selected</button><button id="cancelMoveSelectedRecordsButton" class="secondary" onclick="cancelMoveSelectedRecords()" hidden data-i18n="db.cancel">Cancel</button><button id="completeSelectedRecordsButton" class="secondary" onclick="bulkCompleteDbManagerRecords()" data-i18n="db.markComplete">Mark Complete</button><button id="cancelCompleteSelectedRecordsButton" class="secondary" onclick="cancelCompleteSelectedRecords()" hidden data-i18n="db.cancel">Cancel</button><button id="deleteSelectedRecordsButton" class="danger" onclick="bulkDeleteDbManagerRecords()" data-i18n="db.delete">Delete</button><button id="cancelDeleteSelectedRecordsButton" class="secondary" onclick="cancelDeleteSelectedRecords()" hidden data-i18n="db.cancel">Cancel</button></div></div>
-   <div class="db-toolbar-section"><div class="field-title" data-i18n="db.portability">Portability</div><div class="button-row"><button class="secondary" onclick="exportSelectedDbManagerRecords()" data-i18n="db.exportSelected">Export Selected</button><button class="secondary" onclick="exportCurrentDbManagerGroup()" data-i18n="db.exportGroup">Export Group</button><button class="secondary" onclick="exportFullDbManagerDatabase()" data-i18n="db.exportAll">Export Database</button><input id="dbManagerImportPackageFile" type="file" accept=".zip" style="display:none" onchange="stageImportDbManagerPackage()"><button id="importPackageButton" class="secondary" onclick="handleImportPackageButtonClick()" data-i18n="db.importPackage">Import Package</button><button id="cancelImportPackageButton" class="secondary" onclick="cancelImportDbManagerPackage()" hidden data-i18n="db.cancel">Cancel</button></div></div>
-   <div class="db-toolbar-section"><div class="field-title" data-i18n="db.maintenance">Maintenance</div><div class="button-row"><button class="secondary" onclick="loadDbManagerTrash()" data-i18n="db.trash">View Trash</button><button id="purgeDeletedImagesButton" class="danger" onclick="purgeDeletedDbManagerImages()" data-i18n="db.purge">Purge Deleted Images</button><button id="cancelPurgeDeletedImagesButton" class="secondary" onclick="cancelPurgeDeletedImages()" hidden data-i18n="db.cancel">Cancel</button></div></div>
-  </div>
   <div class="db-manager-table-area"><div id="dbManagerRecords" class="db-table-wrap"><div class="empty">Click Refresh to load records.</div></div></div>
+ </div>
+
+ <div id="dbManagerMoveOverlay" class="aura-confirm-overlay">
+  <div class="aura-confirm-box">
+   <div class="aura-confirm-message">Move <span id="dbManagerMoveCountLabel"></span> selected record(s) to:</div>
+   <div class="db-move-select-wrap"><label data-i18n="db.moveTo">Move To</label><select id="dbManagerMoveGroupSelect"><option value="" data-i18n="rec.noGroup">No Specific Group</option></select></div>
+   <div class="button-row aura-confirm-actions">
+    <button type="button" class="secondary" onclick="closeDbManagerMoveModal()">Cancel</button>
+    <button type="button" onclick="confirmDbManagerMove()" data-i18n="db.moveSelected">Move Selected</button>
+   </div>
+  </div>
  </div>
 </div>
 </main>
@@ -308,6 +305,9 @@ let mediaRecorder;
 let recordedChunks = [];
 let recordedBlob = null;
 let activeEdit = null;
+let expandedRecordIds = new Set();
+let currentLibraryRecords = [];
+let librarySearchTerm = '';
 
 let livePlayBuffer = [];
 let lastActiveImageUrl = null;
@@ -351,6 +351,7 @@ let dbManagerGroupFilterId = '';
 let dbManagerRecordsCache = [];
 let dbManagerSortField = null;
 let dbManagerSortDirection = 'asc';
+let dbManagerSearchTerm = '';
 /**
  * source_item_ids imported via the Image Search page during this browser
  * session. Not persisted -- the Imported Records grid only ever shows what
@@ -530,139 +531,18 @@ function getSelectedDisplayMode() {
     return select?.value || 'single';
 }
 
-function getEffectiveSceneMode(displayMode, slotCount) {
-    if (displayMode === 'single') {
-        return 'single';
-    }
-
-    if (displayMode === 'dual') {
-        return slotCount >= 2 ? 'dual' : 'single';
-    }
-
-    if (displayMode === 'triple') {
-        if (slotCount >= 3) return 'triple';
-        if (slotCount >= 2) return 'dual';
-        return 'single';
-    }
-
-    return 'aura';
-}
-
-function getDisplaySlotLimit(displayMode) {
-    if (displayMode === 'single') return 1;
-    if (displayMode === 'dual') return 2;
-    return 3;
-}
-
-function cloneDisplaySlot(slot, slotIndex = 0, role = 'primary') {
-    if (!slot) {
-        return null;
-    }
-
-    return {
-        ...slot,
-        slotIndex,
-        role
-    };
-}
-
-function getMostRecentSceneSlot(slots) {
-    return slots
-        .filter(Boolean)
-        .slice()
-        .sort((a, b) => {
-            const aTime = Number(a.lastMatchedAt || a.insertedAt || 0);
-            const bTime = Number(b.lastMatchedAt || b.insertedAt || 0);
-
-            return bTime - aTime;
-        })[0] || null;
-}
-
-function getDisplaySlotsForMode(scene, displayMode) {
-    const sourceSlots =
-        Array.isArray(scene?.slots)
-            ? scene.slots.filter(Boolean)
-            : [];
-
-    if (!sourceSlots.length) {
-        return [];
-    }
-
-    if (displayMode === 'single') {
-        const mostRecentSlot =
-            getMostRecentSceneSlot(sourceSlots);
-
-        return mostRecentSlot
-            ? [cloneDisplaySlot(mostRecentSlot, 0, 'primary')]
-            : [];
-    }
-
-    const limit = getDisplaySlotLimit(displayMode);
-
-    const roleForIndex = index =>
-        index === 0
-            ? 'primary'
-            : index === 1
-                ? 'supporting-left'
-                : 'supporting-right';
-
-    if (displayMode === 'dual') {
-        // The server always runs in aura mode and keeps up to THREE slots
-        // (primary + supporting slots 1 and 2). A plain slots[0..1] slice only
-        // ever shows slots 0 and 1, so a new match landing in slot 2 is
-        // invisible in 2-image mode (and, not being in the display scene key,
-        // doesn't even trigger a camera update). Pinning slot 0 (the server's
-        // "primary") is no better: the primary only changes on a rare
-        // high-score promotion, so the left image freezes while only the right
-        // rotates.
-        //
-        // Instead, show the two MOST RECENTLY MATCHED slots so both positions
-        // keep updating and the newest match is always one of the two. Order
-        // the chosen pair by their server slot index so an image that stays
-        // on screen keeps its side (only the replaced one changes) rather than
-        // the whole pair shuffling on every match.
-        const recencyOf = slot =>
-            Number(slot.lastMatchedAt || slot.insertedAt || 0);
-
-        const chosen =
-            sourceSlots
-                .slice()
-                .sort((a, b) => recencyOf(b) - recencyOf(a))
-                .slice(0, limit)
-                .sort((a, b) =>
-                    Number(a.slotIndex || 0) - Number(b.slotIndex || 0)
-                );
-
-        return chosen.map((slot, index) =>
-            cloneDisplaySlot(slot, index, roleForIndex(index))
-        );
-    }
-
-    // triple / aura: show up to three slots in their stable positions.
-    const slots =
-        sourceSlots
-            .slice(0, limit)
-            .map((slot, index) =>
-                cloneDisplaySlot(slot, index, roleForIndex(index))
-            );
-
-    return slots;
-}
-
 function applyDisplayModeToScene(scene) {
-    if (!scene || !Array.isArray(scene.slots)) {
+    // Slot placement is owned by the shared DisplaySceneMapper module so the
+    // camera compositor and Slide Output can never drift apart. The module is
+    // exposed on window by the module <script> near the end of this file.
+    if (!window.DisplaySceneMapper) {
         return scene;
     }
 
-    const displayMode = getSelectedDisplayMode();
-    const slots = getDisplaySlotsForMode(scene, displayMode);
-
-    return {
-        ...scene,
-        sceneMode: getEffectiveSceneMode(displayMode, slots.length),
-        requestedDisplayMode: displayMode,
-        slots
-    };
+    return window.DisplaySceneMapper.applyDisplayModeToScene(
+        scene,
+        getSelectedDisplayMode()
+    );
 }
 
 function saveDisplaySettings() {
@@ -1018,7 +898,6 @@ function handleDisplaySettingsChanged() {
 // This is separate from the live webcam canvas and Aura output window.
 function setActiveVisual(imageUrl, metaText) {
     const display = document.getElementById('activeVisualDisplay');
-    const meta = document.getElementById('activeVisualMeta');
     const transitionType = document.getElementById('transitionType').value;
     const duration = Number(document.getElementById('transitionDurationMs').value || 1800);
 
@@ -1027,7 +906,6 @@ function setActiveVisual(imageUrl, metaText) {
 
     if (transitionType === 'instant') {
         display.innerHTML = `<img src="${imageUrl}" />`;
-        meta.textContent = metaText;
         return;
     }
 
@@ -1035,7 +913,6 @@ function setActiveVisual(imageUrl, metaText) {
 
     setTimeout(() => {
         display.innerHTML = `<img src="${imageUrl}" />`;
-        meta.textContent = metaText;
         display.style.opacity = 1;
     }, duration);
 }
@@ -1471,16 +1348,10 @@ async function loadFullRecords() {
         }
 
         const response = await fetch(`/api/records/full${query}`);
-        const records = await response.json();
+        currentLibraryRecords = await response.json();
 
         blurFocusedElementWithin(recordsBox);
-
-        if (!records.length) {
-            recordsBox.innerHTML = `<div class="empty">${t('lib.none')}</div>`;
-            return;
-        }
-
-        recordsBox.innerHTML = records.map(record => renderRecordCard(record)).join('');
+        renderLibraryRecordsGrid();
 
     } catch (error) {
         blurFocusedElementWithin(recordsBox);
@@ -1503,6 +1374,37 @@ async function loadFullRecords() {
     if (document.getElementById('imageSearchRecords')) {
         await loadImageSearchRecords().catch(console.error);
     }
+}
+
+// Renders currentLibraryRecords into the #records grid, applying
+// librarySearchTerm (matched against the Cleaned Play Mode Trigger Text)
+// client-side so typing in the search box doesn't need a server round trip.
+function renderLibraryRecordsGrid() {
+    const recordsBox = document.getElementById('records');
+    if (!recordsBox) return;
+
+    if (!currentLibraryRecords.length) {
+        recordsBox.innerHTML = `<div class="empty">${t('lib.none')}</div>`;
+        return;
+    }
+
+    const term = librarySearchTerm.trim().toLowerCase();
+    const filtered = term
+        ? currentLibraryRecords.filter(record =>
+            (record.cleaned_trigger_text || '').toLowerCase().includes(term))
+        : currentLibraryRecords;
+
+    if (!filtered.length) {
+        recordsBox.innerHTML = '<div class="empty">No records match your search.</div>';
+        return;
+    }
+
+    recordsBox.innerHTML = filtered.map(record => renderRecordCard(record)).join('');
+}
+
+function filterLibraryRecords(term) {
+    librarySearchTerm = term;
+    renderLibraryRecordsGrid();
 }
 
 /**
@@ -1586,11 +1488,16 @@ async function updateRecordGroup(sourceItemId, groupId) {
     await loadFullRecords();
 }
 
+function infoIconSvg() {
+    return '<svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.6"></circle><circle cx="8" cy="4.6" r="1.1" fill="currentColor"></circle><rect x="7.1" y="6.8" width="1.8" height="5.3" rx="0.9" fill="currentColor"></rect></svg>';
+}
+
 function renderRecordGroupSelector(record) {
     return `
         <div class="field">
             <div class="field-title">
                 Library Group
+                <span class="info-icon" title="Records only trigger in Play Mode when their group matches the active group, or when All Complete Records is selected.">${infoIconSvg()}</span>
             </div>
 
             <select
@@ -1609,11 +1516,6 @@ function renderRecordGroupSelector(record) {
                     </option>
                 `).join('')}
             </select>
-
-            <div class="record-meta">
-                Records only trigger in Play Mode when their group matches the active group,
-                or when All Complete Records is selected.
-            </div>
         </div>
     `;
 }
@@ -1644,8 +1546,9 @@ function closeAllCardMenus() {
 document.addEventListener('click', closeAllCardMenus);
 
 function renderRecordCard(record, idPrefix = 'record-card-') {
+    const isExpanded = expandedRecordIds.has(record.source_item_id);
     return `
-        <div class="record-card" id="${idPrefix}${escapeHtml(record.source_item_id)}">
+        <div class="record-card ${isExpanded ? '' : 'minimized'}" id="${idPrefix}${escapeHtml(record.source_item_id)}">
             <div
     class="record-status-badge ${
         record.record_status === 'complete'
@@ -1665,8 +1568,11 @@ function renderRecordCard(record, idPrefix = 'record-card-') {
     }
 </div>
 
+<button type="button" class="secondary record-done-btn" onclick="collapseRecordAfterEdit(${record.source_item_id})">Done</button>
+
 <button type="button" class="card-menu-btn record-menu-btn" onclick="toggleCardMenu(event, this)" title="Record options">⋯</button>
 <div class="card-dropdown-menu">
+    <button type="button" onclick="expandRecordForEdit(${record.source_item_id})">Edit Record</button>
     <button type="button" onclick="markRecordComplete(${record.source_item_id})">Mark Complete</button>
     <button type="button" class="danger-item" onclick="deleteRecord(${record.source_item_id})">Delete Entire Record</button>
 </div>
@@ -1674,20 +1580,17 @@ function renderRecordCard(record, idPrefix = 'record-card-') {
 <h3>Record #${escapeHtml(record.source_item_id)}</h3>
 
             <div class="field">
-                <div class="field-title">
-    Images (${(record.images || []).length})
-    </div>
                 ${renderImageGrid(record.images || [], record.source_item_id, record.primary_image_id)}
             </div>
 
             ${renderRecordGroupSelector(record)}
 
-            ${editableField('Original Source Text', 'source_raw', record.source_item_id, record.raw_text)}
-            ${editableField('Image Summary', 'summary_text', record.source_item_id, record.summary_text)}
-            ${editableField('Image Prompt', 'image_prompt', record.source_item_id, record.image_prompt, 'prompt')}
+            ${editableField('Original Source Text', 'source_raw', record.source_item_id, record.raw_text, '', true)}
+            ${editableField('Image Summary', 'summary_text', record.source_item_id, record.summary_text, '', true)}
+            ${editableField('Image Prompt', 'image_prompt', record.source_item_id, record.image_prompt, 'prompt', true)}
             ${editableField('Cleaned Play Mode Trigger Text', 'cleaned_trigger_text', record.source_item_id, record.cleaned_trigger_text, 'trigger')}
 
-            <div class="field">
+            <div class="field record-hide-when-minimized">
                 <div class="field-title">Add Image</div>
                 <input type="file" accept="image/*" />
                 <div class="button-row">
@@ -1700,9 +1603,36 @@ function renderRecordCard(record, idPrefix = 'record-card-') {
     `;
 }
 
-function editableField(title, type, id, value, extraClass = '') {
+// Records default to "minimized" (declutter mode) via expandedRecordIds. Edit
+// Record / Done just toggle the .minimized class on the already-rendered card
+// -- no re-fetch or re-render -- so expanding/collapsing never triggers the
+// scroll-jump that a full loadFullRecords() would.
+function setRecordExpanded(sourceItemId, expanded) {
+    if (expanded) {
+        expandedRecordIds.add(sourceItemId);
+    } else {
+        expandedRecordIds.delete(sourceItemId);
+    }
+
+    document.querySelectorAll(`#record-card-${sourceItemId}, #search-record-card-${sourceItemId}`)
+        .forEach(card => card.classList.toggle('minimized', !expanded));
+}
+
+function expandRecordForEdit(sourceItemId) {
+    closeAllCardMenus();
+    setRecordExpanded(sourceItemId, true);
+}
+
+function collapseRecordAfterEdit(sourceItemId) {
+    if (activeEdit && activeEdit.sourceItemId === sourceItemId) {
+        cancelEdit();
+    }
+    setRecordExpanded(sourceItemId, false);
+}
+
+function editableField(title, type, id, value, extraClass = '', hideWhenMinimized = false) {
     return `
-        <div class="field">
+        <div class="field${hideWhenMinimized ? ' record-hide-when-minimized' : ''}">
             <div class="field-title">
                 ${title}
                 <button class="edit-icon" onclick="startEdit(this, '${type}', ${id})">✎</button>
@@ -1740,10 +1670,6 @@ function renderImageGrid(images, sourceItemId, primaryImageId) {
                         </div>
 
                         <img class="generated-image" src="${imageUrl}" />
-
-                        <div class="image-meta">
-                            image_id=${escapeHtml(image.generated_image_id)}
-                        </div>
                     </div>
                 `;
             }).join('')}
@@ -2707,9 +2633,6 @@ async function syncCameraToActiveScene(scene = null) {
             sceneKey
         );
 
-        status.textContent =
-            `Camera transitioned to Active Scene v3: ${displayScene.sceneMode || 'single'} / ${displayScene.slots.length} slot(s).`;
-
         return true;
 
     } catch (error) {
@@ -2910,7 +2833,7 @@ function startAuraBroadcastMirror() {
             }
         }
 
-        setTimeout(frame, 66);
+        requestAnimationFrame(frame);
     }
 
     frame();
@@ -2927,8 +2850,6 @@ function stopAuraBroadcastMirror() {
 // Records short microphone chunks, sends them to the local Whisper service, and
 // runs semantic matching against COMPLETE records.
 window.startLocalWhisperPlayMode = async function () {
-    const statusBox = document.getElementById('livePlayStatus');
-
     localWhisperRunning = true;
     livePlayBuffer = [];
 
@@ -2945,8 +2866,6 @@ localWhisperStream = await navigator.mediaDevices.getUserMedia({
     document.getElementById('localWhisperStartBtn').disabled = true;
     document.getElementById('localWhisperStopBtn').disabled = false;
     document.getElementById('playModeMicIndicator').style.display = 'inline-block';
-
-    statusBox.textContent = t('play.listening');
 
     if (!cameraSceneFollowTimer) {
         await window.startCameraSceneFollow();
@@ -2980,9 +2899,6 @@ window.stopLocalWhisperPlayMode = function () {
     document.getElementById('playModeMicIndicator').style.display = 'none';
 
     window.stopCameraSceneFollow();
-
-    document.getElementById('livePlayStatus').textContent =
-        t('play.stopped');
 };
 
 async function recordLocalWhisperChunk() {
@@ -3374,15 +3290,7 @@ async function loadDbManagerRecords() {
         const records = await response.json();
 
         dbManagerRecordsCache = records;
-
-        if (!records.length) {
-            recordsBox.innerHTML = `<div class="empty">${t('lib.none')}</div>`;
-            updateDbManagerSelectedCount();
-            return;
-        }
-
-        recordsBox.innerHTML = renderDbManagerTable(sortDbManagerRecordsForDisplay(records));
-        updateDbManagerSelectedCount();
+        renderDbManagerRecordsGrid();
     } catch (error) {
         recordsBox.innerHTML =
             `<div class="empty">ERROR loading DB records: ${escapeHtml(error.message)}</div>`;
@@ -3435,10 +3343,41 @@ function sortDbManagerTableBy(fieldName) {
 
     dbManagerSortField = fieldName;
 
-    document.getElementById('dbManagerRecords').innerHTML =
-        renderDbManagerTable(sortDbManagerRecordsForDisplay(dbManagerRecordsCache));
+    renderDbManagerRecordsGrid();
+}
 
+// Renders dbManagerRecordsCache into the #dbManagerRecords table, applying
+// dbManagerSearchTerm (matched against the Cleaned Play Mode Trigger Text)
+// and the current sort -- both client-side, no re-fetch needed.
+function renderDbManagerRecordsGrid() {
+    const recordsBox = document.getElementById('dbManagerRecords');
+    if (!recordsBox) return;
+
+    if (!dbManagerRecordsCache.length) {
+        recordsBox.innerHTML = `<div class="empty">${t('lib.none')}</div>`;
+        updateDbManagerSelectedCount();
+        return;
+    }
+
+    const term = dbManagerSearchTerm.trim().toLowerCase();
+    const filtered = term
+        ? dbManagerRecordsCache.filter(record =>
+            (record.cleaned_trigger_text || '').toLowerCase().includes(term))
+        : dbManagerRecordsCache;
+
+    if (!filtered.length) {
+        recordsBox.innerHTML = '<div class="empty">No records match your search.</div>';
+        updateDbManagerSelectedCount();
+        return;
+    }
+
+    recordsBox.innerHTML = renderDbManagerTable(sortDbManagerRecordsForDisplay(filtered));
     updateDbManagerSelectedCount();
+}
+
+function filterDbManagerRecords(term) {
+    dbManagerSearchTerm = term;
+    renderDbManagerRecordsGrid();
 }
 
 function dbManagerSortHeader(fieldName, label) {
@@ -3557,11 +3496,6 @@ async function setDbManagerGroupFilter() {
     dbManagerGroupFilterId =
         select ? select.value : '';
 
-    cancelMoveSelectedRecords();
-    cancelCompleteSelectedRecords();
-    cancelDeleteSelectedRecords();
-    cancelDeleteCurrentDbManagerGroup();
-
     await loadDbManagerRecords();
 }
 
@@ -3630,29 +3564,9 @@ async function deleteCurrentDbManagerGroup() {
             ? select.selectedOptions[0].textContent.trim()
             : `Group ${groupId}`;
 
-    const deleteButton =
-        document.getElementById('deleteCurrentGroupButton');
+    closeAllCardMenus();
 
-    const cancelButton =
-        document.getElementById('cancelDeleteCurrentGroupButton');
-
-    if (!deleteButton.dataset.confirming) {
-        deleteButton.dataset.confirming = 'true';
-        deleteButton.textContent = `Confirm Delete "${groupName}"`;
-
-        if (cancelButton) {
-            cancelButton.hidden = false;
-        }
-
-        return;
-    }
-
-    deleteButton.dataset.confirming = '';
-    deleteButton.textContent = 'Delete Current Group';
-
-    if (cancelButton) {
-        cancelButton.hidden = true;
-    }
+    if (!await auraConfirm(`Delete group "${groupName}"? This does not delete its records.`)) return;
 
     dbManagerGroupFilterId = '';
 
@@ -3676,60 +3590,37 @@ async function deleteCurrentDbManagerGroup() {
     await loadDbManager();
 }
 
-function cancelDeleteCurrentDbManagerGroup() {
-    const deleteButton =
-        document.getElementById('deleteCurrentGroupButton');
-
-    const cancelButton =
-        document.getElementById('cancelDeleteCurrentGroupButton');
-
-    if (deleteButton) {
-        deleteButton.dataset.confirming = '';
-        deleteButton.textContent = 'Delete Current Group';
-    }
-
-    if (cancelButton) {
-        cancelButton.hidden = true;
-    }
-}
-
-async function bulkMoveDbManagerRecords() {
+// Move Selected opens a modal rather than the inline two-click confirm the
+// other bulk actions use -- opening the modal is itself the deliberate
+// confirmation step, matching the single-image move modal (openMoveImageModal).
+function openDbManagerMoveModal() {
     const recordIds = getSelectedDbManagerRecordIds();
-    const groupSelect = document.getElementById('dbManagerMoveGroupSelect');
-    const groupId = groupSelect ? groupSelect.value : '';
 
     if (!recordIds.length) {
         showToast('Select at least one record first.', true);
         return;
     }
 
-    const groupLabel =
-        groupId && groupSelect.selectedOptions[0]
-            ? groupSelect.selectedOptions[0].textContent.trim()
-            : 'No Specific Group';
+    closeAllCardMenus();
 
-    const moveButton =
-        document.getElementById('moveSelectedRecordsButton');
+    document.getElementById('dbManagerMoveCountLabel').textContent = recordIds.length;
+    document.getElementById('dbManagerMoveOverlay').classList.add('show');
+}
 
-    const cancelButton =
-        document.getElementById('cancelMoveSelectedRecordsButton');
+function closeDbManagerMoveModal() {
+    document.getElementById('dbManagerMoveOverlay').classList.remove('show');
+}
 
-    if (!moveButton.dataset.confirming) {
-        moveButton.dataset.confirming = 'true';
-        moveButton.textContent = `Confirm Move ${recordIds.length} to "${groupLabel}"`;
+async function confirmDbManagerMove() {
+    const recordIds = getSelectedDbManagerRecordIds();
+    const groupSelect = document.getElementById('dbManagerMoveGroupSelect');
+    const groupId = groupSelect ? groupSelect.value : '';
 
-        if (cancelButton) {
-            cancelButton.hidden = false;
-        }
+    closeDbManagerMoveModal();
 
+    if (!recordIds.length) {
+        showToast('Select at least one record first.', true);
         return;
-    }
-
-    moveButton.dataset.confirming = '';
-    moveButton.textContent = 'Move Selected';
-
-    if (cancelButton) {
-        cancelButton.hidden = true;
     }
 
     const response = await fetch('/api/db-manager/bulk/move', {
@@ -3753,23 +3644,6 @@ async function bulkMoveDbManagerRecords() {
     await loadDbManager();
 }
 
-function cancelMoveSelectedRecords() {
-    const moveButton =
-        document.getElementById('moveSelectedRecordsButton');
-
-    const cancelButton =
-        document.getElementById('cancelMoveSelectedRecordsButton');
-
-    if (moveButton) {
-        moveButton.dataset.confirming = '';
-        moveButton.textContent = 'Move Selected';
-    }
-
-    if (cancelButton) {
-        cancelButton.hidden = true;
-    }
-}
-
 async function bulkCompleteDbManagerRecords() {
     const recordIds = getSelectedDbManagerRecordIds();
 
@@ -3778,29 +3652,9 @@ async function bulkCompleteDbManagerRecords() {
         return;
     }
 
-    const completeButton =
-        document.getElementById('completeSelectedRecordsButton');
+    closeAllCardMenus();
 
-    const cancelButton =
-        document.getElementById('cancelCompleteSelectedRecordsButton');
-
-    if (!completeButton.dataset.confirming) {
-        completeButton.dataset.confirming = 'true';
-        completeButton.textContent = `Confirm Complete ${recordIds.length}`;
-
-        if (cancelButton) {
-            cancelButton.hidden = false;
-        }
-
-        return;
-    }
-
-    completeButton.dataset.confirming = '';
-    completeButton.textContent = 'Mark Selected Complete';
-
-    if (cancelButton) {
-        cancelButton.hidden = true;
-    }
+    if (!await auraConfirm(`Mark ${recordIds.length} selected record(s) complete?`)) return;
 
     const response = await fetch('/api/db-manager/bulk/complete', {
         method: 'POST',
@@ -3841,23 +3695,6 @@ async function bulkCompleteDbManagerRecords() {
     await loadDbManager();
 }
 
-function cancelCompleteSelectedRecords() {
-    const completeButton =
-        document.getElementById('completeSelectedRecordsButton');
-
-    const cancelButton =
-        document.getElementById('cancelCompleteSelectedRecordsButton');
-
-    if (completeButton) {
-        completeButton.dataset.confirming = '';
-        completeButton.textContent = 'Mark Selected Complete';
-    }
-
-    if (cancelButton) {
-        cancelButton.hidden = true;
-    }
-}
-
 async function bulkDeleteDbManagerRecords() {
     const recordIds = getSelectedDbManagerRecordIds();
 
@@ -3866,29 +3703,9 @@ async function bulkDeleteDbManagerRecords() {
         return;
     }
 
-    const deleteButton =
-        document.getElementById('deleteSelectedRecordsButton');
+    closeAllCardMenus();
 
-    const cancelButton =
-        document.getElementById('cancelDeleteSelectedRecordsButton');
-
-    if (!deleteButton.dataset.confirming) {
-        deleteButton.dataset.confirming = 'true';
-        deleteButton.textContent = `Confirm Delete ${recordIds.length}`;
-
-        if (cancelButton) {
-            cancelButton.hidden = false;
-        }
-
-        return;
-    }
-
-    deleteButton.dataset.confirming = '';
-    deleteButton.textContent = 'Delete Selected';
-
-    if (cancelButton) {
-        cancelButton.hidden = true;
-    }
+    if (!await auraConfirm(`Delete ${recordIds.length} selected record(s)? This cannot be undone.`)) return;
 
     const response = await fetch('/api/db-manager/bulk/delete', {
         method: 'POST',
@@ -3910,52 +3727,14 @@ async function bulkDeleteDbManagerRecords() {
     await loadDbManager();
 }
 
-function cancelDeleteSelectedRecords() {
-    const deleteButton =
-        document.getElementById('deleteSelectedRecordsButton');
-
-    const cancelButton =
-        document.getElementById('cancelDeleteSelectedRecordsButton');
-
-    if (deleteButton) {
-        deleteButton.dataset.confirming = '';
-        deleteButton.textContent = 'Delete Selected';
-    }
-
-    if (cancelButton) {
-        cancelButton.hidden = true;
-    }
-}
-
 // -----------------------------------------------------------------------------
 // DB Manager: Purge Soft-Deleted Images
 // -----------------------------------------------------------------------------
 // Permanently removes soft-deleted image rows and their files from disk.
-// Uses the same two-click confirm pattern as the other destructive actions.
 async function purgeDeletedDbManagerImages() {
-    const purgeButton =
-        document.getElementById('purgeDeletedImagesButton');
+    closeAllCardMenus();
 
-    const cancelButton =
-        document.getElementById('cancelPurgeDeletedImagesButton');
-
-    if (!purgeButton.dataset.confirming) {
-        purgeButton.dataset.confirming = 'true';
-        purgeButton.textContent = 'Confirm Permanent Purge';
-
-        if (cancelButton) {
-            cancelButton.hidden = false;
-        }
-
-        return;
-    }
-
-    purgeButton.dataset.confirming = '';
-    purgeButton.textContent = 'Purge Deleted Images';
-
-    if (cancelButton) {
-        cancelButton.hidden = true;
-    }
+    if (!await auraConfirm('Permanently purge all deleted images? This cannot be undone.')) return;
 
     const response = await fetch('/api/db-manager/purge-deleted', {
         method: 'POST'
@@ -3971,23 +3750,6 @@ async function purgeDeletedDbManagerImages() {
     showToast(`Purged ${result.purgedRows} deleted image record(s); removed ${result.filesRemoved} file(s) from disk.`);
 
     await loadDbManager();
-}
-
-function cancelPurgeDeletedImages() {
-    const purgeButton =
-        document.getElementById('purgeDeletedImagesButton');
-
-    const cancelButton =
-        document.getElementById('cancelPurgeDeletedImagesButton');
-
-    if (purgeButton) {
-        purgeButton.dataset.confirming = '';
-        purgeButton.textContent = 'Purge Deleted Images';
-    }
-
-    if (cancelButton) {
-        cancelButton.hidden = true;
-    }
 }
 
 // -----------------------------------------------------------------------------
@@ -4178,72 +3940,38 @@ async function exportFullDbManagerDatabase() {
 }
 
 function handleImportPackageButtonClick() {
-    const importButton =
-        document.getElementById('importPackageButton');
-
     const fileInput =
         document.getElementById('dbManagerImportPackageFile');
 
-    if (!importButton || !fileInput) {
+    if (!fileInput) {
         return;
     }
 
-    if (!importButton.dataset.confirming) {
-        fileInput.click();
-        return;
-    }
-
-    importDbManagerPackage().catch(console.error);
+    closeAllCardMenus();
+    fileInput.click();
 }
 
-function stageImportDbManagerPackage() {
+// Opening the file picker is itself the deliberate first step, so staging
+// just needs one auraConfirm() before the actual import -- no separate
+// arm/cancel button pair like the old inline two-click pattern required.
+async function stageImportDbManagerPackage() {
     const fileInput =
         document.getElementById('dbManagerImportPackageFile');
-
-    const importButton =
-        document.getElementById('importPackageButton');
-
-    const cancelButton =
-        document.getElementById('cancelImportPackageButton');
 
     const file = fileInput && fileInput.files[0]
         ? fileInput.files[0]
         : null;
 
-    if (!file || !importButton) {
+    if (!file) {
         return;
     }
 
-    importButton.dataset.confirming = 'true';
-    importButton.textContent = `Confirm Import "${file.name}"`;
-
-    if (cancelButton) {
-        cancelButton.hidden = false;
-    }
-}
-
-function cancelImportDbManagerPackage() {
-    const fileInput =
-        document.getElementById('dbManagerImportPackageFile');
-
-    const importButton =
-        document.getElementById('importPackageButton');
-
-    const cancelButton =
-        document.getElementById('cancelImportPackageButton');
-
-    if (fileInput) {
+    if (!await auraConfirm(`Import package "${file.name}"? This adds its records/groups to your library.`)) {
         fileInput.value = '';
+        return;
     }
 
-    if (importButton) {
-        importButton.dataset.confirming = '';
-        importButton.textContent = 'Import Package';
-    }
-
-    if (cancelButton) {
-        cancelButton.hidden = true;
-    }
+    await importDbManagerPackage();
 }
 
 async function importDbManagerPackage() {
@@ -4255,7 +3983,6 @@ async function importDbManagerPackage() {
         : null;
 
     if (!file) {
-        cancelImportDbManagerPackage();
         return;
     }
 
@@ -4269,13 +3996,12 @@ async function importDbManagerPackage() {
 
     const result = await response.json();
 
+    fileInput.value = '';
+
     if (!response.ok) {
         showToast(result.error || 'Import package failed.', true);
-        cancelImportDbManagerPackage();
         return;
     }
-
-    cancelImportDbManagerPackage();
 
     const groupSummary = result.importedGroupCount
         ? `, ${result.importedGroupCount} group(s)`
@@ -4582,9 +4308,6 @@ loadDbManager().catch(console.error);
  * Imported records stay DRAFT until reviewed and marked complete.
  */
 async function importImagesFromSearch() {
-    const statusBox =
-        document.getElementById('imageImportStatus');
-
     const query =
         document.getElementById('imageImportQuery')
             .value
@@ -4600,9 +4323,6 @@ async function importImagesFromSearch() {
         showToast('Search query is required.', true);
         return;
     }
-
-    statusBox.textContent =
-        `Importing ${limit} image(s) for "${query}"...`;
 
     const spinner = document.getElementById('imageImportSpinner');
     if (spinner) spinner.style.display = 'inline-block';
@@ -4623,13 +4343,9 @@ async function importImagesFromSearch() {
         const result = await response.json();
 
         if (!response.ok) {
-            statusBox.textContent =
-                'ERROR:\n' + JSON.stringify(result, null, 2);
+            showToast(result.error || 'Image import failed.', true);
             return;
         }
-
-        statusBox.textContent =
-            JSON.stringify(result, null, 2);
 
         if (Array.isArray(result.imported)) {
             result.imported.forEach(item => {
@@ -4639,15 +4355,23 @@ async function importImagesFromSearch() {
             });
         }
 
+        showToast(`Imported ${(result.imported || []).length} image(s).`);
+
         await loadFullRecords();
 
     } catch (error) {
-        statusBox.textContent =
-            'ERROR: Image import failed.\n' + error.message;
+        showToast('Image import failed: ' + error.message, true);
     } finally {
         if (spinner) spinner.style.display = 'none';
     }
 }
 
 
-</script></body></html>
+</script>
+<script type="module">
+    // Expose the shared slot-placement logic to the classic script above so
+    // the camera compositor and Slide Output stay in lockstep.
+    import * as DisplaySceneMapper from '/rendering/DisplaySceneMapper.js';
+    window.DisplaySceneMapper = DisplaySceneMapper;
+</script>
+</body></html>
