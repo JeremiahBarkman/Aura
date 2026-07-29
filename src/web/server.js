@@ -22,6 +22,7 @@ const AdmZip = require('adm-zip');
 const express = require('express');
 
 const fs = require('fs');
+const crypto = require('crypto');
 
 const path = require('path');
 const multer = require('multer');
@@ -2069,14 +2070,29 @@ app.post('/api/db-manager/import/package', importPackageUpload.single('package')
         }
 
         // Maps each group's ORIGINAL id (from the exporting database) to
-        // the newly inserted group's id here, so every record can be
-        // reattached to its own group instead of one group being stamped
-        // onto the whole package.
+        // the group's id here (existing, if reused, or newly inserted), so
+        // every record can be reattached to its own group instead of one
+        // group being stamped onto the whole package.
         const oldToNewGroupIds = new Map();
         const importedGroupNames = [];
+        const reusedGroupNames = [];
 
+        // Records/summaries/triggerTexts/images all dedupe against what's
+        // already in this database, so re-importing the same package (or a
+        // package that overlaps a previous one) doesn't pile up duplicates.
         const oldToNewSourceItemIds = new Map();
         const oldToNewSummaryIds = new Map();
+
+        // Only source_item_ids that were actually INSERTED this run -- a
+        // record that deduped to an existing one must not also get a second
+        // summary/trigger_text row grafted onto that existing record (there's
+        // no unique constraint stopping it, but /api/records/full's LEFT
+        // JOINs assume one summary/trigger row per record and would start
+        // fanning out duplicate rows per image otherwise).
+        const newlyInsertedSourceItemIds = new Set();
+
+        let skippedRecordCount = 0;
+        let skippedImageCount = 0;
 
         const importImagesDir =
             path.join(paths.imagesDir, 'imports');
@@ -2092,7 +2108,7 @@ app.post('/api/db-manager/import/package', importPackageUpload.single('package')
         // anything in it fails partway through, groups created for it
         // must not survive as orphaned leftovers either.
         const importTransaction = db.transaction(() => {
-            const groupNameExists = (name) => {
+            const findGroupByName = (name) => {
                 return db.prepare(`
                     SELECT id
                     FROM library_groups
@@ -2100,35 +2116,89 @@ app.post('/api/db-manager/import/package', importPackageUpload.single('package')
                 `).get(name);
             };
 
-            const importDate = new Date().toISOString().slice(0, 10);
+            // A record is treated as "already have this" only when its
+            // non-empty raw source text matches an existing record of the
+            // same source type. Records with no raw text (e.g. some manual
+            // records) have no safe signal to dedupe on, so they're always
+            // imported rather than risk silently dropping something new.
+            const findDuplicateRecordId = (record) => {
+                const rawText = (record.raw_text || '').trim();
+
+                if (!rawText) {
+                    return null;
+                }
+
+                const existing = db.prepare(`
+                    SELECT id
+                    FROM source_items
+                    WHERE source_type = ? AND raw_text = ?
+                    LIMIT 1
+                `).get(record.source_type || 'imported_record', rawText);
+
+                return existing ? existing.id : null;
+            };
+
+            // Lazily hashes a target record's existing (non-deleted) image
+            // files so incoming images can be compared by content, not just
+            // filename -- caches per source_item_id so repeat lookups within
+            // the same import (multiple incoming images on one record) don't
+            // re-read/re-hash the same files from disk.
+            const existingImageHashesBySourceItemId = new Map();
+
+            const getExistingImageHashes = (sourceItemId) => {
+                if (existingImageHashesBySourceItemId.has(sourceItemId)) {
+                    return existingImageHashesBySourceItemId.get(sourceItemId);
+                }
+
+                const hashes = new Set();
+
+                const rows = db.prepare(`
+                    SELECT image_path
+                    FROM generated_images
+                    WHERE source_item_id = ? AND deleted_at IS NULL
+                `).all(sourceItemId);
+
+                for (const row of rows) {
+                    if (!row.image_path || !fs.existsSync(row.image_path)) {
+                        continue;
+                    }
+
+                    try {
+                        hashes.add(
+                            crypto.createHash('sha256')
+                                .update(fs.readFileSync(row.image_path))
+                                .digest('hex')
+                        );
+                    } catch {
+                        // Unreadable file -- can't compare against it, skip.
+                    }
+                }
+
+                existingImageHashesBySourceItemId.set(sourceItemId, hashes);
+                return hashes;
+            };
 
             for (const sourceGroup of exportedGroups) {
                 if (!sourceGroup || !sourceGroup.name) {
                     continue;
                 }
 
-                const originalGroupName = sourceGroup.name;
-                let groupName = originalGroupName;
+                const existingGroup = findGroupByName(sourceGroup.name);
 
-                if (groupNameExists(groupName)) {
-                    const baseName =
-                        `${originalGroupName} (Imported ${importDate})`;
-
-                    groupName = baseName;
-
-                    let counter = 2;
-
-                    while (groupNameExists(groupName)) {
-                        groupName = `${baseName} ${counter}`;
-                        counter++;
+                if (existingGroup) {
+                    if (sourceGroup.id !== undefined && sourceGroup.id !== null) {
+                        oldToNewGroupIds.set(Number(sourceGroup.id), existingGroup.id);
                     }
+
+                    reusedGroupNames.push(sourceGroup.name);
+                    continue;
                 }
 
                 const groupResult = db.prepare(`
                     INSERT INTO library_groups (name, description)
                     VALUES (?, ?)
                 `).run(
-                    groupName,
+                    sourceGroup.name,
                     sourceGroup.description || ''
                 );
 
@@ -2136,7 +2206,7 @@ app.post('/api/db-manager/import/package', importPackageUpload.single('package')
                     oldToNewGroupIds.set(Number(sourceGroup.id), groupResult.lastInsertRowid);
                 }
 
-                importedGroupNames.push(groupName);
+                importedGroupNames.push(sourceGroup.name);
             }
 
             for (const record of sourceRecords) {
@@ -2144,6 +2214,14 @@ app.post('/api/db-manager/import/package', importPackageUpload.single('package')
                     record.group_id && oldToNewGroupIds.has(Number(record.group_id))
                         ? oldToNewGroupIds.get(Number(record.group_id))
                         : null;
+
+                const duplicateId = findDuplicateRecordId(record);
+
+                if (duplicateId) {
+                    oldToNewSourceItemIds.set(Number(record.id), duplicateId);
+                    skippedRecordCount++;
+                    continue;
+                }
 
                 const result = db.prepare(`
                     INSERT INTO source_items (
@@ -2164,6 +2242,8 @@ app.post('/api/db-manager/import/package', importPackageUpload.single('package')
                     newGroupId
                 );
 
+                newlyInsertedSourceItemIds.add(result.lastInsertRowid);
+
                 oldToNewSourceItemIds.set(
                     Number(record.id),
                     result.lastInsertRowid
@@ -2174,7 +2254,11 @@ app.post('/api/db-manager/import/package', importPackageUpload.single('package')
                 const newSourceItemId =
                     oldToNewSourceItemIds.get(Number(summary.source_item_id));
 
-                if (!newSourceItemId) {
+                // Deduped (already-existing) records keep whatever summary
+                // they already have -- grafting a second one on top would
+                // give that record two summary rows with nothing enforcing
+                // one-per-record.
+                if (!newSourceItemId || !newlyInsertedSourceItemIds.has(newSourceItemId)) {
                     continue;
                 }
 
@@ -2203,7 +2287,7 @@ app.post('/api/db-manager/import/package', importPackageUpload.single('package')
                 const newSourceItemId =
                     oldToNewSourceItemIds.get(Number(triggerText.source_item_id));
 
-                if (!newSourceItemId) {
+                if (!newSourceItemId || !newlyInsertedSourceItemIds.has(newSourceItemId)) {
                     continue;
                 }
 
@@ -2238,6 +2322,21 @@ app.post('/api/db-manager/import/package', importPackageUpload.single('package')
                     continue;
                 }
 
+                const imageBuffer = imageEntry.getData();
+
+                const imageHash = crypto.createHash('sha256')
+                    .update(imageBuffer)
+                    .digest('hex');
+
+                const existingHashes = getExistingImageHashes(newSourceItemId);
+
+                if (existingHashes.has(imageHash)) {
+                    skippedImageCount++;
+                    continue;
+                }
+
+                existingHashes.add(imageHash);
+
                 const originalFileName =
                     path.basename(imageEntry.entryName)
                         .replace(`${image.id}-`, '');
@@ -2250,7 +2349,7 @@ app.post('/api/db-manager/import/package', importPackageUpload.single('package')
 
                 fs.writeFileSync(
                     importedImagePath,
-                    imageEntry.getData()
+                    imageBuffer
                 );
 
                 const newSummaryId =
@@ -2287,12 +2386,14 @@ app.post('/api/db-manager/import/package', importPackageUpload.single('package')
 
         res.json({
             success: true,
-            importedRecords: sourceRecords.length,
-            importedSummaries: summaries.length,
-            importedTriggerTexts: triggerTexts.length,
+            importedRecords: sourceRecords.length - skippedRecordCount,
+            skippedRecords: skippedRecordCount,
             importedImages: importedImageCount,
+            skippedImages: skippedImageCount,
             importedGroupCount: importedGroupNames.length,
-            importedGroupNames
+            importedGroupNames,
+            reusedGroupCount: reusedGroupNames.length,
+            reusedGroupNames
         });
 
     } catch (error) {

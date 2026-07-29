@@ -148,7 +148,7 @@
 </section>
 
 <div id="dbManagerOverlay" class="workspace-view db-manager-overlay" hidden>
- <header class="view-header"><div><div class="view-title" data-i18n="db.title">DB Manager</div><div class="view-sub" data-i18n="db.sub">SPREADSHEET RECORD MANAGEMENT</div></div><div class="header-actions"><div class="search-box"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"></circle><line x1="10.8" y1="10.8" x2="14.5" y2="14.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></line></svg><input type="text" id="dbManagerSearchInput" placeholder="Search triggers..." oninput="filterDbManagerRecords(this.value)"></div><button class="secondary" onclick="loadDbManager()" data-i18n="db.refresh">Refresh</button><div class="header-menu"><button type="button" class="secondary header-menu-btn" onclick="toggleCardMenu(event, this)">Filter Group &#9662;</button><div class="card-dropdown-menu" onclick="event.stopPropagation()"><div class="db-move-select-wrap"><label data-i18n="db.filterGroup">Filter Group</label><select id="dbManagerGroupFilterSelect" onchange="setDbManagerGroupFilter()"><option value="" data-i18n="db.allGroups">All Groups</option></select></div></div></div><div class="header-menu"><button type="button" class="secondary header-menu-btn" onclick="toggleCardMenu(event, this)">Maintenance &#9662;</button><div class="card-dropdown-menu" onclick="event.stopPropagation()"><button type="button" onclick="openDbManagerMoveModal()" data-i18n="db.moveSelected">Move Selected</button><button type="button" onclick="bulkCompleteDbManagerRecords()" data-i18n="db.markComplete">Mark Complete</button><button type="button" class="danger-item" onclick="bulkDeleteDbManagerRecords()" data-i18n="db.delete">Delete</button><button type="button" class="danger-item" onclick="deleteCurrentDbManagerGroup()" data-i18n="db.deleteGroup">Delete Current Group</button><button type="button" onclick="loadDbManagerTrash()" data-i18n="db.trash">View Trash</button><button type="button" class="danger-item" onclick="purgeDeletedDbManagerImages()" data-i18n="db.purge">Purge Deleted Images</button></div></div><div class="header-menu"><button type="button" class="secondary header-menu-btn" onclick="toggleCardMenu(event, this)">Portability &#9662;</button><div class="card-dropdown-menu" onclick="event.stopPropagation()"><button type="button" onclick="exportSelectedDbManagerRecords()" data-i18n="db.exportSelected">Export Selected</button><button type="button" onclick="exportCurrentDbManagerGroup()" data-i18n="db.exportGroup">Export Group</button><button type="button" onclick="exportFullDbManagerDatabase()" data-i18n="db.exportAll">Export Database</button><input id="dbManagerImportPackageFile" type="file" accept=".zip" style="display:none" onchange="stageImportDbManagerPackage()"><button type="button" onclick="handleImportPackageButtonClick()" data-i18n="db.importPackage">Import Package</button></div></div></div></header>
+ <header class="view-header"><div><div class="view-title" data-i18n="db.title">DB Manager</div><div class="view-sub" data-i18n="db.sub">SPREADSHEET RECORD MANAGEMENT</div></div><div class="header-actions"><div class="search-box"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"></circle><line x1="10.8" y1="10.8" x2="14.5" y2="14.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></line></svg><input type="text" id="dbManagerSearchInput" placeholder="Search triggers..." oninput="filterDbManagerRecords(this.value)"></div><button class="secondary" onclick="loadDbManager()" data-i18n="db.refresh">Refresh</button><div class="header-menu"><button type="button" class="secondary header-menu-btn" onclick="toggleCardMenu(event, this)">Filter Group &#9662;</button><div class="card-dropdown-menu" onclick="event.stopPropagation()"><div class="db-move-select-wrap"><label data-i18n="db.filterGroup">Filter Group</label><select id="dbManagerGroupFilterSelect" onchange="setDbManagerGroupFilter()"><option value="" data-i18n="db.allGroups">All Groups</option></select></div></div></div><div class="header-menu"><button type="button" class="secondary header-menu-btn" onclick="toggleCardMenu(event, this)">Maintenance &#9662;</button><div class="card-dropdown-menu" onclick="event.stopPropagation()"><button type="button" onclick="openDbManagerMoveModal()" data-i18n="db.moveSelected">Move Selected</button><button type="button" onclick="bulkCompleteDbManagerRecords()" data-i18n="db.markComplete">Mark Complete</button><button type="button" class="danger-item" onclick="bulkDeleteDbManagerRecords()" data-i18n="db.delete">Delete</button><button type="button" class="danger-item" onclick="deleteCurrentDbManagerGroup()" data-i18n="db.deleteGroup">Delete Current Group</button><button type="button" onclick="loadDbManagerTrash()" data-i18n="db.trash">View Trash</button></div></div><div class="header-menu"><button type="button" class="secondary header-menu-btn" onclick="toggleCardMenu(event, this)">Portability &#9662;</button><div class="card-dropdown-menu" onclick="event.stopPropagation()"><button type="button" onclick="exportSelectedDbManagerRecords()" data-i18n="db.exportSelected">Export Selected</button><button type="button" onclick="exportCurrentDbManagerGroup()" data-i18n="db.exportGroup">Export Group</button><button type="button" onclick="exportFullDbManagerDatabase()" data-i18n="db.exportAll">Export Database</button><input id="dbManagerImportPackageFile" type="file" accept=".zip" style="display:none" onchange="stageImportDbManagerPackage()"><button type="button" onclick="handleImportPackageButtonClick()" data-i18n="db.importPackage">Import Package</button></div></div></div></header>
  <div class="db-manager-window">
   <div class="db-manager-table-area"><div id="dbManagerRecords" class="db-table-wrap"><div class="empty">Click Refresh to load records.</div></div></div>
  </div>
@@ -1021,8 +1021,16 @@ let currentRecordId = null;
 // would, but never leaves the page.
 let auraConfirmResolve = null;
 
-function auraConfirm(message) {
+// okLabel/danger let callers doing something other than a plain delete
+// (Import, Mark Complete, ...) get an accurate button instead of the
+// hardcoded "Delete" the modal originally shipped with.
+function auraConfirm(message, okLabel = 'Delete', danger = true) {
     document.getElementById('auraConfirmMessage').textContent = message;
+
+    const okBtn = document.getElementById('auraConfirmOkBtn');
+    okBtn.textContent = okLabel;
+    okBtn.className = danger ? 'danger' : '';
+
     document.getElementById('auraConfirmOverlay').classList.add('show');
 
     return new Promise(resolve => {
@@ -3654,7 +3662,7 @@ async function bulkCompleteDbManagerRecords() {
 
     closeAllCardMenus();
 
-    if (!await auraConfirm(`Mark ${recordIds.length} selected record(s) complete?`)) return;
+    if (!await auraConfirm(`Mark ${recordIds.length} selected record(s) complete?`, 'Mark Complete', false)) return;
 
     const response = await fetch('/api/db-manager/bulk/complete', {
         method: 'POST',
@@ -3732,9 +3740,7 @@ async function bulkDeleteDbManagerRecords() {
 // -----------------------------------------------------------------------------
 // Permanently removes soft-deleted image rows and their files from disk.
 async function purgeDeletedDbManagerImages() {
-    closeAllCardMenus();
-
-    if (!await auraConfirm('Permanently purge all deleted images? This cannot be undone.')) return;
+    if (!await auraConfirm('Permanently empty the trash? This cannot be undone.', 'Empty Trash')) return;
 
     const response = await fetch('/api/db-manager/purge-deleted', {
         method: 'POST'
@@ -3749,7 +3755,7 @@ async function purgeDeletedDbManagerImages() {
 
     showToast(`Purged ${result.purgedRows} deleted image record(s); removed ${result.filesRemoved} file(s) from disk.`);
 
-    await loadDbManager();
+    await loadDbManagerTrash();
 }
 
 // -----------------------------------------------------------------------------
@@ -3771,14 +3777,29 @@ async function loadDbManagerTrash() {
         }
 
         const backButton =
-            '<div style="padding:12px"><button class="secondary" onclick="loadDbManager()">Back to Records</button></div>';
+            '<button class="secondary" onclick="loadDbManager()">Back to Records</button>';
+
+        const emptyTrashButton = `
+            <button class="danger" onclick="purgeDeletedDbManagerImages()" style="display:inline-flex;align-items:center;gap:6px">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>
+                Empty Trash
+            </button>
+        `;
 
         if (!rows.length) {
-            recordsBox.innerHTML =
-                backButton +
-                '<div class="empty">Trash is empty.</div>';
+            recordsBox.innerHTML = `
+                <div style="padding:12px">${backButton}</div>
+                <div class="empty">Trash is empty.</div>
+            `;
             return;
         }
+
+        const headerRow = `
+            <div style="padding:12px;display:flex;justify-content:space-between;align-items:center;gap:10px">
+                ${backButton}
+                ${emptyTrashButton}
+            </div>
+        `;
 
         const tableRows = rows.map(row => `
             <tr>
@@ -3796,7 +3817,7 @@ async function loadDbManagerTrash() {
         `).join('');
 
         recordsBox.innerHTML = `
-            ${backButton}
+            ${headerRow}
             <table class="db-table">
                 <thead>
                     <tr>
@@ -3966,7 +3987,7 @@ async function stageImportDbManagerPackage() {
         return;
     }
 
-    if (!await auraConfirm(`Import package "${file.name}"? This adds its records/groups to your library.`)) {
+    if (!await auraConfirm(`Import package "${file.name}"? Records/groups/images already in your library are detected and skipped, not duplicated.`, 'Import', false)) {
         fileInput.value = '';
         return;
     }
@@ -4007,8 +4028,26 @@ async function importDbManagerPackage() {
         ? `, ${result.importedGroupCount} group(s)`
         : '';
 
+    const skippedParts = [];
+
+    if (result.skippedRecords) {
+        skippedParts.push(`${result.skippedRecords} record(s)`);
+    }
+
+    if (result.skippedImages) {
+        skippedParts.push(`${result.skippedImages} image(s)`);
+    }
+
+    if (result.reusedGroupCount) {
+        skippedParts.push(`${result.reusedGroupCount} group(s)`);
+    }
+
+    const skippedSummary = skippedParts.length
+        ? ` Already had ${skippedParts.join(', ')} -- skipped.`
+        : '';
+
     showToast(
-        `Imported ${result.importedRecords} record(s), ${result.importedImages} image(s)${groupSummary}.`
+        `Imported ${result.importedRecords} record(s), ${result.importedImages} image(s)${groupSummary}.${skippedSummary}`
     );
 
     await loadLibraryGroups();
