@@ -10,7 +10,8 @@
     "predist": "node scripts/stage-resources.js",
     "dist": "electron-builder",
     "predist:dir": "node scripts/stage-resources.js",
-    "dist:dir": "electron-builder --dir"
+    "dist:dir": "electron-builder --dir",
+    "build:prereq": "node scripts/build-prereq-bundle.js"
   },
   "keywords": [],
   "author": "",

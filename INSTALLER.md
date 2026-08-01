@@ -5,10 +5,20 @@ Packaging and deployment.
 ## npm scripts
 
 ```
-npm run stage       # scripts/stage-resources.js — stages native binaries for packaging
-npm run dist        # electron-builder NSIS installer (predist runs `stage` automatically)
-npm run dist:dir    # unpacked build output only, no installer (predist:dir runs `stage` automatically)
+npm run stage         # scripts/stage-resources.js — stages native binaries for packaging
+npm run dist          # electron-builder NSIS installer (predist runs `stage` automatically)
+npm run dist:dir      # unpacked build output only, no installer (predist:dir runs `stage` automatically)
+npm run build:prereq  # scripts/build-prereq-bundle.js — rebuilds installer/prerequisites.zip
 ```
+
+## scripts/build-prereq-bundle.js
+
+Zips `installer/prerequisites/` into `installer/prerequisites.zip`, with everything under a `prerequisites/` root (what testers extract). Run it whenever anything in that folder changes — the bundle ships **separately from the `.exe`**, so a new installer build does not pick up wizard changes on its own.
+
+It exists because the bundle was hand-zipped and drifted: four of its nine files were stale against the folder before anyone noticed, and one hand-built copy shipped a stray `__pycache__/*.pyc`. Two guards:
+
+- `__pycache__`, `.vs`, `obj`, `bin` and any `.pyc`/`.pyo` are excluded; an unexpected subdirectory logs a warning rather than being silently swallowed.
+- It **hard-fails** if `installer/prerequisites/speech_server.py` differs from `services/speech/speech_server.py`. Those are maintained as duplicates and shipping a stale copy is this bundle's characteristic failure.
 
 ## scripts/stage-resources.js
 
