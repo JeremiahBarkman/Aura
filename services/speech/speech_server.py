@@ -3,6 +3,7 @@ from flask_cors import CORS
 from faster_whisper import WhisperModel
 import tempfile
 import os
+import sys
 
 app = Flask(__name__)
 CORS(app)
@@ -36,6 +37,23 @@ WHISPER_MODEL = env_or("WHISPER_MODEL", "base")
 # larger models to stay fast.
 WHISPER_DEVICE = env_or("WHISPER_DEVICE", "cpu")
 WHISPER_COMPUTE_TYPE = env_or("WHISPER_COMPUTE_TYPE", "int8")
+
+# CTranslate2 lazy-loads cuBLAS/cuDNN from its own internal thread pool on
+# first inference, which does not inherit os.add_dll_directory() on Windows --
+# PATH is the only DLL search mechanism that reaches it. A system-wide CUDA
+# Toolkit + cuDNN install already puts these on PATH; this covers the lighter
+# alternative (no multi-GB installer, no reboot):
+#   pip install nvidia-cublas-cu12 nvidia-cudnn-cu12
+# into this venv. No-ops (and CTranslate2 raises its own clear error) if
+# neither is present.
+if WHISPER_DEVICE == "cuda":
+    _venv_site_packages = os.path.join(
+        os.path.dirname(sys.executable), "..", "Lib", "site-packages"
+    )
+    for _nvidia_pkg in ("cublas", "cudnn", "cuda_nvrtc"):
+        _dll_dir = os.path.join(_venv_site_packages, "nvidia", _nvidia_pkg, "bin")
+        if os.path.isdir(_dll_dir):
+            os.environ["PATH"] = _dll_dir + os.pathsep + os.environ["PATH"]
 
 print(f"Loading Whisper model '{WHISPER_MODEL}' on {WHISPER_DEVICE} ({WHISPER_COMPUTE_TYPE})...")
 

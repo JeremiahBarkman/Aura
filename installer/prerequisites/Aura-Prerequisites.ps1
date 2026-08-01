@@ -517,6 +517,17 @@ function Setup-SpeechService {
         & $script:VenvPython -m pip install --upgrade pip 2>&1 | ForEach-Object { Write-Log "$_" }
         & $script:VenvPython -m pip install flask flask-cors faster-whisper 2>&1 | ForEach-Object { Write-Log "$_" }
 
+        # NVIDIA machines: also grab cuBLAS/cuDNN so Whisper can run on the
+        # GPU instead of pinning a CPU core during Play Mode. Skipped for
+        # AMD/Intel/unknown (CTranslate2 only supports CUDA). If this pip
+        # install fails, Test-WhisperCudaAvailable comes back false and
+        # Save-Config leaves WHISPER_DEVICE unset -- Whisper just runs on
+        # CPU, same as today. Not fatal either way.
+        if ((Get-GpuVariant).Variant -eq 'nvidia') {
+            Write-Log 'NVIDIA GPU detected - installing cuBLAS/cuDNN for GPU-accelerated Whisper...'
+            & $script:VenvPython -m pip install nvidia-cublas-cu12 nvidia-cudnn-cu12 2>&1 | ForEach-Object { Write-Log "$_" }
+        }
+
         & $script:VenvPython -c 'import flask, flask_cors, faster_whisper' 2>$null
         if ($LASTEXITCODE -eq 0) {
             # Persist SPEECH_PYTHON/SPEECH_SCRIPT immediately. Those keys are
@@ -612,6 +623,8 @@ function Write-DotEnv {
     AddKV 'SPEECH_PYTHON'; AddKV 'SPEECH_SCRIPT'
     AddLine '# Whisper model size: base (default), small, or medium for better non-English.'
     AddKV 'WHISPER_MODEL'
+    AddLine '# GPU acceleration, set automatically when an NVIDIA GPU is detected.'
+    AddKV 'WHISPER_DEVICE'; AddKV 'WHISPER_COMPUTE_TYPE'
 
     # Write UTF-8 without BOM.
     $utf8 = New-Object System.Text.UTF8Encoding($false)
@@ -837,6 +850,18 @@ function Get-GpuVariant {
     } catch {
         return @{ Variant='nvidia'; Gpu='unknown' }
     }
+}
+
+# Whether the speech venv has the pip-installed cuBLAS/cuDNN wheels Whisper's
+# CUDA path needs at runtime (see the matching PATH-fix in speech_server.py).
+# Used by Save-Config to decide WHISPER_DEVICE -- re-checked fresh each save
+# rather than tracked in a variable, same as SPEECH_PYTHON/SPEECH_SCRIPT.
+function Test-WhisperCudaAvailable {
+    foreach ($pkg in @('cublas', 'cudnn', 'cuda_nvrtc')) {
+        $dllDir = Join-Path $script:SpeechVenv "Lib\site-packages\nvidia\$pkg\bin"
+        if (-not (Test-Path $dllDir)) { return $false }
+    }
+    return $true
 }
 
 # Latest portable archive for this GPU, straight from the releases API.
@@ -1106,6 +1131,8 @@ function Save-Config {
         'OLLAMA_EMBED_MODEL' = $script:EmbedModel
         'SPEECH_PYTHON'      = $(if (Test-Path $script:VenvPython) { $script:VenvPython } else { '' })
         'SPEECH_SCRIPT'      = $(if (Test-Path $script:SpeechScript) { $script:SpeechScript } else { '' })
+        'WHISPER_DEVICE'       = $(if (Test-WhisperCudaAvailable) { 'cuda' } else { '' })
+        'WHISPER_COMPUTE_TYPE' = $(if (Test-WhisperCudaAvailable) { 'float16' } else { '' })
     }
     foreach ($k in $script:Fields.Keys) { $vals[$k] = $script:Fields[$k].Text }
     Write-DotEnv -Values $vals
