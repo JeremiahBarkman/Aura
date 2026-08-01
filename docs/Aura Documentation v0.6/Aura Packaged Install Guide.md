@@ -14,7 +14,10 @@ not bundled in the installer and need to already be running on the machine.
 > (`Install Aura Prerequisites.bat`) that checks for everything below,
 > installs the small tools for you (Ollama, Python, FFmpeg), sets up the
 > speech service, and writes your `.env` — including fields to paste your
-> PsySeg and SerpAPI keys into. For ComfyUI, the checkpoint, and a text
+> SerpAPI key and, optionally, your PsySeg keys into (leave PsySeg empty and
+> the wizard selects the license-free PaddleSeg engine). It also enables GPU
+> acceleration for speech-to-text automatically on NVIDIA machines. For
+> ComfyUI, the checkpoint, and a text
 > model it detects what's missing and links you to the downloads (those are
 > too large to auto-install). You can still follow the manual steps below
 > if you prefer; the wizard just automates most of them.
@@ -223,12 +226,23 @@ The **app interface language** is separate and set in
 **Settings → Language** (17 languages available). It does not affect how
 your records are processed.
 
-### 2.4 PsySeg SDK license
+### 2.4 PsySeg SDK license — optional
 
-Used for the background-segmentation/virtual-camera feature. You need a
-valid license key, access key, and access token for the
+Used by the **PsySeg** background-segmentation engine. If you have one, you
+need a valid license key, access key, and access token for the
 `@personifyinc/psyseg-sdk` package. Contact whoever manages the PsySeg
-license for these — there's no self-serve signup.
+license — there's no self-serve signup.
+
+**This is no longer required.** Aura ships a second segmentation engine,
+**PaddleSeg**, which runs a bundled ONNX model on your GPU and needs no
+license. Blur, Remove Background and Replace Background all work the same
+on either engine.
+
+If you leave the PsySeg fields empty, the prerequisites wizard selects
+PaddleSeg for you, so background segmentation works on a fresh install with
+no license at all. You can switch engines any time in
+**Settings → Segmentation → Engine** (the change applies the next time you
+start the camera).
 
 ### 2.5 SerpAPI key
 
