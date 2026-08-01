@@ -1,6 +1,6 @@
 {
   "name": "aura",
-  "version": "0.6.6",
+  "version": "0.6.7",
   "description": "",
   "main": "electron-main.js",
   "scripts": {
@@ -47,7 +47,11 @@
       "public/**/*",
       "src/**/*",
       "comfy/**/*",
-      "node_modules/**/*"
+      "node_modules/**/*",
+      "!node_modules/onnxruntime-web/dist/**",
+      "node_modules/onnxruntime-web/dist/ort.webgpu.bundle.min.mjs",
+      "node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.asyncify.mjs",
+      "node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.asyncify.wasm"
     ],
     "extraResources": [
       {
