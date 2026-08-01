@@ -50,15 +50,6 @@
             );
         }
 
-        #status {
-            position: fixed;
-            left: 16px;
-            bottom: 12px;
-            color: rgba(255,255,255,0.45);
-            font-family: Consolas, "Courier New", monospace;
-            font-size: 12px;
-            z-index: 10;
-        }
     </style>
         </head>
 
@@ -69,7 +60,6 @@
     </div>
 
     <div id="bottomFade"></div>
-    <div id="status">Aura Slide Output waiting for active scene...</div>
 
     <script type="module">
 
@@ -170,7 +160,7 @@ function getSlideDisplayMode() {
             return `/manual-images/${encodeURIComponent(fileName)}`;
         }
 
-function swapImage(imageUrl, metaText, transition = {}) {
+function swapImage(imageUrl, transition = {}) {
     if (!imageUrl || imageUrl === currentImageUrl) {
         return;
     }
@@ -186,7 +176,6 @@ function swapImage(imageUrl, metaText, transition = {}) {
 
     const imageA = document.getElementById('imageA');
     const imageB = document.getElementById('imageB');
-    const status = document.getElementById('status');
 
     const incoming = showingA ? imageB : imageA;
     const outgoing = showingA ? imageA : imageB;
@@ -218,8 +207,6 @@ function swapImage(imageUrl, metaText, transition = {}) {
 
         showingA = !showingA;
         currentImageUrl = imageUrl;
-
-        status.textContent = metaText || 'Aura Slide Output active.';
     };
 
     incoming.src = imageUrl;
@@ -251,12 +238,8 @@ async function renderSceneWithSharedRenderer(scene) {
     const imageUrl =
         sceneCanvas.toDataURL('image/png');
 
-    const metaText =
-        `mode=${scene.sceneMode || 'single'} | shared renderer | slots=${slots.length} | minDisplay=${getMinimumDisplayMs(scene)}ms`;
-
     swapImage(
         imageUrl,
-        metaText,
         scene.transition || {}
     );
 
@@ -291,9 +274,48 @@ function renderScene(scene) {
     // Every scene mode (single/dual/triple/aura) is drawn through the same
     // shared SceneRenderer, so the layout matches the camera composite exactly.
     renderSceneWithSharedRenderer(scene).catch(error => {
-        document.getElementById('status').textContent =
-            'Shared renderer error: ' + error.message;
+        console.error('Shared renderer error:', error);
     });
+}
+
+// Fades whichever image layer is showing back out and resets the render
+// bookkeeping, so a later scene -- including a repeat of the one just
+// cleared -- is not deduped away by currentSceneKey/currentImageUrl.
+function clearDisplay() {
+    const imageA = document.getElementById('imageA');
+    const imageB = document.getElementById('imageB');
+
+    // Clearing uses the same transition the user picked for scene changes
+    // (Studio's Transition Type / Duration, mirrored into aura-config). There
+    // is no scene to read a transition off -- activeScene is null by the time
+    // we get here -- so it comes from the config the poll already loads.
+    const transitionType =
+        slideOutputConfig.transitionType || 'crossfade';
+
+    const durationMs =
+        Number(slideOutputConfig.transitionDurationMs ?? 800);
+
+    const animate =
+        transitionType !== 'instant' && durationMs > 0;
+
+    // Visibility is driven by the .active class (.slide-image is opacity 0,
+    // .slide-image.active is opacity 1) -- NOT by inline opacity. Setting
+    // inline opacity here would look correct immediately but permanently
+    // outrank the class, so every later swapImage would add .active to a
+    // layer that stays invisible and the output could never show anything
+    // again.
+    for (const layer of [imageA, imageB]) {
+        layer.style.transition = animate
+            ? `opacity ${durationMs}ms ease-in-out`
+            : 'none';
+
+        layer.classList.remove('active');
+    }
+
+    currentImageUrl = '';
+    currentSceneKey = '';
+    currentSceneStartedAt = 0;
+    pendingScene = null;
 }
 
 function tryRenderPendingScene() {
@@ -317,7 +339,16 @@ async function pollActiveScene() {
 
         const rawScene = result.activeScene;
 
+        // A null scene means Play Mode's Clear Scene emptied the stage (it is
+        // also the pre-first-match state). Returning early here would leave
+        // the last slide on screen forever, so fade it out instead. Guarded on
+        // currentImageUrl so the normal "nothing has matched yet" case does no
+        // work on every 750ms poll.
         if (!rawScene) {
+            if (currentImageUrl) {
+                clearDisplay();
+            }
+
             return;
         }
 
@@ -328,8 +359,7 @@ async function pollActiveScene() {
         tryRenderPendingScene();
 
     } catch (error) {
-        document.getElementById('status').textContent =
-            'Aura Slide Output error: ' + error.message;
+        console.error('Aura Slide Output error:', error);
     }
 }
 

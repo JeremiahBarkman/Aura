@@ -16,6 +16,11 @@ const defaultConfig = Object.freeze({
     minimumDisplayMs: 3000,
     minimumMatchScore: 0.45,
 
+    // Which segmentation engine backs the live camera pipeline. Engine ids
+    // are registered in public/segmentation/createSegmentationProvider.js;
+    // an unknown value falls back to psyseg.
+    segmentationEngine: 'psyseg',
+
     // PsySeg segmentation edge/blur controls (Webcam Live View sliders).
     // psySegErode smooths the segmentation edge (blur/remove/replace);
     // psySegBlur is the background-blur strength (blur mode only).

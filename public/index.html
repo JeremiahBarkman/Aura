@@ -77,7 +77,7 @@
   </div>
   <aside class="studio-side">
    <div class="panel"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><div class="panel-title" style="margin:0" data-i18n="play.title">Play Mode</div><svg id="playModeMicIndicator" class="mic-indicator" style="display:none" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title data-i18n="play.listening">Play Mode is listening</title><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg></div><div style="display:flex;align-items:center;gap:6px;margin-bottom:7px"><label data-i18n="play.group" style="margin-bottom:0">Active Play Mode Group</label><span class="info-icon" title="Records only trigger in Play Mode when their group matches the active group, or when All Complete Records is selected."><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.6"></circle><circle cx="8" cy="4.6" r="1.1" fill="currentColor"></circle><rect x="7.1" y="6.8" width="1.8" height="5.3" rx="0.9" fill="currentColor"></rect></svg></span></div><select id="activeGroupSelect" onchange="setActiveGroupFromSelect()"><option value="" data-i18n="play.allComplete">All Complete Records</option></select><label data-i18n="play.mic">Microphone</label><select id="microphoneDeviceSelect"></select>
-    <div class="button-row"><button id="localWhisperStartBtn" onclick="startLocalWhisperPlayMode()" data-i18n="play.start">Start Play Mode</button><button id="localWhisperStopBtn" class="danger" onclick="stopLocalWhisperPlayMode()" disabled data-i18n="play.stop">Stop</button></div>
+    <div class="button-row"><button id="localWhisperStartBtn" onclick="startLocalWhisperPlayMode()" data-i18n="play.start">Start Play Mode</button><button id="localWhisperStopBtn" class="danger" onclick="stopLocalWhisperPlayMode()" disabled data-i18n="play.stop">Stop</button><button id="clearSceneBtn" class="secondary" onclick="clearActiveScene()" data-i18n="play.clearScene">Clear Scene</button></div>
    </div>
    <div class="panel"><div class="eyebrow" data-i18n="transcript.rolling">ROLLING TRANSCRIPT</div><div id="rollingTranscript" style="margin-top:10px">No speech captured yet.</div></div>
    <div class="panel"><div class="eyebrow" data-i18n="play.match">ACTIVE BACKGROUND MATCH</div><div id="activePlayMatch" style="margin-top:12px">No active match yet.</div></div>
@@ -125,6 +125,11 @@
  <header class="view-header"><div><div class="view-title" data-i18n="set.title">Settings</div><div class="view-sub" data-i18n="set.sub">DEVICES · DISPLAY · PRESENTATION</div></div></header>
  <div class="settings-body"><div class="panel settings-card"><div class="panel-title" data-i18n="set.language">Language</div><select id="settingsUiLanguage" onchange="setUiLanguageFromSelect()"></select></div>
  <div class="panel settings-card"><div class="panel-title" data-i18n="set.devices">Devices</div><div class="two-col"><div><label data-i18n="set.camera">Camera</label><select id="settingsCameraDeviceSelect"></select></div><div><label data-i18n="set.mic">Microphone</label><select id="settingsMicrophoneDeviceSelect"></select></div></div></div>
+ <div class="panel settings-card"><div class="panel-title" data-i18n="set.segmentation">Segmentation</div>
+  <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px"><label data-i18n="set.segEngine" style="margin-bottom:0">Engine</label><span class="info-icon" title="Which engine separates you from your background. PsySeg is the licensed SDK; PaddleSeg runs a local ONNX model on the GPU and needs no licence. Takes effect the next time the camera starts."><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.6"></circle><circle cx="8" cy="4.6" r="1.1" fill="currentColor"></circle><rect x="7.1" y="6.8" width="1.8" height="5.3" rx="0.9" fill="currentColor"></rect></svg></span></div>
+  <select id="settingsSegmentationEngine" onchange="setSegmentationEngineFromSelect()"></select>
+  <div id="settingsSegmentationStatus" class="status-box" data-i18n="set.segRestart">Restart the camera to apply a change.</div>
+ </div>
  <div class="panel settings-card"><div class="panel-title" data-i18n="set.matching">Matching &amp; Generation</div>
   <label style="display:flex;align-items:center;gap:10px"><input id="settingsSemanticMatching" type="checkbox" style="width:auto" checked><span data-i18n="set.semantic">Semantic matching (embeddings) in Play Mode</span><span class="info-icon" title="Uses an Ollama embedding model so related phrases match triggers even without exact word overlap. Falls back to keyword matching automatically if the embedding model is unavailable."><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.6"></circle><circle cx="8" cy="4.6" r="1.1" fill="currentColor"></circle><rect x="7.1" y="6.8" width="1.8" height="5.3" rx="0.9" fill="currentColor"></rect></svg></span></label>
   <label data-i18n="set.model">Ollama Model Override</label><input id="settingsOllamaModel" placeholder="Empty = default from .env / built-in">
@@ -143,6 +148,11 @@
   </div>
   <pre id="settingsLogView" class="log-view">Select a log to view it.</pre>
   <div id="settingsLogStatus" class="status-box">No log loaded.</div>
+ </div>
+ <div class="panel settings-card">
+  <div class="panel-title" data-i18n="set.dangerZone">Danger Zone</div>
+  <div style="color:var(--coral);font-size:.85em;margin-bottom:10px" data-i18n="set.dangerZoneHint">Permanently deletes every record, image, and group in the database. This cannot be undone.</div>
+  <div class="button-row"><button class="danger" onclick="clearGlobalDatabase()" data-i18n="set.clearDatabase">Clear Database</button></div>
  </div>
  </div>
 </section>
@@ -896,7 +906,7 @@ function handleDisplaySettingsChanged() {
 // -----------------------------------------------------------------------------
 // Updates the control-panel preview of the currently selected semantic image.
 // This is separate from the live webcam canvas and Aura output window.
-function setActiveVisual(imageUrl, metaText) {
+function setActiveVisual(imageUrl) {
     const display = document.getElementById('activeVisualDisplay');
     const transitionType = document.getElementById('transitionType').value;
     const duration = Number(document.getElementById('transitionDurationMs').value || 1800);
@@ -1582,6 +1592,7 @@ function renderRecordCard(record, idPrefix = 'record-card-') {
 <div class="card-dropdown-menu">
     <button type="button" onclick="expandRecordForEdit(${record.source_item_id})">Edit Record</button>
     <button type="button" onclick="markRecordComplete(${record.source_item_id})">Mark Complete</button>
+    <button type="button" onclick="markRecordDraft(${record.source_item_id})">Mark Draft</button>
     <button type="button" class="danger-item" onclick="deleteRecord(${record.source_item_id})">Delete Entire Record</button>
 </div>
 
@@ -1949,12 +1960,16 @@ async function initializeAuraSegmentationProvider() {
         return auraSegmentationProvider;
     }
 
-    const module = await import('/segmentation/PsySegSegmentationProvider.js?v=7');
+    const { createSegmentationProvider, DEFAULT_ENGINE } =
+        await import('/segmentation/createSegmentationProvider.js?v=1');
 
     const video = document.getElementById('auraLiveVideo');
     const canvas = document.getElementById('auraLiveCanvas');
 
-    auraSegmentationProvider = new module.PsySegSegmentationProvider();
+    const engineId =
+        (auraConfigState && auraConfigState.segmentationEngine) || DEFAULT_ENGINE;
+
+    auraSegmentationProvider = await createSegmentationProvider(engineId);
 
     await auraSegmentationProvider.initialize();
     auraSegmentationProvider.attachVideo(video);
@@ -1964,9 +1979,58 @@ async function initializeAuraSegmentationProvider() {
     applyPsySegParams();
 
     document.getElementById('auraSegmentationStatus').textContent =
-        'Segmentation provider initialized.';
+        `Segmentation provider initialized (${auraSegmentationProvider.engineId}).`;
 
     return auraSegmentationProvider;
+}
+
+// Settings > Segmentation: fill the engine dropdown from the provider
+// registry, so adding an engine there shows up here with no edit.
+async function populateSegmentationEngineSelect() {
+    const select = document.getElementById('settingsSegmentationEngine');
+    if (!select) return;
+
+    const { listSegmentationEngines, DEFAULT_ENGINE } =
+        await import('/segmentation/createSegmentationProvider.js?v=1');
+
+    select.innerHTML = listSegmentationEngines()
+        .map(engine => `<option value="${engine.id}">${escapeHtml(engine.label)}</option>`)
+        .join('');
+
+    select.value =
+        (auraConfigState && auraConfigState.segmentationEngine) || DEFAULT_ENGINE;
+}
+
+// Switching engines means building a different provider, and the live one is
+// created once and cached. Rather than tear down a running camera underneath
+// the user, the old provider is disposed and the choice takes effect the next
+// time the camera starts -- which the status line says explicitly.
+function setSegmentationEngineFromSelect() {
+    const select = document.getElementById('settingsSegmentationEngine');
+    const status = document.getElementById('settingsSegmentationStatus');
+    if (!select) return;
+
+    const engineId = select.value;
+
+    patchAuraConfig({ segmentationEngine: engineId })
+        .then(() => {
+            if (auraSegmentationProvider) {
+                auraSegmentationProvider.dispose();
+                auraSegmentationProvider = null;
+            }
+
+            if (status) {
+                status.textContent =
+                    `Engine set to ${select.selectedOptions[0].textContent}. Restart the camera to apply.`;
+            }
+        })
+        .catch(error => {
+            console.error('Failed to save segmentation engine:', error);
+
+            if (status) {
+                status.textContent = 'Could not save the engine choice.';
+            }
+        });
 }
 
 // Read the Webcam Live View sliders and push their values onto the live
@@ -2566,6 +2630,62 @@ async function transitionCameraBackground(
     lastCameraSceneKey = sceneKey;
 }
 
+// Play Mode "Clear Scene": empties every filled slot and returns the stage to
+// its pre-first-match state.
+//
+// Clearing the server state alone is not enough to make anything disappear:
+// both consumers (syncCameraToActiveScene here, pollActiveScene in the slide
+// output) deliberately ignore an empty scene and keep showing the last one,
+// so the camera would still be displaying the cleared image. The camera is
+// therefore transitioned to an empty background explicitly, and the dedup key
+// is reset so the next match is not mistaken for a repeat of what was just
+// cleared.
+async function clearActiveScene() {
+    const status =
+        document.getElementById('auraSegmentationStatus');
+
+    try {
+        const response =
+            await fetch('/api/play/scene-slots/clear', { method: 'POST' });
+
+        if (!response.ok) {
+            const result = await response.json().catch(() => ({}));
+            showToast(result.error || 'Clear scene failed.', true);
+            return;
+        }
+
+        lastCameraSceneKey = '';
+
+        // Only touch the camera if one is actually running -- Clear Scene is
+        // usable with the camera stopped, and initializing a provider just to
+        // clear it would start the render loop as a side effect.
+        if (auraSegmentationProvider) {
+            const settings = getCameraTransitionSettings(null);
+
+            const animate =
+                settings.type !== 'instant' && settings.durationMs > 0;
+
+            // A null background renders as black in both providers, which is
+            // exactly the "nothing selected" state.
+            await auraSegmentationProvider.startBackgroundTransition(
+                null,
+                animate ? settings.durationMs : 0,
+                settings.type
+            );
+        }
+
+        if (status) {
+            status.textContent = 'Scene cleared.';
+        }
+
+        showToast('Scene cleared.');
+
+    } catch (error) {
+        console.error('Clear scene failed:', error);
+        showToast('Clear scene failed.', true);
+    }
+}
+
 async function fetchActiveScene() {
     const response =
         await fetch('/api/play/active-scene');
@@ -3024,13 +3144,7 @@ async function runLivePlayMatch() {
             lastActiveImageUrl = imageUrl;
             lastSwitchTime = now;
 
-            setActiveVisual(
-                imageUrl,
-                `score=${match.score.toFixed(3)}` +
-                ` (kw=${Number(match.keyword_score ?? 0).toFixed(3)}` +
-                `, sem=${Number(match.semantic_score ?? 0).toFixed(3)})` +
-                ` | source_item_id=${match.source_item_id} | image_id=${match.image_id}`
-            );
+            setActiveVisual(imageUrl);
         }
 
         /*
@@ -3051,12 +3165,6 @@ async function runLivePlayMatch() {
         <div>
             <span style="color:#58a6ff;">Match Score:</span>
             ${escapeHtml(match.score.toFixed(3))}
-        </div>
-
-        <div class="record-meta">
-            source_item_id=${escapeHtml(match.source_item_id)}
-            | image_id=${escapeHtml(match.image_id)}
-            | status=${escapeHtml(match.record_status)}
         </div>
 
         <div>
@@ -3092,6 +3200,21 @@ async function markRecordComplete(sourceItemId) {
             `${result.error}\n\nMissing:\n- ${(result.missingFields || []).join('\n- ')}`,
             true
         );
+        return;
+    }
+
+    await loadFullRecords();
+}
+
+async function markRecordDraft(sourceItemId) {
+    const response = await fetch(`/api/source-items/${sourceItemId}/draft`, {
+        method: 'PATCH'
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+        showToast(result.error || 'Could not mark record as draft.', true);
         return;
     }
 
@@ -3140,6 +3263,7 @@ loadAuraConfig()
                 loadDisplaySettings();
         loadMatchingSettings();
         loadPsySegSettings();
+        populateSegmentationEngineSelect().catch(console.error);
 
         try {
             await loadCameraDevices();
@@ -3733,6 +3857,36 @@ async function bulkDeleteDbManagerRecords() {
     }
 
     await loadDbManager();
+}
+
+// Settings > Danger Zone: wipes every record, image, and group. Two separate
+// auraConfirm prompts (not one dialog with extra text) so a reflexive second
+// click doesn't also confirm -- the user has to consciously trigger the
+// modal twice.
+async function clearGlobalDatabase() {
+    if (!await auraConfirm(
+        'Clear the entire database? This permanently deletes every record, image, and group.',
+        'Continue'
+    )) return;
+
+    if (!await auraConfirm(
+        'Are you absolutely sure? This cannot be undone and there is no backup.',
+        'Yes, Clear Everything'
+    )) return;
+
+    const response = await fetch('/api/db-manager/clear-database', {
+        method: 'POST'
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+        showToast(result.error || 'Clear database failed.', true);
+        return;
+    }
+
+    showToast('Database cleared.');
+    await loadLibraryGroups();
 }
 
 // -----------------------------------------------------------------------------

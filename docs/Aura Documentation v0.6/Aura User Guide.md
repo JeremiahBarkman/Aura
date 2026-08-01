@@ -66,6 +66,13 @@ new match is chosen, slightly ahead of the camera transition finishing.
   - **Start Play Mode / Stop** — begin or end live speech matching. The mic
     icon next to the panel title lights up while Play Mode is actively
     listening.
+  - **Clear Scene** — empties every filled scene slot and returns the stage
+    to how it looked before the first match, in both the camera and the
+    Slide Output window. Useful between segments when you want a clean
+    start rather than leaving the last matched image on screen. It uses
+    whichever Transition Type and Duration you have set, so the scene fades
+    away rather than cutting. Clear Scene does not stop Play Mode — the
+    next thing you say can fill the stage again.
 - **Rolling Transcript** — shows the last few seconds of what Aura heard
   while Play Mode is running. Useful for confirming your microphone is
   picking up speech correctly.
@@ -340,6 +347,14 @@ DB Manager, is immediate and permanent and does not go through Trash.
   Capture).
 - **Devices** — camera and microphone selection, mirrored with the pickers
   in Studio.
+- **Segmentation**:
+  - **Engine** — which engine separates you from your background.
+    **PsySeg** is the licensed Personify SDK (the default, and what Aura
+    has always used). **PaddleSeg (ONNX)** runs a local PP-HumanSeg model
+    on your GPU and needs no licence. Both support Blur, Remove and
+    Replace identically, so this is safe to switch between.
+    The change takes effect the next time you start the camera — if the
+    camera is already running, stop and start it again.
 - **Matching & Generation**:
   - **Semantic matching (embeddings) in Play Mode** — toggle described in
     section 5; hover the ⓘ for the short version.

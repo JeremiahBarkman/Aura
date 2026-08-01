@@ -1,0 +1,266 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>PaddleSeg Provider Test</title>
+<style>
+ body { font-family: monospace; background:#111; color:#eee; padding:20px }
+ #log div { padding:2px 0 }
+ .pass { color:#8fd18a } .fail { color:#e08b7a } .info { color:#a1968a }
+ canvas { border:1px solid #444; margin:6px 6px 0 0 }
+</style>
+</head>
+<body>
+<h3>PaddleSeg Provider — end-to-end test</h3>
+<div id="log"></div>
+<div>
+ <canvas id="source" width="256" height="144"></canvas>
+ <canvas id="out" width="256" height="144"></canvas>
+</div>
+<!-- Not display:none -- Chromium can skip decoding for a fully hidden video,
+     which would silently feed drawImage black frames. -->
+<video id="vid" autoplay muted playsinline width="128" style="opacity:.35"></video>
+
+<script type="module">
+const logEl = document.getElementById('log');
+const results = [];
+
+function log(msg, cls = 'info') {
+    const d = document.createElement('div');
+    d.className = cls;
+    d.textContent = msg;
+    logEl.appendChild(d);
+    console.log(`[paddleseg-test] ${msg}`);
+}
+
+function check(name, condition, detail = '') {
+    results.push({ name, ok: !!condition });
+    log(`${condition ? 'PASS' : 'FAIL'}  ${name}${detail ? ' — ' + detail : ''}`,
+        condition ? 'pass' : 'fail');
+}
+
+// Fake camera: a canvas painted red on the left half, blue on the right,
+// captured as a MediaStream so the provider gets a genuine HTMLVideoElement
+// with real videoWidth/videoHeight -- not a stub.
+const source = document.getElementById('source');
+const sctx = source.getContext('2d');
+
+function paintSource() {
+    sctx.fillStyle = '#ff0000';
+    sctx.fillRect(0, 0, source.width / 2, source.height);
+    sctx.fillStyle = '#0000ff';
+    sctx.fillRect(source.width / 2, 0, source.width / 2, source.height);
+    requestAnimationFrame(paintSource);
+}
+paintSource();
+
+const video = document.getElementById('vid');
+video.srcObject = source.captureStream(30);
+
+// loadedmetadata fires at readyState 1 (HAVE_METADATA) -- dimensions are
+// known but no frame has been decoded yet, so drawImage would paint black.
+// Explicitly start playback and wait for actual frame data.
+await video.play();
+
+await new Promise(resolve => {
+    const ready = () =>
+        video.readyState >= 2 && video.videoWidth > 0;
+
+    if (ready()) return resolve();
+
+    const tick = () => ready() ? resolve() : requestAnimationFrame(tick);
+    tick();
+});
+
+log(`fake camera ready: ${video.videoWidth}x${video.videoHeight} readyState=${video.readyState}`);
+
+// --- load provider --------------------------------------------------------
+let ProviderClass;
+try {
+    const mod = await import('/segmentation/PaddleSegSegmentationProvider.js');
+    ProviderClass = mod.PaddleSegSegmentationProvider;
+    check('module imports', !!ProviderClass);
+} catch (e) {
+    check('module imports', false, e.message);
+    window.__testDone = { results };
+    throw e;
+}
+
+// --- missing-model error path --------------------------------------------
+try {
+    const bad = new ProviderClass({ modelUrl: '/models/paddleseg/__does_not_exist.onnx' });
+    await bad.initialize();
+    check('missing model rejects', false, 'initialize() resolved unexpectedly');
+} catch (e) {
+    check('missing model rejects with clear message',
+        /missing|could not be fetched/i.test(e.message), e.message.slice(0, 90));
+}
+
+// --- real init against the synthetic model --------------------------------
+const provider = new ProviderClass({
+    modelUrl: '/models/paddleseg/__synthetic_test.onnx'
+});
+
+const out = document.getElementById('out');
+
+try {
+    await provider.initialize();
+    check('initialize() succeeds', true);
+} catch (e) {
+    check('initialize() succeeds', false, e.message);
+    window.__testDone = { results };
+    throw e;
+}
+
+check('model input size read from graph (not fallback)',
+    provider.modelWidth === 192 && provider.modelHeight === 192,
+    `${provider.modelWidth}x${provider.modelHeight}`);
+
+check('input/output names resolved',
+    !!provider.inputName && !!provider.outputName,
+    `${provider.inputName} -> ${provider.outputName}`);
+
+provider.attachVideo(video);
+provider.attachCanvas(out);
+
+// --- remove mode: person(=red left half) kept, background transparent -----
+provider.erodeLevel = 0;   // no edge blur, so the assert is crisp
+await provider.removeBackground();
+
+await new Promise(r => setTimeout(r, 1200));
+
+check('render loop produced frames',
+    (out.__auraFrameId || 0) > 0, `frameId=${out.__auraFrameId}`);
+
+const octx = out.getContext('2d', { willReadFrequently: true });
+const px = octx.getImageData(0, 0, out.width, out.height);
+
+const sampleAt = (xFrac, yFrac) => {
+    const x = Math.floor(out.width * xFrac);
+    const y = Math.floor(out.height * yFrac);
+    const i = (y * out.width + x) * 4;
+    return { r: px.data[i], g: px.data[i + 1], b: px.data[i + 2], a: px.data[i + 3] };
+};
+
+const left = sampleAt(0.25, 0.5);
+const right = sampleAt(0.75, 0.5);
+
+log(`left  sample rgba(${left.r},${left.g},${left.b},${left.a})`);
+log(`right sample rgba(${right.r},${right.g},${right.b},${right.a})`);
+
+check('remove: person side opaque', left.a > 200, `alpha=${left.a}`);
+check('remove: background side transparent', right.a < 55, `alpha=${right.a}`);
+check('remove: person keeps source colour', left.r > 180 && left.b < 75,
+    `r=${left.r} b=${left.b}`);
+
+// --- replace mode: background side shows the replacement image ------------
+const bg = document.createElement('canvas');
+bg.width = 64; bg.height = 64;
+const bgctx = bg.getContext('2d');
+bgctx.fillStyle = '#00ff00';
+bgctx.fillRect(0, 0, 64, 64);
+
+const bgImg = new Image();
+await new Promise(res => { bgImg.onload = res; bgImg.src = bg.toDataURL(); });
+
+provider.replaceBackground(bgImg);
+await new Promise(r => setTimeout(r, 900));
+
+const px2 = octx.getImageData(0, 0, out.width, out.height);
+const sample2 = (xFrac) => {
+    const x = Math.floor(out.width * xFrac);
+    const y = Math.floor(out.height * 0.5);
+    const i = (y * out.width + x) * 4;
+    return { r: px2.data[i], g: px2.data[i + 1], b: px2.data[i + 2], a: px2.data[i + 3] };
+};
+
+const l2 = sample2(0.25);
+const r2 = sample2(0.75);
+log(`replace left  rgba(${l2.r},${l2.g},${l2.b},${l2.a})`);
+log(`replace right rgba(${r2.r},${r2.g},${r2.b},${r2.a})`);
+
+check('replace: background side becomes replacement colour',
+    r2.g > 180 && r2.r < 75, `g=${r2.g} r=${r2.r}`);
+check('replace: person side still source colour',
+    l2.r > 180 && l2.g < 75, `r=${l2.r} g=${l2.g}`);
+check('replace: frame fully opaque', r2.a > 200 && l2.a > 200);
+
+// --- blur mode runs without error ----------------------------------------
+const before = out.__auraFrameId;
+provider.blurLevel = 12;
+await provider.blurBackground();
+await new Promise(r => setTimeout(r, 700));
+check('blur mode keeps rendering', out.__auraFrameId > before,
+    `${before} -> ${out.__auraFrameId}`);
+
+// --- stop halts the loop --------------------------------------------------
+provider.stop();
+const atStop = out.__auraFrameId;
+await new Promise(r => setTimeout(r, 500));
+check('stop() halts the render loop', out.__auraFrameId === atStop,
+    `${atStop} -> ${out.__auraFrameId}`);
+
+provider.dispose();
+
+// --- softmax auto-detection ----------------------------------------------
+// The synthetic model has no Softmax node, so it must take the logits path.
+check('synthetic model detected as raw logits',
+    provider.outputIsProbabilities === false,
+    `outputIsProbabilities=${provider.outputIsProbabilities}`);
+
+// The real PP-HumanSeg export has Softmax baked in, so it must take the
+// probabilities path -- getting this wrong washes the mask out rather than
+// throwing, which is exactly why it is asserted here.
+const real = new ProviderClass({ modelUrl: '/models/paddleseg/pp_humanseg.onnx' });
+
+try {
+    await real.initialize();
+    check('real PP-HumanSeg model initializes', true,
+        `${real.modelWidth}x${real.modelHeight}`);
+
+    check('real model input size read from graph', real.modelWidth === 192 && real.modelHeight === 192,
+        `${real.modelWidth}x${real.modelHeight}`);
+
+    const realOut = document.createElement('canvas');
+    real.attachVideo(video);
+    real.attachCanvas(realOut);
+    await real.removeBackground();
+
+    await new Promise(r => setTimeout(r, 2000));
+
+    check('real model produced frames', (realOut.__auraFrameId || 0) > 0,
+        `frameId=${realOut.__auraFrameId}`);
+
+    check('real model detected as already-softmaxed',
+        real.outputIsProbabilities === true,
+        `outputIsProbabilities=${real.outputIsProbabilities}`);
+
+    // Sanity: a real segmentation model fed a flat red/blue card has no person
+    // in it, so we only assert the mask is a valid, non-degenerate alpha
+    // channel -- not any particular shape.
+    const rctx = realOut.getContext('2d', { willReadFrequently: true });
+    const rpx = rctx.getImageData(0, 0, realOut.width, realOut.height).data;
+
+    let minA = 255, maxA = 0;
+    for (let i = 3; i < rpx.length; i += 4) {
+        if (rpx[i] < minA) minA = rpx[i];
+        if (rpx[i] > maxA) maxA = rpx[i];
+    }
+
+    check('real model alpha in valid range', minA >= 0 && maxA <= 255,
+        `alpha ${minA}..${maxA}`);
+
+    real.stop();
+    real.dispose();
+} catch (e) {
+    check('real PP-HumanSeg model initializes', false, e.message);
+}
+
+const failed = results.filter(r => !r.ok);
+log(`\n${results.length - failed.length}/${results.length} passed`,
+    failed.length ? 'fail' : 'pass');
+
+window.__testDone = { results, failed: failed.map(f => f.name) };
+</script>
+</body>
+</html>

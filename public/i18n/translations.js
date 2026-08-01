@@ -37,7 +37,7 @@ en: {
     'studio.title': 'Studio', 'studio.sub': 'THINK · SAY · DISPLAY', 'studio.online': 'Local system online',
     'cam.panel': 'Webcam Live View', 'cam.device': 'Camera Device', 'cam.start': 'Start Camera', 'cam.stop': 'Stop Camera', 'cam.blur': 'Blur', 'cam.removeBg': 'Remove BG', 'cam.reset': 'Reset', 'cam.erode': 'Edge Smoothing (Erode)', 'cam.blurLevel': 'Background Blur',
     'visual.active': 'Active Visual', 'transcript.rolling': 'ROLLING TRANSCRIPT', 'log.activity': 'ACTIVITY LOG', 'status.system': 'SYSTEM STATUS',
-    'play.title': 'Play Mode', 'play.group': 'Active Play Mode Group', 'play.allComplete': 'All Complete Records', 'play.mic': 'Microphone', 'play.start': 'Start Play Mode', 'play.stop': 'Stop',
+    'play.title': 'Play Mode', 'play.group': 'Active Play Mode Group', 'play.allComplete': 'All Complete Records', 'play.mic': 'Microphone', 'play.start': 'Start Play Mode', 'play.stop': 'Stop', 'play.clearScene': 'Clear Scene',
     'play.status': 'LIVE PLAY STATUS', 'play.match': 'ACTIVE BACKGROUND MATCH', 'play.stopped': 'Play Mode is stopped.', 'play.listening': 'Play Mode listening...', 'play.noMatch': 'No active match yet.',
     'disp.title': 'Display & Transition', 'disp.mode': 'Display Mode', 'disp.img1': '1 Image', 'disp.img2': '2 Images', 'disp.img3': '3 Images', 'disp.aura': 'Aura Mode',
     'disp.transition': 'Transition Type', 'disp.instant': 'Instant', 'disp.fade': 'Fade', 'disp.crossfade': 'Crossfade', 'disp.duration': 'Transition Duration', 'disp.minDisplay': 'Minimum Display Time', 'disp.minScore': 'Minimum Match Score',
@@ -69,7 +69,10 @@ en: {
     'set.semanticHint': 'Uses an Ollama embedding model so related phrases match triggers even without exact word overlap. Falls back to keyword matching automatically if the embedding model is unavailable.',
     'set.model': 'Ollama Model Override', 'set.modelHint': 'Model used for summaries, prompts, and trigger text. Must already be pulled in Ollama.',
     'set.negative': 'Negative Prompt', 'set.negativeHint': 'Applied to every ComfyUI image generation.', 'set.save': 'Save', 'set.status': 'STATUS', 'set.language': 'Language',
-    'set.logs': 'Logs', 'set.logsSelect': 'Select Log', 'set.logsRefresh': 'Refresh Log', 'set.logsFolder': 'Open Log Folder', 'set.logsCopy': 'Copy Log'
+    'set.logs': 'Logs', 'set.logsSelect': 'Select Log', 'set.logsRefresh': 'Refresh Log', 'set.logsFolder': 'Open Log Folder', 'set.logsCopy': 'Copy Log',
+    'set.dangerZone': 'Danger Zone', 'set.dangerZoneHint': 'Permanently deletes every record, image, and group in the database. This cannot be undone.', 'set.clearDatabase': 'Clear Database',
+    'set.segmentation': 'Segmentation', 'set.segEngine': 'Engine', 'set.segRestart': 'Restart the camera to apply a change.',
+    'set.segEngineHint': 'Which engine separates you from your background. PsySeg is the licensed SDK; PaddleSeg runs a local ONNX model on the GPU and needs no licence. Takes effect the next time the camera starts.'
 },
 
 es: {

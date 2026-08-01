@@ -23,7 +23,8 @@
     "better-sqlite3": "^12.10.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "multer": "^2.1.1"
+    "multer": "^2.1.1",
+    "onnxruntime-web": "^1.27.0"
   },
   "devDependencies": {
     "electron": "^42.3.0",

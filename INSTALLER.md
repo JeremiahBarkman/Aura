@@ -26,6 +26,7 @@ It's copy-only and non-destructive, skips byte-identical copies to keep git clea
 - `asar: false` — explicitly unpacked, because the native `.exe`/`.dll` extraResources and `better-sqlite3`'s native binding need real filesystem paths (Windows can't `CreateProcess` a path inside `app.asar`).
 - `npmRebuild: false` — deliberately does not rebuild native modules for Electron's ABI; the bundled standalone `node.exe` is used instead (see ARCHITECTURE.md).
 - `files`: `electron-main.js`, `electron-preload.js`, `package.json`, `.env.example`, `public/**/*`, `src/**/*`, `comfy/**/*`, `node_modules/**/*`.
+  - Because `public/**/*` and `node_modules/**/*` are both included, the PaddleSeg ONNX model (`public/models/paddleseg/pp_humanseg.onnx`, 6.1 MB) and `onnxruntime-web` ship automatically — neither is an external prerequisite. **`onnxruntime-web` is ~133 MB on disk**, almost all of it alternative WASM builds (`jsep`, `asyncify`, `jspi`, plain) when the app only ever loads `ort.webgpu.bundle.min.mjs`. With `asar: false` all of it lands in the installer; a `files` exclusion for the unused variants would reclaim most of that.
 - `extraResources`: copies the 4 staged `native/runtime/*` binaries into `resources/native/*.exe` and `resources/node.exe` (flattened out of `native/runtime/`).
 - `win.target: nsis`, icon at `build/icon.ico`.
 - `nsis`: `oneClick: false`, `perMachine: true`, user-choosable install directory, desktop + Start Menu shortcuts, `shortcutName: "Aura"`.
@@ -37,6 +38,14 @@ On a packaged install, `electron-main.js` resolves `.env` to `<userData>/.env` (
 ## External prerequisites (not bundled by electron-builder)
 
 Aura depends on several external services/tools that are **not** packaged into the installer and must be present on the target machine: Ollama (with models pulled), ComfyUI (with checkpoints for `comfy/workflows/aura_background_api.json`), a Python venv for the speech service, and PsySeg/SerpAPI credentials. `installer/prerequisites/Aura-Prerequisites.ps1` is the tester-facing wizard that sets these up (including creating the speech venv and installing `faster-whisper`/`flask`/`flask-cors`), and `installer/prerequisites/speech_server.py` is a copy of the speech service staged for that wizard.
+
+**Keep `installer/prerequisites/speech_server.py` byte-identical to `services/speech/speech_server.py`.** They are maintained as duplicates; the installer copy is the one that reaches users.
+
+### Whisper GPU acceleration (set up by the wizard)
+
+`Setup-SpeechService` detects the GPU via `Get-GpuVariant` (the same helper that picks the ComfyUI portable build). On NVIDIA machines it additionally `pip install`s `nvidia-cublas-cu12` and `nvidia-cudnn-cu12` into the speech venv, then `Save-Config` writes `WHISPER_DEVICE=cuda` / `WHISPER_COMPUTE_TYPE=float16` — but only if `Test-WhisperCudaAvailable` confirms those wheels actually landed. AMD/Intel/no-GPU machines get empty values and fall back to CPU/int8 exactly as before. A failed GPU install is non-fatal: it degrades to CPU rather than breaking speech setup.
+
+This avoids requiring a system-wide CUDA Toolkit + cuDNN install. The catch it works around: CTranslate2 lazy-loads cuBLAS from its own thread pool on first inference, and `os.add_dll_directory()` does not reach that thread on Windows — only `PATH` does. `speech_server.py` prepends the pip-installed DLL directories to `PATH` when `WHISPER_DEVICE=cuda`. Without that, `cuda` fails at the first transcription with `Library cublas64_12.dll is not found`, *after* the model appears to load fine.
 
 `docs/Aura Documentation v0.6/Aura Packaged Install Guide.md` is the current end-user-facing installation walkthrough covering the installer plus each external prerequisite — treat it as the source of truth for end-user install steps; this file covers the packaging mechanics instead.
 

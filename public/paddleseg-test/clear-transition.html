@@ -1,0 +1,162 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Clear Transition Test</title>
+<style>
+ body { font-family: monospace; background:#111; color:#eee; padding:20px }
+ .pass { color:#8fd18a } .fail { color:#e08b7a } .info { color:#a1968a }
+ table { border-collapse: collapse; margin:10px 0 }
+ td,th { border:1px solid #333; padding:3px 9px; text-align:right }
+</style>
+</head>
+<body>
+<h3>Clear Scene — does a transition to "nothing" actually fade?</h3>
+<p class="info">Drives each provider's background-transition code directly at
+controlled progress values. No render loop and no model inference, so the
+result is deterministic rather than racing per-frame ONNX work on the main
+thread.</p>
+<div id="log"></div>
+
+<script type="module">
+const logEl = document.getElementById('log');
+const results = [];
+const log = (m, c='info') => { const d=document.createElement('div'); d.className=c; d.textContent=m; logEl.appendChild(d); };
+const check = (n, ok, detail='') => { results.push({n, ok}); log(`${ok?'PASS':'FAIL'}  ${n}${detail?' — '+detail:''}`, ok?'pass':'fail'); };
+
+const W = 64, H = 36;
+
+// Opaque green stand-in for "the scene currently on screen".
+const bgc = document.createElement('canvas');
+bgc.width = bgc.height = 32;
+const bgx = bgc.getContext('2d');
+bgx.fillStyle = '#00ff00';
+bgx.fillRect(0, 0, 32, 32);
+const green = new Image();
+await new Promise(r => { green.onload = r; green.src = bgc.toDataURL(); });
+
+const probe = document.createElement('canvas');
+probe.width = W; probe.height = H;
+const probeCtx = probe.getContext('2d', { willReadFrequently: true });
+
+// Reads the green channel at the centre of whatever the provider produced.
+function greenAt(imageDataOrCanvas) {
+    if (imageDataOrCanvas instanceof ImageData) {
+        const i = ((H >> 1) * W + (W >> 1)) * 4;
+        return imageDataOrCanvas.data[i + 1];
+    }
+    const d = probeCtx.getImageData(W >> 1, H >> 1, 1, 1).data;
+    return d[1];
+}
+
+// Puts a provider mid-transition at an exact progress, with no incoming
+// image -- i.e. exactly what Clear Scene does.
+function setClearTransition(p, progress, type, durationMs = 1000) {
+    p.transitionActive = true;
+    p.transitionFrom = green;
+    p.transitionTo = null;
+    p.transitionType = type;
+    p.transitionDurationMs = durationMs;
+    p.transitionStartMs = performance.now() - (progress * durationMs);
+}
+
+async function sampleCurve(makeProvider, render, type) {
+    const out = [];
+
+    for (const progress of [0, 0.25, 0.5, 0.75, 0.95]) {
+        // Fresh provider each sample: a settled transition mutates state.
+        const p = makeProvider();
+        setClearTransition(p, progress, type);
+        out.push({ progress, g: render(p) });
+    }
+
+    return out;
+}
+
+function renderTable(rows) {
+    const t = document.createElement('table');
+    t.innerHTML = '<tr><th>progress</th>' + rows.map(r => `<th>${r.progress}</th>`).join('') +
+        '</tr><tr><th>green</th>' + rows.map(r => `<td>${r.g}</td>`).join('') + '</tr>';
+    logEl.appendChild(t);
+}
+
+// A correct fade-out: starts bright, ends dark, never brightens.
+function assertFades(label, rows) {
+    const first = rows[0].g;
+    const last = rows[rows.length - 1].g;
+    const monotonic = rows.every((r, i) => i === 0 || r.g <= rows[i - 1].g + 2);
+    const intermediate = rows.some(r => r.g > 15 && r.g < first - 25);
+
+    check(`${label}: starts visible`, first > 200, `g=${first}`);
+    check(`${label}: never brightens`, monotonic);
+    check(`${label}: has partially-faded middle (not a snap)`, intermediate,
+        rows.map(r => r.g).join(','));
+    check(`${label}: ends faded out`, last < 40, `g=${last}`);
+}
+
+// --- PaddleSeg ------------------------------------------------------------
+const { PaddleSegSegmentationProvider } =
+    await import('/segmentation/PaddleSegSegmentationProvider.js');
+
+const paddleRender = p => {
+    probeCtx.clearRect(0, 0, W, H);
+    p.drawBackground(probeCtx, W, H);
+    return greenAt(probe);
+};
+
+log('PaddleSeg — crossfade to nothing');
+const paddleCross = await sampleCurve(() => new PaddleSegSegmentationProvider(), paddleRender, 'crossfade');
+renderTable(paddleCross);
+assertFades('PaddleSeg crossfade', paddleCross);
+
+log('PaddleSeg — fade to nothing');
+const paddleFade = await sampleCurve(() => new PaddleSegSegmentationProvider(), paddleRender, 'fade');
+renderTable(paddleFade);
+assertFades('PaddleSeg fade', paddleFade);
+
+// --- PsySeg ---------------------------------------------------------------
+// getTransitionBackgroundImageData only touches the canvases built in the
+// constructor, so it runs without the PsySeg SDK or a licence.
+const { PsySegSegmentationProvider } =
+    await import('/segmentation/PsySegSegmentationProvider.js');
+
+const psyRender = p => greenAt(p.getTransitionBackgroundImageData(W, H));
+
+log('PsySeg — crossfade to nothing');
+const psyCross = await sampleCurve(() => new PsySegSegmentationProvider(), psyRender, 'crossfade');
+renderTable(psyCross);
+assertFades('PsySeg crossfade', psyCross);
+
+log('PsySeg — fade to nothing');
+const psyFade = await sampleCurve(() => new PsySegSegmentationProvider(), psyRender, 'fade');
+renderTable(psyFade);
+assertFades('PsySeg fade', psyFade);
+
+// --- regression: a real crossfade BETWEEN two images still works ----------
+const rc = document.createElement('canvas');
+rc.width = rc.height = 32;
+const rx = rc.getContext('2d');
+rx.fillStyle = '#ff0000';
+rx.fillRect(0, 0, 32, 32);
+const red = new Image();
+await new Promise(r => { red.onload = r; red.src = rc.toDataURL(); });
+
+const twoImage = [0.05, 0.5, 0.95].map(progress => {
+    const p = new PaddleSegSegmentationProvider();
+    setClearTransition(p, progress, 'crossfade');
+    p.transitionTo = red;           // now there IS an incoming image
+    return { progress, g: paddleRender(p) };
+});
+
+renderTable(twoImage);
+check('two-image crossfade still holds outgoing at full alpha early',
+    twoImage[0].g > 200, `g=${twoImage[0].g}`);
+check('two-image crossfade still resolves to incoming image',
+    twoImage[2].g < 60, `g=${twoImage[2].g}`);
+
+const failed = results.filter(r => !r.ok);
+log(`\n${results.length - failed.length}/${results.length} passed`, failed.length ? 'fail' : 'pass');
+window.__testDone = { results, failed: failed.map(f => f.n) };
+</script>
+</body>
+</html>

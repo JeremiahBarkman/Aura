@@ -563,12 +563,20 @@ await this.psyseg.init({
             // A*(1-t) + B*t dissolve across the whole frame.
             const t = smoothstep(progress);
 
+            // ...unless there is no incoming image (Play Mode's Clear Scene,
+            // or a background that failed to load). With nothing to dissolve
+            // INTO, holding the outgoing image at alpha 1 would leave it fully
+            // visible for the whole duration and then snap to black at the
+            // end -- no visible transition at all. Fade it out over black
+            // instead, which is what "crossfade to nothing" means.
+            const hasIncoming = isDrawable(this.transitionTo);
+
             if (isDrawable(this.transitionFrom)) {
-                ctx.globalAlpha = 1;
+                ctx.globalAlpha = hasIncoming ? 1 : 1 - t;
                 ctx.drawImage(this.transitionFrom, 0, 0, width, height);
             }
 
-            if (isDrawable(this.transitionTo)) {
+            if (hasIncoming) {
                 ctx.globalAlpha = t;
                 ctx.drawImage(this.transitionTo, 0, 0, width, height);
             }

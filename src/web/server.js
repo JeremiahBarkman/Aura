@@ -947,6 +947,34 @@ app.patch('/api/source-items/:id/complete', (req, res) => {
     });
 });
 
+// Marks a record back to draft status. Draft records are excluded from Play
+// Mode matching until re-marked complete via the route above.
+app.patch('/api/source-items/:id/draft', (req, res) => {
+    const sourceItemId = Number(req.params.id);
+
+    const record = db.prepare(`
+        SELECT id
+        FROM source_items
+        WHERE id = ?
+    `).get(sourceItemId);
+
+    if (!record) {
+        return res.status(404).json({ error: 'Record not found.' });
+    }
+
+    db.prepare(`
+        UPDATE source_items
+        SET record_status = 'draft'
+        WHERE id = ?
+    `).run(sourceItemId);
+
+    res.json({
+        success: true,
+        sourceItemId,
+        recordStatus: 'draft'
+    });
+});
+
 
 // -----------------------------------------------------------------------------
 // Maintenance: Trash (Soft-Deleted Images)
@@ -1435,6 +1463,64 @@ app.delete('/api/db-manager/groups/:id', (req, res) => {
 
     } catch (error) {
         console.error('Delete group failed:', error);
+
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// Wipes every record, image, and group in the database. Settings' "Clear
+// Database" action -- gated behind a double confirmation client-side since
+// this has no undo.
+app.post('/api/db-manager/clear-database', (req, res) => {
+    try {
+        const imagePaths = db.prepare(`
+            SELECT DISTINCT image_path
+            FROM generated_images
+            WHERE image_path IS NOT NULL
+        `).all();
+
+        const clearAllTables = db.transaction(() => {
+            // image_search_imports references source_items and
+            // generated_images with no ON DELETE CASCADE, so it must be
+            // cleared first or the foreign_keys pragma rejects the deletes
+            // below (same ordering bulk/delete uses).
+            db.prepare('DELETE FROM image_search_imports').run();
+
+            // Cascades to summaries, trigger_texts, generated_images, and
+            // trigger_embeddings via their ON DELETE CASCADE constraints.
+            db.prepare('DELETE FROM source_items').run();
+
+            db.prepare('DELETE FROM library_groups').run();
+        });
+
+        clearAllTables();
+
+        let filesRemoved = 0;
+
+        for (const { image_path } of imagePaths) {
+            try {
+                if (fs.existsSync(image_path)) {
+                    fs.unlinkSync(image_path);
+                    filesRemoved++;
+                }
+            } catch (fileError) {
+                console.warn(
+                    `Clear database: could not remove file ${image_path}:`,
+                    fileError.message
+                );
+            }
+        }
+
+        res.json({
+            success: true,
+            filesRemoved
+        });
+
+    } catch (error) {
+        console.error('Clear database failed:', error);
 
         res.status(500).json({
             success: false,

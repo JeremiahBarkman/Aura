@@ -1,2 +1,13 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Binary assets. Without these, `* text=auto` above plus core.autocrlf=true can
+# apply LF->CRLF conversion to files git's heuristic misdetects as text, which
+# silently corrupts them (the PP-HumanSeg .onnx model diffed as ~22k lines of
+# "text" before this rule existed).
+*.onnx binary
+*.pdf binary
+*.exe binary
+*.dll binary
+*.zip binary
+*.7z binary

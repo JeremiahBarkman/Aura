@@ -127,6 +127,22 @@ function createPlayRoutes({
         });
     });
 
+    // Play Mode "Clear Scene": drop every filled slot and the published
+    // scene, so the next match starts from an empty stage. activeAuraScene is
+    // set back to null -- the same value it holds before the first match of a
+    // session -- rather than an empty scene object, so consumers see exactly
+    // the state they already handle at startup.
+    router.post('/api/play/scene-slots/clear', (req, res) => {
+        sceneSlotManager.clearSlots();
+
+        sceneState.activeAuraScene = null;
+
+        res.json({
+            success: true,
+            activeScene: null
+        });
+    });
+
     router.post('/api/play/active-scene', (req, res) => {
         const incomingScene = req.body || {};
 

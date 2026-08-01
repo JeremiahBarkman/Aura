@@ -24,6 +24,12 @@ jspm_packages/
 # electron-builder output (installers are ~125 MB each)
 dist/
 
+# Built installers copied out of dist/ for distribution. Same reason dist/ is
+# ignored -- 125 MB each, and git history cannot practically shed them later.
+# The prerequisites wizard and its assets under installer/ ARE tracked; only
+# the built binaries are not.
+installer/*.exe
+
 # NuGet packages restored into the native projects
 packages/
 

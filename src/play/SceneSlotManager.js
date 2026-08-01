@@ -19,6 +19,15 @@ class SceneSlotManager {
         this.sceneMode = sceneMode;
     }
 
+    // Empties every slot, returning the manager to its constructed state so
+    // the next match fills a clean scene. sceneMode and transition settings
+    // are deliberately kept -- they are display preferences, not scene
+    // content, and re-deriving them from the next match would briefly show
+    // the wrong layout.
+    clearSlots() {
+        this.slots = [];
+    }
+
     findSlotByImageId(imageId) {
         return this.slots.find(slot =>
             slot &&
