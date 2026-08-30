@@ -58,20 +58,62 @@ function refreshWorkflowSeeds(workflow) {
     return workflow;
 }
 
-function injectPrompt(workflow, positivePrompt, negativePrompt = DEFAULT_NEGATIVE_PROMPT) {
+/**
+ * Collects the ids of the text nodes wired into a sampler's negative input.
+ *
+ * The graph states this outright: every sampler carries `positive` and
+ * `negative` input links, each of the form [nodeId, outputIndex]. Reading the
+ * wiring is the only reliable way to tell the two apart -- all four
+ * CLIPTextEncode nodes in aura_background_api.json carry ComfyUI's default
+ * title, "CLIP Text Encode (Prompt)", so nothing distinguishes them by name.
+ */
+function findNegativeTextNodeIds(workflow) {
+    const negativeIds = new Set();
+
     for (const node of Object.values(workflow)) {
+        const link = node.inputs && node.inputs.negative;
+
+        if (Array.isArray(link) && link.length > 0) {
+            negativeIds.add(String(link[0]));
+        }
+    }
+
+    return negativeIds;
+}
+
+function injectPrompt(workflow, positivePrompt, negativePrompt = DEFAULT_NEGATIVE_PROMPT) {
+    const negativeIds = findNegativeTextNodeIds(workflow);
+
+    let negativeNodesFilled = 0;
+
+    for (const [nodeId, node] of Object.entries(workflow)) {
         if (!node.inputs || !Object.prototype.hasOwnProperty.call(node.inputs, 'text')) {
             continue;
         }
 
         const title = node._meta && node._meta.title ? node._meta.title.toLowerCase() : '';
 
-        if (title.includes('negative')) {
+        // Wiring is authoritative. The title check stays as a fallback for
+        // workflow templates that label the node but route it through
+        // something this walk does not follow.
+        if (negativeIds.has(nodeId) || title.includes('negative')) {
             node.inputs.text = negativePrompt;
+            negativeNodesFilled += 1;
             continue;
         }
 
         node.inputs.text = positivePrompt;
+    }
+
+    // Failing to find a negative node is exactly the bug this replaced: every
+    // node got the positive prompt, so the samplers were steered toward the
+    // things the negative prompt exists to exclude, and nothing said so. Make
+    // that loud rather than silent if a future workflow reintroduces it.
+    if (negativeNodesFilled === 0) {
+        console.warn(
+            '[AURA COMFY] No negative conditioning node found in the workflow; ' +
+            'the negative prompt was NOT applied to this generation.'
+        );
     }
 
     return workflow;
