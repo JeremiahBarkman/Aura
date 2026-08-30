@@ -1,6 +1,6 @@
 const net = require('net');
 const fs = require('fs');
-const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, desktopCapturer } = require('electron');
 const {
     spawn,
     execFileSync
@@ -613,6 +613,46 @@ function createMainWindow() {
             backgroundThrottling: false
         }
     });
+
+    /*
+    Aura Conference records the meeting the user is already sitting in, which
+    means capturing what Windows is playing (the remote participants) and not
+    just the microphone. Chromium exposes that only through getDisplayMedia,
+    and Electron only answers that call if the app installs a handler.
+
+    audio: 'loopback' taps the Windows audio render endpoint, so it works with
+    headphones and needs no virtual audio device.
+
+    Two deliberate details:
+    - A video source is still returned even though Conference discards the
+      video track immediately. Chromium rejects an audio-only getDisplayMedia
+      request outright, so there is no way to ask for just the audio.
+    - There is no picker. The renderer never offers a choice of what to
+      capture -- Conference wants the system mix and nothing else -- so a
+      picker would only be a dialog with one correct answer. Aura makes no
+      other getDisplayMedia call, so this handler has exactly one caller.
+*/
+mainWindow.webContents.session.setDisplayMediaRequestHandler(
+    async (request, callback) => {
+        try {
+            const sources = await desktopCapturer.getSources({
+                types: ['screen']
+            });
+
+            callback({
+                video: sources[0],
+                audio: 'loopback'
+            });
+        } catch (error) {
+            console.error('Display media request failed:', error);
+
+            // An empty grant is how this API reports "denied"; the renderer
+            // sees a rejected getDisplayMedia and falls back to mic-only.
+            callback({});
+        }
+    },
+    { useSystemPicker: false }
+);
 
     mainWindow.loadURL(
     `http://localhost:${process.env.PORT}`

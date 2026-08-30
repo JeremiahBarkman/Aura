@@ -16,6 +16,7 @@ const paths = {
     dataDir: dataRoot,
     dbPath: path.join(dataRoot, 'aura.db'),
     audioDir: path.join(dataRoot, 'audio'),
+    conferenceAudioDir: path.join(dataRoot, 'audio', 'conference'),
     imagesDir: path.join(dataRoot, 'images'),
     generatedImagesDir: path.join(dataRoot, 'images', 'generated'),
     backgroundsDir: path.join(dataRoot, 'images', 'backgrounds'),

@@ -81,6 +81,53 @@ CREATE TABLE IF NOT EXISTS image_search_imports (
         REFERENCES generated_images(id)
 );
 
+-- One Aura Conference recording session. Audio is captured as a series of
+-- short chunks during the meeting; everything downstream (transcription,
+-- topic extraction, record generation) runs after recording stops so a live
+-- call never competes with Whisper/Ollama/ComfyUI for the GPU.
+--
+-- transcript/language/error are unused while only recording exists, but are
+-- declared now on purpose: Aura has no migration framework, so a column added
+-- to this table later would need an ad-hoc ensureColumn() call in server.js.
+-- Declaring them up front keeps that out of the codebase entirely.
+CREATE TABLE IF NOT EXISTS conferences (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'recording',
+    transcript TEXT,
+    duration_ms INTEGER,
+    language TEXT,
+    group_id INTEGER,
+    error TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (group_id)
+        REFERENCES library_groups(id)
+);
+
+-- One audio file per recording chunk, in capture order.
+--
+-- The recorder restarts every few minutes rather than writing one long file,
+-- so each row points at an independently valid .webm that Whisper can accept
+-- on its own. That keeps any single transcription request short, and means a
+-- crash mid-meeting costs one chunk instead of the whole session.
+--
+-- duration_ms is measured by the browser while recording. MediaRecorder
+-- routinely omits duration from the WebM header, so probing the file after
+-- the fact is unreliable -- the capturing side is the only place that knows.
+CREATE TABLE IF NOT EXISTS conference_chunks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    conference_id INTEGER NOT NULL,
+    chunk_index INTEGER NOT NULL,
+    audio_path TEXT NOT NULL,
+    duration_ms INTEGER,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (conference_id)
+        REFERENCES conferences(id)
+        ON DELETE CASCADE
+);
+
 -- Cached embedding vector for each record's cleaned trigger text, used by
 -- Play Mode semantic matching. embedding is a raw Float32Array buffer.
 -- Rows are invalidated (deleted) when trigger text changes and re-created
@@ -113,3 +160,7 @@ CREATE INDEX IF NOT EXISTS idx_image_search_imports_source_item
 
 CREATE INDEX IF NOT EXISTS idx_source_items_group_status
     ON source_items(group_id, record_status);
+
+-- Chunks are always read as a complete session in capture order.
+CREATE INDEX IF NOT EXISTS idx_conference_chunks_conference
+    ON conference_chunks(conference_id, chunk_index);

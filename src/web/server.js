@@ -42,6 +42,10 @@ const createSystemRoutes = require('./routes/systemRoutes');
 
 const createPlayRoutes = require('./routes/playRoutes');
 
+const createConferenceRoutes = require('./routes/conferenceRoutes');
+
+const conferenceService = require('../conference/conferenceService');
+
 // -----------------------------------------------------------------------------
 // Express Application State
 // -----------------------------------------------------------------------------
@@ -83,6 +87,23 @@ const manualImageStorage = multer.diskStorage({
 });
 
 const manualImageUpload = multer({ storage: manualImageStorage });
+
+// Conference chunks are named from the session id and capture index so the
+// files on disk stay readable next to the conference_chunks rows that point
+// at them. req.params is populated by route matching before this middleware
+// runs, so :id is available here.
+const conferenceChunkStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, paths.conferenceAudioDir);
+    },
+    filename: function (req, file, cb) {
+        const conferenceId = String(req.params.id || 'unknown');
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        cb(null, `conference-${conferenceId}-${timestamp}.webm`);
+    }
+});
+
+const conferenceChunkUpload = multer({ storage: conferenceChunkStorage });
 
 const importPackageStorage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -127,7 +148,7 @@ ensureColumn('generated_images', 'is_active', 'INTEGER NOT NULL DEFAULT 1');
 ensureColumn('generated_images', 'is_favorite', 'INTEGER NOT NULL DEFAULT 0');
 ensureColumn('generated_images', 'deleted_at', 'TEXT');
 
-for (const dir of [paths.audioDir, path.join(paths.imagesDir, 'manual'), path.join(paths.imagesDir, 'imports'), paths.generatedImagesDir, paths.backgroundsDir, paths.importsDir]) {
+for (const dir of [paths.audioDir, paths.conferenceAudioDir, path.join(paths.imagesDir, 'manual'), path.join(paths.imagesDir, 'imports'), paths.generatedImagesDir, paths.backgroundsDir, paths.importsDir]) {
     fs.mkdirSync(dir, { recursive: true });
 }
 
@@ -164,6 +185,11 @@ app.use(createPlayRoutes({
     playModeService,
     sceneSlotManager,
     sceneState
+}));
+
+app.use(createConferenceRoutes({
+    conferenceService,
+    chunkUpload: conferenceChunkUpload
 }));
 
 // -----------------------------------------------------------------------------

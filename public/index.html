@@ -2,7 +2,7 @@
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Aura Studio</title><link rel="icon" type="image/png" href="/assets/favicon.png"><style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
 :root{--bg:#0c0a08;--panel:#141009;--input:#0e0b07;--ghost:#1c150d;--b1:#221d19;--b2:#2a2420;--b3:#33291f;--b4:#4a3a22;--amber:#e3b57f;--amber2:#eec596;--text:#efe9e2;--secondary:#c4b8aa;--muted:#a1968a;--label:#8a7e70;--disabled:#5a4f44;--green:#8fd18a;--coral:#e08b7a}
-*{box-sizing:border-box}html{scrollbar-color:var(--b3) var(--bg);scrollbar-width:thin}*::-webkit-scrollbar{width:10px;height:10px}*::-webkit-scrollbar-track{background:var(--bg)}*::-webkit-scrollbar-thumb{background:var(--b3);border-radius:6px;border:2px solid var(--bg)}*::-webkit-scrollbar-thumb:hover{background:var(--b4)}html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',system-ui,sans-serif}body{overflow:hidden;background:radial-gradient(1100px 620px at 22% -12%,#191410 0%,#0c0a08 58%)}button,input,select,textarea{font:inherit}button{cursor:pointer}.app-shell{height:100vh;display:flex}.workspace-rail{width:216px;flex:0 0 216px;border-right:1px solid var(--b1);display:flex;flex-direction:column;padding:18px 14px;background:rgba(12,10,8,.72)}.brand{display:flex;flex-direction:column;align-items:center;gap:9px;padding:14px 8px 26px}.brand-logo{width:100%;max-width:168px;height:auto;object-fit:contain;filter:drop-shadow(0 0 14px rgba(227,181,127,.4))}.brand-sub{font:12px 'IBM Plex Mono';letter-spacing:.16em;color:var(--label)}.nav-item{width:100%;display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;margin-bottom:3px;border:1px solid transparent;background:transparent;color:var(--muted);text-align:left}.nav-item:hover{color:var(--text);border-color:var(--b3)}.nav-item.active{background:rgba(227,181,127,.1);border-color:rgba(227,181,127,.22);color:#f0d9bb;font-weight:600}.nav-glyph{width:9px;height:9px;border:1.5px solid var(--disabled);border-radius:2px}.nav-item.active .nav-glyph{border-color:var(--amber);background:var(--amber)}.output-card{margin-top:auto;border:1px solid var(--b1);background:var(--panel);border-radius:12px;padding:13px}.eyebrow{font:12px 'IBM Plex Mono';letter-spacing:.14em;color:var(--label)}.output-btn{width:100%;margin-top:8px;padding:8px 11px;border-radius:8px;border:1px solid var(--b3);background:var(--ghost);color:var(--secondary);text-align:left}.output-btn:hover{border-color:var(--amber);color:var(--text);background:var(--ghost)}.main-shell{flex:1;min-width:0;height:100vh}.workspace-view{height:100%;display:none;flex-direction:column;min-width:0}.workspace-view.active{display:flex}.view-header{height:60px;flex:0 0 60px;display:flex;align-items:center;padding:0 24px;border-bottom:1px solid var(--b1);gap:14px}.view-title{font-size:18px;font-weight:600}.view-sub{font:12px 'IBM Plex Mono';letter-spacing:.08em;color:var(--label);margin-top:2px}.header-actions{margin-left:auto;display:flex;align-items:center;gap:10px}.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px rgba(143,209,138,.6)}.dot.offline{background:var(--coral);box-shadow:0 0 8px rgba(224,139,122,.6)}.status-row{display:flex;align-items:center;gap:9px;margin-bottom:4px}.status-row:last-child{margin-bottom:0}.scroll{overflow:auto;min-height:0}.studio-body{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 372px;min-height:0}.studio-main{padding:22px;display:flex;flex-direction:column;gap:18px;overflow:auto}.studio-side{border-left:1px solid var(--b1);padding:20px;overflow:auto}.panel{border:1px solid var(--b1);background:var(--panel);border-radius:14px;padding:16px}.panel-title{font-size:16px;font-weight:600;margin-bottom:12px}.hero-canvas{width:min(100%,81.7778vh);height:auto;aspect-ratio:16/9;max-height:none;margin-inline:auto;border-radius:16px;background:#05070a;border:1px solid var(--b1);box-shadow:0 30px 70px -30px rgba(0,0,0,.8);display:block}.two-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.active-visual-display{width:100%;aspect-ratio:16/9;min-height:180px;background:#05070a;border:1px solid var(--b2);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--label)}.active-visual-display img{max-width:100%;max-height:100%;object-fit:contain}.active-meta,.record-meta,.image-meta,.subtitle{font:13px 'IBM Plex Mono';color:var(--label);line-height:1.5}.field{margin-top:12px}.field-title,label{display:block;font-size:14px;color:var(--muted);margin-bottom:7px}input,select,textarea{width:100%;background:var(--input);color:var(--text);border:1px solid var(--b2);border-radius:8px;padding:9px 11px;outline:none}input:focus,select:focus,textarea:focus{border-color:var(--amber);box-shadow:0 0 0 2px rgba(227,181,127,.12)}input[type=range]{accent-color:var(--amber);padding:0}.button-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}button{padding:9px 13px;border-radius:8px;border:1px solid var(--b4);background:var(--amber);color:#1a1206;font-weight:600}button:hover{background:var(--amber2)}button.secondary{background:var(--ghost);border-color:var(--b3);color:var(--secondary);font-weight:400}button.secondary:hover{border-color:var(--amber);color:var(--text);background:var(--ghost)}button.danger,.delete-button{background:rgba(224,139,122,.1);border-color:#5a3a34;color:var(--coral)}button:disabled{opacity:.45;cursor:not-allowed}.status-box,.field-content,#audioStatus,#manualStatus,#livePlayStatus,#rollingTranscript{background:var(--input);border:1px solid var(--b2);border-radius:8px;padding:11px;white-space:pre-wrap;overflow-wrap:anywhere;min-height:42px;color:var(--secondary)}
+*{box-sizing:border-box}html{scrollbar-color:var(--b3) var(--bg);scrollbar-width:thin}*::-webkit-scrollbar{width:10px;height:10px}*::-webkit-scrollbar-track{background:var(--bg)}*::-webkit-scrollbar-thumb{background:var(--b3);border-radius:6px;border:2px solid var(--bg)}*::-webkit-scrollbar-thumb:hover{background:var(--b4)}html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',system-ui,sans-serif}body{overflow:hidden;background:radial-gradient(1100px 620px at 22% -12%,#191410 0%,#0c0a08 58%)}button,input,select,textarea{font:inherit}button{cursor:pointer}.app-shell{height:100vh;display:flex}.workspace-rail{width:216px;flex:0 0 216px;border-right:1px solid var(--b1);display:flex;flex-direction:column;padding:18px 14px;background:rgba(12,10,8,.72)}.brand{display:flex;flex-direction:column;align-items:center;gap:9px;padding:14px 8px 26px}.brand-logo{width:100%;max-width:168px;height:auto;object-fit:contain;filter:drop-shadow(0 0 14px rgba(227,181,127,.4))}.brand-sub{font:12px 'IBM Plex Mono';letter-spacing:.16em;color:var(--label)}.nav-item{width:100%;display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;margin-bottom:3px;border:1px solid transparent;background:transparent;color:var(--muted);text-align:left}.nav-item:hover{color:var(--text);border-color:var(--b3)}.nav-item.active{background:rgba(227,181,127,.1);border-color:rgba(227,181,127,.22);color:#f0d9bb;font-weight:600}.nav-glyph{width:9px;height:9px;border:1.5px solid var(--disabled);border-radius:2px}.nav-item.active .nav-glyph{border-color:var(--amber);background:var(--amber)}.output-card{margin-top:auto;border:1px solid var(--b1);background:var(--panel);border-radius:12px;padding:13px}.eyebrow{font:12px 'IBM Plex Mono';letter-spacing:.14em;color:var(--label)}.output-btn{width:100%;margin-top:8px;padding:8px 11px;border-radius:8px;border:1px solid var(--b3);background:var(--ghost);color:var(--secondary);text-align:left}.output-btn:hover{border-color:var(--amber);color:var(--text);background:var(--ghost)}.main-shell{flex:1;min-width:0;height:100vh}.workspace-view{height:100%;display:none;flex-direction:column;min-width:0}.workspace-view.active{display:flex}.view-header{height:60px;flex:0 0 60px;display:flex;align-items:center;padding:0 24px;border-bottom:1px solid var(--b1);gap:14px}.view-title{font-size:18px;font-weight:600}.view-sub{font:12px 'IBM Plex Mono';letter-spacing:.08em;color:var(--label);margin-top:2px}.header-actions{margin-left:auto;display:flex;align-items:center;gap:10px}.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px rgba(143,209,138,.6)}.dot.offline{background:var(--coral);box-shadow:0 0 8px rgba(224,139,122,.6)}.status-row{display:flex;align-items:center;gap:9px;margin-bottom:4px}.status-row:last-child{margin-bottom:0}.scroll{overflow:auto;min-height:0}.studio-body{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 372px;min-height:0}.studio-main{padding:22px;display:flex;flex-direction:column;gap:18px;overflow:auto}.studio-side{border-left:1px solid var(--b1);padding:20px;overflow:auto}.panel{border:1px solid var(--b1);background:var(--panel);border-radius:14px;padding:16px}.panel-title{font-size:16px;font-weight:600;margin-bottom:12px}.hero-canvas{width:min(100%,81.7778vh);height:auto;aspect-ratio:16/9;max-height:none;margin-inline:auto;border-radius:16px;background:#05070a;border:1px solid var(--b1);box-shadow:0 30px 70px -30px rgba(0,0,0,.8);display:block}.two-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.active-visual-display{width:100%;aspect-ratio:16/9;min-height:180px;background:#05070a;border:1px solid var(--b2);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--label)}.active-visual-display img{max-width:100%;max-height:100%;object-fit:contain}.active-meta,.record-meta,.image-meta,.subtitle{font:13px 'IBM Plex Mono';color:var(--label);line-height:1.5}.field{margin-top:12px}.field-title,label{display:block;font-size:14px;color:var(--muted);margin-bottom:7px}input,select,textarea{width:100%;background:var(--input);color:var(--text);border:1px solid var(--b2);border-radius:8px;padding:9px 11px;outline:none}input:focus,select:focus,textarea:focus{border-color:var(--amber);box-shadow:0 0 0 2px rgba(227,181,127,.12)}input[type=range]{accent-color:var(--amber);padding:0}input[type=checkbox]{accent-color:var(--amber)}.button-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}button{padding:9px 13px;border-radius:8px;border:1px solid var(--b4);background:var(--amber);color:#1a1206;font-weight:600}button:hover{background:var(--amber2)}button.secondary{background:var(--ghost);border-color:var(--b3);color:var(--secondary);font-weight:400}button.secondary:hover{border-color:var(--amber);color:var(--text);background:var(--ghost)}button.danger,.delete-button{background:rgba(224,139,122,.1);border-color:#5a3a34;color:var(--coral)}button:disabled{opacity:.45;cursor:not-allowed}.status-box,.field-content,#audioStatus,#manualStatus,#livePlayStatus,#rollingTranscript{background:var(--input);border:1px solid var(--b2);border-radius:8px;padding:11px;white-space:pre-wrap;overflow-wrap:anywhere;min-height:42px;color:var(--secondary)}
 .log-view{background:var(--input);border:1px solid var(--b2);border-radius:8px;padding:11px;margin:0 0 10px;height:340px;overflow:auto;white-space:pre;font:12px 'IBM Plex Mono';color:var(--secondary);tab-size:4}#activePlayMatch{background:transparent;border:0;padding:0;min-height:0}.terminal-label{font:12px 'IBM Plex Mono';letter-spacing:.12em;color:var(--label);margin:14px 0 7px}.activity-footer{height:192px;flex:0 0 192px;border-top:1px solid var(--b1);display:grid;grid-template-columns:1fr 400px;background:rgba(12,10,8,.5)}.activity-log-wrap{padding:14px 22px;min-width:0}.system-wrap{border-left:1px solid var(--b1);padding:14px 22px;display:flex;flex-direction:column;min-height:0}#auraActivityLog{height:120px;overflow:auto;white-space:pre-wrap;font:14px/1.8 'IBM Plex Mono';color:var(--secondary)}#systemStatus{flex:1;min-height:0;overflow:auto;font:14px/1.4 'IBM Plex Mono';color:var(--secondary)}.library-layout{flex:1;display:grid;grid-template-columns:236px 1fr;min-height:0}.filter-rail{border-right:1px solid var(--b1);padding:18px 14px;overflow:auto}.library-content{padding:22px;overflow:auto}.records-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}.record-card{border:1px solid var(--b1);background:var(--panel);border-radius:14px;padding:14px;min-width:0}.record-card h3{margin:6px 0 10px;font-size:16px}.record-status-badge{display:inline-flex;padding:3px 9px;border-radius:20px;font:12px 'IBM Plex Mono';letter-spacing:.06em}.record-status-complete{background:#12301d;color:#7ee7a5;border:1px solid #2e7d4f}.record-status-draft{background:#3a2a12;color:#e0b15c;border:1px solid #7d5a1f}.image-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}.image-tile{background:var(--input);border:1px solid var(--b2);border-radius:9px;padding:8px}.generated-image{width:100%;aspect-ratio:16/9;object-fit:contain;background:#05070a;border-radius:7px}.record-card,.image-tile{position:relative}.card-menu-btn{position:absolute;width:26px;height:26px;padding:0;border-radius:50%;background:rgba(12,10,8,.6);border:1px solid var(--b3);color:var(--text);font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center;font-weight:700;z-index:6}.card-menu-btn:hover{background:rgba(12,10,8,.88);border-color:var(--amber);color:var(--amber2)}.record-menu-btn{top:14px;right:14px}.image-menu-btn{top:6px;right:6px}.card-dropdown-menu{display:none;position:absolute;min-width:150px;background:var(--panel);border:1px solid var(--b2);border-radius:10px;box-shadow:0 12px 30px -10px rgba(0,0,0,.6);z-index:20;padding:4px}.card-dropdown-menu.show{display:block}.record-menu-btn+.card-dropdown-menu{top:44px;right:14px}.image-menu-btn+.card-dropdown-menu{top:36px;right:6px}.card-dropdown-menu button{display:block;width:100%;text-align:left;padding:8px 10px;border:0;border-radius:6px;background:transparent;color:var(--secondary);font-weight:400;font-size:14px}.card-dropdown-menu button:hover{background:var(--ghost);color:var(--text)}.card-dropdown-menu button.danger-item{color:var(--coral)}.card-dropdown-menu button.danger-item:hover{background:rgba(224,139,122,.12)}.primary-badge{position:absolute;top:6px;left:6px;background:rgba(227,181,127,.92);color:#1a1206;font:11px 'IBM Plex Mono';font-weight:700;padding:2px 7px;border-radius:20px;letter-spacing:.03em;z-index:4}.edit-icon{padding:2px 7px;margin-left:6px}.info-icon{margin-left:6px;display:inline-flex;vertical-align:middle;color:var(--amber);cursor:help}.info-icon:hover{color:var(--amber2)}.info-icon svg{display:block}.search-box{position:relative;display:inline-flex;align-items:center;width:220px}.search-box svg{position:absolute;left:10px;color:var(--label);pointer-events:none}.search-box input{width:100%;padding-left:32px}.header-menu{position:relative}.header-menu-btn+.card-dropdown-menu{top:100%;right:0;margin-top:6px;min-width:220px;max-height:70vh;overflow-y:auto}.edit-actions{display:flex;gap:8px;margin-top:8px}.edit-textarea{min-height:100px}.capture-body,.import-body,.settings-body{padding:22px;overflow:auto;min-height:0}.capture-grid{display:grid;grid-template-columns:minmax(280px,1fr) minmax(320px,1.4fr) minmax(280px,1fr);gap:20px;align-items:start}.stack{display:flex;flex-direction:column;gap:16px}.pipeline{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}.pipe-step{font:13px 'IBM Plex Mono';padding:6px 13px;border-radius:20px;border:1px solid var(--b3);color:var(--label)}.pipe-step.active{background:#2a2016;border-color:var(--b4);color:var(--amber)}.pipe-step.pulsing{background:#2a2016;border-color:var(--amber);color:var(--amber);animation:auraPulse 1.1s ease-in-out infinite}@keyframes auraSpin{to{transform:rotate(360deg)}}.aura-spinner{display:inline-block;width:15px;height:15px;border:2px solid var(--b3);border-top-color:var(--amber);border-radius:50%;animation:auraSpin .8s linear infinite;vertical-align:middle;margin-left:10px}.mic-indicator{color:var(--amber);vertical-align:middle;animation:auraPulse 1.1s ease-in-out infinite}.gen-image-card{margin-top:4px}.gen-image-card img{width:100%;aspect-ratio:16/9;object-fit:contain;background:#05070a;border:1px solid var(--b2);border-radius:10px;display:block}.file-chip{display:inline-flex;align-items:center;gap:7px;margin-top:8px;padding:5px 10px;background:var(--input);border:1px solid var(--b2);border-radius:8px;font:13px 'IBM Plex Mono';color:var(--secondary);max-width:100%}.file-chip .file-chip-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.file-chip .file-chip-x{cursor:pointer;border:0;background:transparent;color:var(--coral);font-weight:700;padding:0 2px;font-size:15px;line-height:1}.aura-toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(8px);background:#12301d;color:#7ee7a5;border:1px solid #2e7d4f;border-radius:10px;padding:11px 18px;font:14px 'IBM Plex Sans',sans-serif;box-shadow:0 12px 30px -10px rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:2000;white-space:pre-wrap;max-width:480px;text-align:left}.aura-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}.aura-toast.warn{background:#3a2a12;color:#e0b15c;border-color:#7d5a1f}.import-grid{display:grid;grid-template-columns:1fr 300px;min-height:0;flex:1}.import-main{padding:22px;overflow:auto}.import-side{border-left:1px solid var(--b1);padding:22px;background:rgba(12,10,8,.4)}.db-manager-overlay{position:static;inset:auto;background:transparent;padding:0;z-index:auto}.db-manager-overlay[hidden]{display:none!important}.db-manager-window{height:100%;overflow-y:auto;background:transparent;border:0;border-radius:0;display:flex;flex-direction:column;gap:14px;padding:22px;box-shadow:none}.db-manager-header{display:flex;align-items:flex-start;gap:16px}.db-manager-header button{margin-left:auto}.db-manager-table-area{flex:1;min-height:0;overflow:auto;border:1px solid var(--b1);border-radius:12px;background:#100c07}.db-sortable-header{cursor:pointer;user-select:none}.db-sortable-header:hover{color:var(--text)}.db-table{width:100%;border-collapse:collapse;font-size:15px}.db-table th,.db-table td{padding:10px 12px;border-bottom:1px solid #1a1611;text-align:left;white-space:nowrap}.db-table th{position:sticky;top:0;background:var(--input);font:12px 'IBM Plex Mono';letter-spacing:.1em;color:var(--label)}.db-manager-record-checkbox,#dbManagerSelectAllCheckbox{width:auto}.db-thumbnail{width:56px;height:32px;object-fit:cover;border-radius:5px}.db-move-select-wrap{min-width:220px}.settings-card{max-width:760px;margin-bottom:20px}.hidden{display:none!important}.record-done-btn{margin-left:8px}.record-card.minimized .record-hide-when-minimized,.record-card.minimized .record-done-btn{display:none}@keyframes auraPulse{0%,100%{opacity:1}50%{opacity:.32}}@media(max-width:1100px){.studio-body{grid-template-columns:1fr}.studio-side{border-left:0;border-top:1px solid var(--b1)}.capture-grid{grid-template-columns:1fr}.activity-footer{grid-template-columns:1fr;height:auto}.system-wrap{border-left:0;border-top:1px solid var(--b1)}}.aura-confirm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:3000;align-items:center;justify-content:center}.aura-confirm-overlay.show{display:flex}.aura-confirm-box{background:var(--panel);border:1px solid var(--b1);border-radius:14px;padding:22px;max-width:420px;box-shadow:0 20px 50px -15px rgba(0,0,0,.7)}.aura-confirm-message{color:var(--text);font:15px/1.5 'IBM Plex Sans',sans-serif;margin-bottom:18px}.aura-confirm-actions{justify-content:flex-end}
 
 /* 1080p full-screen Studio fit: keep all primary controls visible without scrolling. */
@@ -41,6 +41,7 @@
   .studio-side #activePlayMatch{margin-top:7px!important;max-height:116px;overflow:auto}
   .studio-side input[type=range]{height:16px}
 }
+.conference-sources{display:flex;flex-direction:column;gap:8px;margin-top:4px}.conference-check{display:flex;align-items:center;gap:9px;margin:0;font:14px 'IBM Plex Sans',sans-serif;color:var(--secondary);text-transform:none;letter-spacing:0}.conference-check input{width:auto;margin:0}#conferenceStatus:empty{display:none}.conference-consent{margin-top:14px;padding:11px 13px;border:1px solid var(--b2);border-left:3px solid var(--amber);border-radius:8px;background:rgba(227,181,127,.06);font:13px/1.55 'IBM Plex Sans',sans-serif;color:var(--secondary)}.conference-hint{margin-top:10px;font:13px/1.6 'IBM Plex Sans',sans-serif;color:var(--secondary)}.conference-meta{font:13px 'IBM Plex Mono';color:var(--label);margin-top:6px}
 </style></head>
 <body>
 <div class="app-shell">
@@ -50,6 +51,7 @@
   <button class="nav-item" data-view="library"><span class="nav-glyph"></span><span data-i18n="nav.library">Library</span></button>
   <button class="nav-item" data-view="capture"><span class="nav-glyph"></span><span data-i18n="nav.capture">Capture</span></button>
   <button class="nav-item" data-view="import"><span class="nav-glyph"></span><span data-i18n="nav.imageSearch">Image Search</span></button>
+  <button class="nav-item" data-view="conference"><span class="nav-glyph"></span><span data-i18n="nav.conference">Aura Conference</span></button>
   <button class="nav-item" data-view="manager"><span class="nav-glyph"></span><span data-i18n="nav.dbManager">DB Manager</span></button>
   <button class="nav-item" data-view="settings"><span class="nav-glyph"></span><span data-i18n="nav.settings">Settings</span></button>
   <div class="output-card"><div class="eyebrow" data-i18n="output.title">OUTPUT WINDOWS</div>
@@ -119,6 +121,30 @@
   <div id="imageSearchRecords" class="records-grid"><div class="empty">Loading...</div></div>
  </div>
  <aside class="import-side"><div style="display:flex;align-items:center;gap:6px;margin-bottom:12px"><div class="panel-title" data-i18n="imp.target" style="margin-bottom:0">Import Target</div><span class="info-icon" title="Each downloaded image becomes a new draft record. Source metadata is retained and the record can be completed here or in the Library."><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.6"></circle><circle cx="8" cy="4.6" r="1.1" fill="currentColor"></circle><rect x="7.1" y="6.8" width="1.8" height="5.3" rx="0.9" fill="currentColor"></rect></svg></span></div><label data-i18n="imp.targetGroup">Target Group</label><select id="imageImportGroupSelect"><option value="" data-i18n="rec.noGroup">No Specific Group</option></select></aside></div>
+</section>
+
+<section id="view-conference" class="workspace-view">
+ <header class="view-header"><div><div class="view-title" data-i18n="conf.title">Aura Conference</div><div class="view-sub">MEETING CAPTURE · TRANSCRIPT · DRAFT RECORDS</div></div></header>
+ <div class="import-grid"><div class="import-main">
+  <div class="panel"><div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><div class="panel-title" style="margin:0" data-i18n="conf.record">Record a Meeting</div><svg id="conferenceMicIndicator" class="mic-indicator" style="display:none" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title data-i18n="conf.recordingTitle">Aura Conference is recording</title><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg></div>
+   <label data-i18n="conf.sessionTitle">Session Title</label><input id="conferenceTitle" placeholder="Leave blank to name it by date" data-i18n-placeholder="conf.sessionTitlePh">
+   <label style="margin-top:14px" data-i18n="conf.audioSources">Audio Sources</label>
+   <div class="conference-sources">
+    <label class="conference-check"><input type="checkbox" id="conferenceUseSystem" checked><span data-i18n="conf.systemAudio">System audio (other participants)</span></label>
+    <label class="conference-check"><input type="checkbox" id="conferenceUseMic" checked><span data-i18n="conf.micAudio">Microphone (you)</span></label>
+   </div>
+   <label style="margin-top:14px" data-i18n="conf.mic">Microphone</label><select id="conferenceMicSelect"></select>
+   <div class="button-row" style="align-items:center"><button id="conferenceStartBtn" onclick="startConferenceRecording()" data-i18n="conf.start">Start Recording</button><button id="conferenceStopBtn" class="danger" onclick="stopConferenceRecording()" disabled data-i18n="conf.stop">Stop Recording</button></div>
+   <div id="conferenceStatus" class="active-meta" style="margin-top:12px"></div>
+   <div class="conference-consent" data-i18n="conf.consent">Everyone on the call is being recorded. Make sure participants have agreed before you start — in many places recording without consent is unlawful.</div>
+  </div>
+  <div class="panel-title" style="margin-top:20px" data-i18n="conf.sessions">Recorded Sessions</div>
+  <div id="conferenceSessions" class="records-grid"><div class="empty">Loading...</div></div>
+ </div>
+ <aside class="import-side"><div style="display:flex;align-items:center;gap:6px;margin-bottom:12px"><div class="panel-title" data-i18n="conf.target" style="margin-bottom:0">Conference Target</div><span class="info-icon" title="Records produced from this meeting will be assigned to this group as drafts."><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.6"></circle><circle cx="8" cy="4.6" r="1.1" fill="currentColor"></circle><rect x="7.1" y="6.8" width="1.8" height="5.3" rx="0.9" fill="currentColor"></rect></svg></span></div><label data-i18n="conf.targetGroup">Target Group</label><select id="conferenceGroupSelect"><option value="" data-i18n="rec.noGroup">No Specific Group</option></select>
+  <div class="eyebrow" style="margin-top:24px" data-i18n="conf.howItWorks">HOW IT WORKS</div>
+  <div class="conference-hint" data-i18n="conf.howItWorksBody">Aura records the meeting in short segments so nothing is lost if something goes wrong. Transcription and record generation run after you stop, so the call itself stays fast.</div>
+ </aside></div>
 </section>
 
 <section id="view-settings" class="workspace-view">
@@ -284,6 +310,7 @@ function showWorkspaceView(name){
   const el=document.getElementById('view-'+name); if(el) el.classList.add('active');
   if(name==='library') loadFullRecords().catch(console.error);
   if(name==='import') loadImageSearchRecords().catch(console.error);
+  if(name==='conference') loadConferenceSessions().catch(console.error);
   // Re-list on every visit: a service may have started, failed or rotated its
   // log since the last time Settings was open.
   if(name==='settings' && typeof refreshDiagnosticLogs==='function') refreshDiagnosticLogs().catch(console.error);
@@ -1010,6 +1037,422 @@ async function uploadRecording() {
     } finally {
         setCaptureActivity('generating', false);
     }
+}
+
+// -----------------------------------------------------------------------------
+// Aura Conference: Meeting Capture
+// -----------------------------------------------------------------------------
+// Records a meeting the user is already sitting in. Microphone and Windows
+// system audio are mixed into one stream, recorded in short segments, and
+// uploaded as the meeting runs.
+//
+// The recorder is stopped and restarted on a timer rather than using
+// MediaRecorder's timeslice argument. Timeslice emits fragments that are only
+// playable when concatenated with the segment header; stopping produces a
+// complete, standalone .webm every time. That matters downstream, where each
+// chunk is transcribed on its own -- and it means a crash mid-meeting costs
+// the current segment instead of the entire session.
+
+const CONFERENCE_CHUNK_MS = 5 * 60 * 1000;
+
+let conferenceState = null;
+
+function conferenceSetStatus(message) {
+    const el = document.getElementById('conferenceStatus');
+    if (el) el.textContent = message;
+}
+
+function formatConferenceElapsed(ms) {
+    const total = Math.floor(ms / 1000);
+    const pad = (value) => String(value).padStart(2, '0');
+
+    return `${pad(Math.floor(total / 3600))}:${pad(Math.floor(total / 60) % 60)}:${pad(total % 60)}`;
+}
+
+function formatConferenceDuration(ms) {
+    if (!ms) return '0m';
+
+    const minutes = Math.round(ms / 60000);
+
+    return minutes < 60
+        ? `${minutes}m`
+        : `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+}
+
+/*
+    Builds the stream Aura actually records.
+
+    System audio comes from getDisplayMedia, which is the only way Chromium
+    exposes loopback capture; electron-main answers that request with
+    audio:'loopback' and no picker. The video track it forces us to request is
+    stopped immediately -- Conference wants sound only, and leaving an unused
+    screen-capture track running costs real CPU.
+
+    Mixing happens through a Web Audio destination node so both sources arrive
+    as one track. Recording them separately would leave two files per segment
+    to align later, and Whisper has no use for the separation.
+*/
+async function buildConferenceStream({ useMic, useSystem, micDeviceId }) {
+    const audioContext = new AudioContext();
+    const destination = audioContext.createMediaStreamDestination();
+    const sourceStreams = [];
+    const captured = [];
+
+    if (useSystem) {
+        try {
+            const displayStream = await navigator.mediaDevices.getDisplayMedia({
+                video: true,
+                audio: true
+            });
+
+            displayStream.getVideoTracks().forEach(track => {
+                track.stop();
+                displayStream.removeTrack(track);
+            });
+
+            if (displayStream.getAudioTracks().length === 0) {
+                throw new Error('No system audio track was returned.');
+            }
+
+            audioContext.createMediaStreamSource(displayStream).connect(destination);
+            sourceStreams.push(displayStream);
+            captured.push('system audio');
+        } catch (error) {
+            console.warn('Conference system audio unavailable:', error);
+        }
+    }
+
+    if (useMic) {
+        try {
+            const micStream = await navigator.mediaDevices.getUserMedia({
+                audio: micDeviceId ? { deviceId: { exact: micDeviceId } } : true
+            });
+
+            audioContext.createMediaStreamSource(micStream).connect(destination);
+            sourceStreams.push(micStream);
+            captured.push('microphone');
+        } catch (error) {
+            console.warn('Conference microphone unavailable:', error);
+        }
+    }
+
+    if (captured.length === 0) {
+        await audioContext.close();
+        throw new Error('No audio source could be captured.');
+    }
+
+    return {
+        audioContext,
+        destination,
+        sourceStreams,
+        captured
+    };
+}
+
+async function uploadConferenceChunk(blob, chunkIndex, durationMs) {
+    const formData = new FormData();
+
+    formData.append('audio', blob, `chunk-${chunkIndex}.webm`);
+    formData.append('chunkIndex', String(chunkIndex));
+    formData.append('durationMs', String(durationMs));
+
+    const response = await fetch(
+        `/api/conference/sessions/${conferenceState.sessionId}/chunks`,
+        { method: 'POST', body: formData }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Chunk upload failed.');
+    }
+
+    conferenceState.uploadedChunks += 1;
+}
+
+/*
+    Starts one segment recorder.
+
+    onstop decides what happens next: another segment while the meeting is
+    running, or closing the session once the user has pressed Stop. Chaining
+    through onstop rather than a timer keeps the two paths from overlapping --
+    a segment is never started while the previous one is still flushing.
+*/
+function startConferenceChunkRecorder() {
+    const chunkIndex = conferenceState.nextChunkIndex++;
+    const chunkStartedAt = Date.now();
+    const parts = [];
+
+    const recorder = new MediaRecorder(conferenceState.destination.stream, {
+        mimeType: 'audio/webm'
+    });
+
+    recorder.ondataavailable = event => {
+        if (event.data.size > 0) parts.push(event.data);
+    };
+
+    recorder.onstop = async () => {
+        const blob = new Blob(parts, { type: 'audio/webm' });
+        const durationMs = Date.now() - chunkStartedAt;
+
+        try {
+            await uploadConferenceChunk(blob, chunkIndex, durationMs);
+        } catch (error) {
+            conferenceState.failedChunks += 1;
+            console.error('Conference chunk upload failed:', error);
+            showToast(`Segment ${chunkIndex + 1} could not be saved.`, true);
+        }
+
+        if (conferenceState.stopping) {
+            await finishConferenceSession();
+        } else {
+            startConferenceChunkRecorder();
+        }
+    };
+
+    recorder.start();
+
+    conferenceState.recorder = recorder;
+
+    conferenceState.rotateTimer = setTimeout(() => {
+        if (recorder.state === 'recording') recorder.stop();
+    }, CONFERENCE_CHUNK_MS);
+
+    updateConferenceRecordingStatus();
+}
+
+/*
+    That a meeting is being recorded is signalled by the pulsing microphone
+    next to the panel title -- the same indicator Play Mode uses when it is
+    listening. This line carries the detail behind it: which sources are
+    actually being captured, how long it has been running, and how many
+    segments have reached the server.
+*/
+function updateConferenceRecordingStatus() {
+    if (!conferenceState) return;
+
+    const elapsed = formatConferenceElapsed(
+        Date.now() - conferenceState.startedAt
+    );
+
+    const saved = conferenceState.failedChunks > 0
+        ? `${conferenceState.uploadedChunks} saved · ${conferenceState.failedChunks} failed`
+        : `${conferenceState.uploadedChunks} saved`;
+
+    conferenceSetStatus(
+        `${conferenceState.statusLabel} · ${elapsed} · ${saved}`
+    );
+}
+
+async function startConferenceRecording() {
+    if (conferenceState) return;
+
+    const useMic = document.getElementById('conferenceUseMic').checked;
+    const useSystem = document.getElementById('conferenceUseSystem').checked;
+
+    if (!useMic && !useSystem) {
+        return conferenceSetStatus('Select at least one audio source.');
+    }
+
+    const startBtn = document.getElementById('conferenceStartBtn');
+    startBtn.disabled = true;
+
+    conferenceSetStatus('Starting...');
+
+    let audio = null;
+
+    try {
+        audio = await buildConferenceStream({
+            useMic,
+            useSystem,
+            micDeviceId: document.getElementById('conferenceMicSelect').value
+        });
+
+        const response = await fetch('/api/conference/sessions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: document.getElementById('conferenceTitle').value,
+                groupId: document.getElementById('conferenceGroupSelect').value || null
+            })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || 'Could not start the session.');
+        }
+
+        // Say what was actually captured, not what was requested: a missing
+        // source is easy to miss until the transcript comes back half empty.
+        const missing = [];
+        if (useSystem && !audio.captured.includes('system audio')) missing.push('system audio');
+        if (useMic && !audio.captured.includes('microphone')) missing.push('microphone');
+
+        conferenceState = {
+            sessionId: result.session.id,
+            audioContext: audio.audioContext,
+            destination: audio.destination,
+            sourceStreams: audio.sourceStreams,
+            recorder: null,
+            rotateTimer: null,
+            tickTimer: null,
+            nextChunkIndex: 0,
+            uploadedChunks: 0,
+            failedChunks: 0,
+            startedAt: Date.now(),
+            stopping: false,
+            statusLabel: missing.length > 0
+                ? `Recording ${audio.captured.join(' + ')} — could not capture ${missing.join(' and ')}`
+                : `Recording ${audio.captured.join(' + ')}`
+        };
+
+        startConferenceChunkRecorder();
+
+        conferenceState.tickTimer = setInterval(updateConferenceRecordingStatus, 1000);
+
+        document.getElementById('conferenceMicIndicator').style.display = 'inline-block';
+        document.getElementById('conferenceStopBtn').disabled = false;
+
+        if (missing.length > 0) {
+            showToast(`Conference could not capture ${missing.join(' and ')}.`, true);
+        }
+    } catch (error) {
+        if (audio) {
+            audio.sourceStreams.forEach(stream =>
+                stream.getTracks().forEach(track => track.stop())
+            );
+            await audio.audioContext.close();
+        }
+
+        conferenceState = null;
+        startBtn.disabled = false;
+        conferenceSetStatus('ERROR: ' + error.message);
+    }
+}
+
+/*
+    Stops recording.
+
+    The final segment still has to flush and upload, so this only raises the
+    stopping flag and lets the recorder's onstop handler close the session.
+    Tearing the audio graph down here would truncate that last segment.
+*/
+function stopConferenceRecording() {
+    if (!conferenceState || conferenceState.stopping) return;
+
+    conferenceState.stopping = true;
+
+    clearTimeout(conferenceState.rotateTimer);
+    clearInterval(conferenceState.tickTimer);
+
+    // Capture ends the moment the recorder stops; only the upload is left. The
+    // microphone stops pulsing here rather than in finishConferenceSession so
+    // it never implies Aura is still listening while a segment uploads.
+    document.getElementById('conferenceMicIndicator').style.display = 'none';
+    document.getElementById('conferenceStopBtn').disabled = true;
+    conferenceSetStatus('Saving the last segment...');
+
+    if (conferenceState.recorder && conferenceState.recorder.state !== 'inactive') {
+        conferenceState.recorder.stop();
+    } else {
+        finishConferenceSession();
+    }
+}
+
+async function finishConferenceSession() {
+    const state = conferenceState;
+
+    if (!state) return;
+
+    state.sourceStreams.forEach(stream =>
+        stream.getTracks().forEach(track => track.stop())
+    );
+
+    try {
+        await state.audioContext.close();
+    } catch (error) {
+        console.warn('Conference audio context close failed:', error);
+    }
+
+    try {
+        const response = await fetch(
+            `/api/conference/sessions/${state.sessionId}/finish`,
+            { method: 'POST' }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || 'Could not close the session.');
+        }
+
+        conferenceSetStatus(
+            `Recorded ${formatConferenceDuration(result.session.duration_ms)} in ${state.uploadedChunks} segment(s).`
+        );
+    } catch (error) {
+        conferenceSetStatus('ERROR: ' + error.message);
+    }
+
+    conferenceState = null;
+
+    document.getElementById('conferenceStartBtn').disabled = false;
+    document.getElementById('conferenceStopBtn').disabled = true;
+    document.getElementById('conferenceTitle').value = '';
+
+    loadConferenceSessions().catch(console.error);
+}
+
+async function loadConferenceSessions() {
+    const container = document.getElementById('conferenceSessions');
+
+    if (!container) return;
+
+    const response = await fetch('/api/conference/sessions');
+    const result = await response.json();
+
+    const sessions = result.sessions || [];
+
+    if (sessions.length === 0) {
+        container.innerHTML = '<div class="empty">No conferences recorded yet.</div>';
+        return;
+    }
+
+    container.innerHTML = sessions.map(session => `
+        <div class="record-card">
+            <h3>${escapeHtml(session.title)}</h3>
+            <div class="conference-meta">
+                ${escapeHtml(session.created_at)}<br>
+                ${formatConferenceDuration(session.duration_ms)} ·
+                ${session.chunk_count} segment(s) ·
+                ${escapeHtml(session.status)}
+            </div>
+            <div class="button-row">
+                <button class="danger" onclick="deleteConferenceSession(${session.id})">Delete</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function deleteConferenceSession(sessionId) {
+    const confirmed = await auraConfirm(
+        'Delete this conference and its recorded audio?'
+    );
+
+    if (!confirmed) return;
+
+    const response = await fetch(`/api/conference/sessions/${sessionId}`, {
+        method: 'DELETE'
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+        return showToast(result.error || 'Could not delete the conference.', true);
+    }
+
+    showToast('Conference deleted.');
+    loadConferenceSessions().catch(console.error);
 }
 
 // -----------------------------------------------------------------------------
@@ -2175,7 +2618,7 @@ async function loadMicrophoneDevices() {
         devices.filter(device => device.kind === 'audioinput');
 
     populateDeviceSelects(
-        ['microphoneDeviceSelect', 'settingsMicrophoneDeviceSelect'],
+        ['microphoneDeviceSelect', 'settingsMicrophoneDeviceSelect', 'conferenceMicSelect'],
         microphones,
         'microphoneDeviceId',
         'Microphone'
@@ -4336,6 +4779,30 @@ async function loadLibraryGroups() {
         `;
 
         imageImportGroupSelect.value =
+            activeLibraryGroupId || '';
+    }
+
+    /*
+        Conference target group controls where the draft records produced
+        from a recorded meeting are assigned.
+    */
+    const conferenceGroupSelect =
+        document.getElementById('conferenceGroupSelect');
+
+    if (conferenceGroupSelect) {
+        conferenceGroupSelect.innerHTML = `
+            <option value="">
+                ${t('rec.noGroup')}
+            </option>
+
+            ${visibleGroups.map(group => `
+                <option value="${group.id}">
+                    ${escapeHtml(group.name)}
+                </option>
+            `).join('')}
+        `;
+
+        conferenceGroupSelect.value =
             activeLibraryGroupId || '';
     }
        /*
