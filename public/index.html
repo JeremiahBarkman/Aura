@@ -1069,6 +1069,22 @@ function formatConferenceElapsed(ms) {
     return `${pad(Math.floor(total / 3600))}:${pad(Math.floor(total / 60) % 60)}:${pad(total % 60)}`;
 }
 
+/*
+    SQLite writes created_at through CURRENT_TIMESTAMP, which is UTC and
+    carries no zone marker ("2026-08-30 20:03:04"). Rendering that string as-is
+    put a UTC timestamp directly under a title built from local time, so a
+    session recorded at 13:03 displayed its own date as 20:03. Parse it as UTC
+    explicitly -- without the "Z" the browser would read it as local and shift
+    it a second time.
+*/
+function formatConferenceTimestamp(value) {
+    const parsed = new Date(String(value).replace(' ', 'T') + 'Z');
+
+    return Number.isNaN(parsed.getTime())
+        ? value
+        : parsed.toLocaleString();
+}
+
 function formatConferenceDuration(ms) {
     if (!ms) return '0m';
 
@@ -1422,7 +1438,7 @@ async function loadConferenceSessions() {
         <div class="record-card">
             <h3>${escapeHtml(session.title)}</h3>
             <div class="conference-meta">
-                ${escapeHtml(session.created_at)}<br>
+                ${escapeHtml(formatConferenceTimestamp(session.created_at))}<br>
                 ${formatConferenceDuration(session.duration_ms)} ·
                 ${session.chunk_count} segment(s) ·
                 ${escapeHtml(session.status)}
