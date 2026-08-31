@@ -6,10 +6,20 @@ Packaging and deployment.
 
 ```
 npm run stage         # scripts/stage-resources.js — stages native binaries for packaging
-npm run dist          # electron-builder NSIS installer (predist runs `stage` automatically)
-npm run dist:dir      # unpacked build output only, no installer (predist:dir runs `stage` automatically)
+npm run check:docs    # scripts/check-docs-sync.js — fails if the two doc copies differ
+npm run sync:docs     # same script with --fix: copies docs/ over installer/
+npm run dist          # electron-builder NSIS installer (predist runs `check:docs` + `stage`)
+npm run dist:dir      # unpacked build output only, no installer (predist:dir runs the same two)
 npm run build:prereq  # scripts/build-prereq-bundle.js — rebuilds installer/prerequisites.zip
 ```
+
+## scripts/check-docs-sync.js
+
+The four end-user documents are maintained as byte-identical copies in `docs/Aura Documentation vX.Y/` and `installer/Aura Documentation vX.Y/`. Both are tracked; the `installer/` copy is the one testers receive, so a stale one ships wrong instructions inside a correct-looking build. They had already drifted once — both Install Guides still named `v0.6.6` while `package.json` was on `0.6.7`.
+
+Runs from `predist`/`predist:dir`, so a release build fails rather than packaging a mismatch. It catches content differences, a file present on only one side, and the case where a version bump renamed one folder and not the other (every file inside can still match, which makes that the easiest kind to miss). The folder is found by its `Aura Documentation` prefix rather than a hardcoded version, so a bump doesn't leave the check passing against a directory that no longer exists.
+
+`docs/` is the source of truth — this file points at that copy as the end-user install walkthrough. `npm run sync:docs` copies it over `installer/` and re-verifies; the direction is fixed on purpose, because merging would mean guessing which side is right and guessing wrong silently discards an edit.
 
 ## scripts/build-prereq-bundle.js
 
