@@ -155,6 +155,7 @@ CREATE TABLE IF NOT EXISTS conference_topics (
     image_strategy TEXT NOT NULL DEFAULT 'none',
     positive_prompt TEXT,
     negative_prompt TEXT,
+    aspect_ratio TEXT,
     search_query TEXT,
     alt_queries TEXT,
     original_trigger_text TEXT,

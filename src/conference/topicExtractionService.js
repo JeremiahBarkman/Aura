@@ -245,6 +245,7 @@ Constraints:
 - Avoid legible text in images. Do not ask for words, labels, captions, or signage.
 - Never name a real living person, and never request a real trademark, logo, or brand mark. Describe the generic form instead.
 - Never embed confidential specifics, client names, or figures from the meeting into an image prompt.
+- Do not write the aspect ratio into the prompt text. It is a separate field and the image is sized from it; "16:9" inside the prompt only spends tokens.
 - Keep style consistent across all subjects in a single meeting so the generated set reads as one collection. Choose one visual register per meeting and hold it.
 
 **Negative prompt construction:**
@@ -423,6 +424,7 @@ function normalizeSubject(subject, index) {
         imageStrategy: strategy,
         positivePrompt: wantsGeneration ? asString(comfyui.positive_prompt) : '',
         negativePrompt: wantsGeneration ? asString(comfyui.negative_prompt) : '',
+        aspectRatio: asString(comfyui.aspect_ratio),
         searchQuery: wantsSearch ? asString(serpapi.q) : '',
         altQueries: wantsSearch ? asStringArray(serpapi.alt_queries) : [],
         triggerCandidateText: asString(subject.trigger_candidate_text),

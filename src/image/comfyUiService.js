@@ -36,6 +36,56 @@ function loadWorkflowTemplate() {
     return JSON.parse(workflowJson);
 }
 
+/**
+ * Latent dimensions per aspect ratio.
+ *
+ * These are SDXL's own training buckets, not arbitrary shapes with the right
+ * proportions. SDXL is trained at roughly one megapixel and degrades badly
+ * away from it -- asking for 1920x1080 gives a correctly proportioned image
+ * full of duplicated subjects and mangled anatomy. Every entry here is close
+ * to 1024x1024 in total pixels and divisible by 64.
+ */
+const ASPECT_RATIO_DIMENSIONS = {
+    '1:1':  { width: 1024, height: 1024 },
+    '16:9': { width: 1344, height: 768 },
+    '9:16': { width: 768,  height: 1344 },
+    '3:2':  { width: 1216, height: 832 },
+    '2:3':  { width: 832,  height: 1216 },
+    '4:3':  { width: 1152, height: 896 },
+    '3:4':  { width: 896,  height: 1152 }
+};
+
+/**
+ * Resizes the workflow's empty latent to the requested aspect ratio.
+ *
+ * An unknown or absent ratio leaves the template's own dimensions alone, so
+ * every caller that does not ask for a shape keeps generating exactly what it
+ * generated before.
+ */
+function applyAspectRatio(workflow, aspectRatio) {
+    const dimensions = ASPECT_RATIO_DIMENSIONS[String(aspectRatio || '').trim()];
+
+    if (!dimensions) {
+        return workflow;
+    }
+
+    for (const node of Object.values(workflow)) {
+        if (!node.inputs) {
+            continue;
+        }
+
+        const hasWidth = Object.prototype.hasOwnProperty.call(node.inputs, 'width');
+        const hasHeight = Object.prototype.hasOwnProperty.call(node.inputs, 'height');
+
+        if (hasWidth && hasHeight) {
+            node.inputs.width = dimensions.width;
+            node.inputs.height = dimensions.height;
+        }
+    }
+
+    return workflow;
+}
+
 function randomSeed() {
     return Math.floor(Math.random() * 999999999999999);
 }
@@ -119,8 +169,10 @@ function injectPrompt(workflow, positivePrompt, negativePrompt = DEFAULT_NEGATIV
     return workflow;
 }
 
-async function queueWorkflow(positivePrompt = null, negativePrompt = null) {
+async function queueWorkflow(positivePrompt = null, negativePrompt = null, aspectRatio = null) {
     let workflow = refreshWorkflowSeeds(loadWorkflowTemplate());
+
+    workflow = applyAspectRatio(workflow, aspectRatio);
 
     if (positivePrompt) {
         // Precedence: a negative supplied for this specific image, then the
@@ -242,8 +294,8 @@ function persistGeneratedImageToStorage(sourcePath) {
     }
 }
 
-async function generateImageFromWorkflow(positivePrompt = null, negativePrompt = null) {
-    const queued = await queueWorkflow(positivePrompt, negativePrompt);
+async function generateImageFromWorkflow(positivePrompt = null, negativePrompt = null, aspectRatio = null) {
+    const queued = await queueWorkflow(positivePrompt, negativePrompt, aspectRatio);
 
     const promptId = queued.prompt_id;
 

@@ -251,10 +251,10 @@ const saveExtraction = db.transaction((conferenceId, { sourceText, language, top
         INSERT INTO conference_topics (
             conference_id, subject_id, order_index, title, description,
             visual_concept, image_strategy, positive_prompt, negative_prompt,
-            search_query, alt_queries, original_trigger_text,
+            aspect_ratio, search_query, alt_queries, original_trigger_text,
             cleaned_trigger_text, salience, confidence, is_sensitive, raw_json
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     for (const topic of topics) {
@@ -268,6 +268,7 @@ const saveExtraction = db.transaction((conferenceId, { sourceText, language, top
             topic.imageStrategy,
             topic.positivePrompt,
             topic.negativePrompt,
+            topic.aspectRatio,
             topic.searchQuery,
             JSON.stringify(topic.altQueries || []),
             topic.triggerCandidateText,

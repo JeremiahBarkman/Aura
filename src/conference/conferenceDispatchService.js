@@ -69,7 +69,8 @@ function needsSearch(strategy) {
 async function generateSubjectImage(topic) {
     const generated = await comfyUiService.generateImageFromWorkflow(
         topic.positive_prompt,
-        topic.negative_prompt || null
+        topic.negative_prompt || null,
+        topic.aspect_ratio || null
     );
 
     const image = generated.images[0];
