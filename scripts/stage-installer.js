@@ -76,6 +76,51 @@ function verifyStartHereVersion(artifactName) {
     console.log(`  START HERE.txt names ${artifactName}`);
 }
 
+/**
+ * Removes superseded builds from dist/.
+ *
+ * electron-builder never prunes its own output, so every release accumulated:
+ * v0.6.6, v0.6.7 and v0.7.0 were all sitting there at ~135 MB each.
+ *
+ * Only files sharing the current artifact's prefix are touched, and the prefix
+ * is derived from the real filename rather than hardcoded -- win-unpacked/,
+ * builder-effective-config.yaml and anything else electron-builder writes are
+ * left alone. Blockmaps go with their installer.
+ */
+function pruneSupersededBuilds(artifactName) {
+    // "Aura Installer v0.7.0.exe" -> "Aura Installer "
+    const prefix = artifactName.split(`v${version}`)[0];
+
+    if (!prefix) {
+        return;
+    }
+
+    const keep = new Set([artifactName, `${artifactName}.blockmap`]);
+
+    let reclaimed = 0;
+
+    for (const name of fs.readdirSync(distDir)) {
+        const isArtifact =
+            name.startsWith(prefix) &&
+            (name.endsWith('.exe') || name.endsWith('.exe.blockmap'));
+
+        if (!isArtifact || keep.has(name)) {
+            continue;
+        }
+
+        const full = path.join(distDir, name);
+
+        reclaimed += fs.statSync(full).size;
+        fs.unlinkSync(full);
+
+        console.log(`  prune   ${name}`);
+    }
+
+    if (reclaimed > 0) {
+        console.log(`  reclaimed ${(reclaimed / 1048576).toFixed(0)} MB from dist/`);
+    }
+}
+
 function stage() {
     const artifactName = expectedArtifactName();
     const builtPath = path.join(distDir, artifactName);
@@ -117,6 +162,10 @@ function stage() {
     }
 
     console.log(`  copy    ${artifactName}  ${(stagedSize / 1048576).toFixed(1)} MB`);
+
+    // Only after the current build is safely staged, so a failed copy never
+    // leaves dist/ pruned and installer/ wrong at the same time.
+    pruneSupersededBuilds(artifactName);
 
     // The .blockmap is for differential auto-updates. Aura has no updater, and
     // shipping it would only invite testers to wonder what it is.

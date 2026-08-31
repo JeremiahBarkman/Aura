@@ -1,7 +1,7 @@
 {
   "name": "aura",
   "version": "0.7.0",
-  "description": "",
+  "description": "Local-first AI virtual camera that turns live speech into matching backgrounds.",
   "main": "electron-main.js",
   "scripts": {
     "start": "node src/web/server.js",

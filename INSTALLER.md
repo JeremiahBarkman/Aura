@@ -24,7 +24,7 @@ Before touching anything it **hard-fails if `START HERE.txt` names a version oth
 
 The artifact filename is derived from `build.artifactName`, not hardcoded, so changing that template does not leave this looking for a file electron-builder no longer produces. The `.exe.blockmap` is deliberately not staged: it exists for differential auto-updates and Aura has no updater.
 
-`dist/` accumulates every build (v0.6.6, v0.6.7 and v0.7.0 are all there, ~400 MB). electron-builder does not prune it and neither does this — `installer/` is the folder that has to be right.
+It also prunes superseded builds from `dist/`, which electron-builder never does on its own — three releases had accumulated at ~135 MB each. Only files sharing the current artifact's filename prefix (and their `.blockmap`s) are removed; `win-unpacked/`, `builder-effective-config.yaml` and anything else in `dist/` are left alone. Pruning happens **after** the current build is safely staged, so a failed copy never leaves `dist/` pruned and `installer/` wrong at the same time.
 
 ## scripts/check-docs-sync.js
 
