@@ -71,14 +71,81 @@ async function freeMemory() {
             return false;
         }
 
-        console.log('[AURA COMFY] Asked ComfyUI to release its VRAM.');
-        return true;
+        return await waitForVramRelease();
     } catch (error) {
         console.log(
             `[AURA COMFY] Could not reach ComfyUI to free VRAM (${error.message}); continuing.`
         );
         return false;
     }
+}
+
+async function readTorchVram() {
+    const response = await fetch(`${comfyBaseUrl}/system_stats`);
+
+    if (!response.ok) {
+        return null;
+    }
+
+    const stats = await response.json();
+    const device = (stats.devices || [])[0];
+
+    return device ? Number(device.torch_vram_total) || 0 : null;
+}
+
+/**
+ * Waits for ComfyUI to actually give the memory back.
+ *
+ * /free only sets a queue flag and returns 200; the unload and the collection
+ * that follows it happen on ComfyUI's worker thread afterwards. Returning
+ * before that lands would defeat the point: Ollama fixes its GPU/CPU layer
+ * split when the model loads and keeps it for the whole run, so starting
+ * extraction a moment too early locks in the bad split for the entire job and
+ * the optimization silently does nothing.
+ *
+ * Polls rather than sleeping a guessed interval, and gives up rather than
+ * blocking a conference on a service that is only an optimization.
+ */
+async function waitForVramRelease(timeoutMs = 15000, pollMs = 250) {
+    const before = await readTorchVram();
+
+    if (before === null) {
+        return true;
+    }
+
+    if (before === 0) {
+        console.log('[AURA COMFY] ComfyUI was already holding no VRAM.');
+        return true;
+    }
+
+    const deadline = Date.now() + timeoutMs;
+
+    while (Date.now() < deadline) {
+        await sleep(pollMs);
+
+        const now = await readTorchVram();
+
+        if (now === null) {
+            return true;
+        }
+
+        // Released rather than merely reduced. A little residue is normal --
+        // the allocator does not return every block.
+        if (now <= before * 0.25) {
+            console.log(
+                `[AURA COMFY] Released ${((before - now) / 1e9).toFixed(2)} GB of VRAM ` +
+                `in ${((timeoutMs - (deadline - Date.now())) / 1000).toFixed(1)}s.`
+            );
+            return true;
+        }
+    }
+
+    console.warn(
+        `[AURA COMFY] ComfyUI still holds ${(before / 1e9).toFixed(2)} GB after ` +
+        `${timeoutMs / 1000}s; continuing anyway.`
+    );
+
+    return false;
 }
 
 function loadWorkflowTemplate() {
