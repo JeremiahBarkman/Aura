@@ -23,6 +23,7 @@
 
 const speechService = require('../speech/localWhisperService');
 const stopwordService = require('../text/stopwordService');
+const comfyUiService = require('../image/comfyUiService');
 const conferenceService = require('./conferenceService');
 const topicExtractionService = require('./topicExtractionService');
 
@@ -144,6 +145,18 @@ async function runPipeline(id) {
         conferenceService.saveTranscript(id, transcript, language);
 
         conferenceService.setStatus(id, 'extracting');
+
+        /*
+            Extraction is the most memory-hungry thing Aura does -- a 24B model
+            with a context sized to the whole transcript. ComfyUI holding SDXL
+            alongside it is what pushes the model onto the CPU and turns a long
+            meeting into a long wait.
+
+            Asked for after transcription rather than before, so Whisper is
+            already done with the GPU and this is not paid for a session that
+            fails before it reaches the model.
+        */
+        await comfyUiService.freeMemory();
 
         const session = conferenceService.getSession(id);
 

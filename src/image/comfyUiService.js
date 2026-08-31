@@ -31,6 +31,56 @@ async function checkComfyUiHealth() {
     return response.json();
 }
 
+/**
+ * Asks ComfyUI to drop its models out of VRAM.
+ *
+ * Aura's other GPU consumers do not fit alongside it on a smaller card: with
+ * ComfyUI holding SDXL, a 24B extraction model sat 48% GPU-resident on an 8 GB
+ * board and one 38-minute meeting took 18 minutes to process.
+ *
+ * Deliberately not "stop ComfyUI". Aura only holds a handle to that process
+ * when it spawned it (COMFYUI_AUTOSTART with port 8188 free at launch), so a
+ * user-started instance is invisible to it -- a stop/restart design would work
+ * on some machines and silently do nothing on others. This works either way,
+ * costs no restart, and needs no undo: ComfyUI reloads the checkpoint by
+ * itself on the next generation.
+ *
+ * /free sets a queue flag rather than interrupting, so it cannot disturb a
+ * generation already in flight.
+ *
+ * Best-effort. ComfyUI being absent is normal (it is an optional service) and
+ * must not fail whatever asked for the memory.
+ *
+ * @returns {Promise<boolean>} Whether ComfyUI accepted the request.
+ */
+async function freeMemory() {
+    try {
+        const response = await fetch(`${comfyBaseUrl}/free`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                unload_models: true,
+                free_memory: true
+            })
+        });
+
+        if (!response.ok) {
+            console.warn(
+                `[AURA COMFY] /free returned ${response.status}; VRAM not released.`
+            );
+            return false;
+        }
+
+        console.log('[AURA COMFY] Asked ComfyUI to release its VRAM.');
+        return true;
+    } catch (error) {
+        console.log(
+            `[AURA COMFY] Could not reach ComfyUI to free VRAM (${error.message}); continuing.`
+        );
+        return false;
+    }
+}
+
 function loadWorkflowTemplate() {
     const workflowJson = fs.readFileSync(workflowPath, 'utf8');
     return JSON.parse(workflowJson);
@@ -319,6 +369,7 @@ async function generateImageFromWorkflow(positivePrompt = null, negativePrompt =
 
 module.exports = {
     checkComfyUiHealth,
+    freeMemory,
     loadWorkflowTemplate,
     queueWorkflow,
     getHistory,

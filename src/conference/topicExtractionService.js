@@ -596,6 +596,19 @@ async function extractTopics({ transcript, metadata = {} }) {
             model,
             stream: true,
             format: 'json',
+            /*
+                Release the model as soon as this finishes instead of Ollama's
+                default 5-minute idle hold.
+
+                Dispatch runs ComfyUI generation immediately after extraction,
+                and a 24B model left resident is 10+ GB the image model cannot
+                have. The reload cost on a back-to-back re-process is seconds
+                against a job measured in minutes.
+
+                This only unloads the extraction model. Play Mode's embedding
+                model is a separate entry in Ollama and is unaffected.
+            */
+            keep_alive: 0,
             messages: [
                 { role: 'system', content: SYSTEM_PROMPT },
                 { role: 'user', content: userMessage }
