@@ -82,7 +82,7 @@ new match is chosen, slightly ahead of the camera transition finishing.
   matched it. More detailed than the Active Visual readout above; useful
   when tuning trigger phrases or Minimum Match Score.
 
-See [section 5](#5-play-mode--how-live-matching-works) for how matching
+See [section 6](#6-play-mode--how-live-matching-works) for how matching
 actually works and how to tune it.
 
 ### Display & Transition
@@ -147,10 +147,15 @@ The result is saved as a **draft** record.
 
 ### Audio Source
 
-Click **Start Recording**, speak, then **Stop**. Click **Save Recording** to
-transcribe it (via Whisper) and run it through the same summary → prompt →
-trigger → image pipeline as Text Source. The transcript appears under
-**Whisper Transcription** once processing finishes.
+Choose a **Microphone**, click **Start Recording**, speak, then **Stop**.
+Click **Save Recording** to transcribe it (via Whisper) and run it through
+the same summary → prompt → trigger → image pipeline as Text Source. The
+transcript appears under **Whisper Transcription** once processing
+finishes.
+
+The Microphone dropdown here is the same setting as the one in Studio,
+Settings and Conference — changing it in any of those changes it
+everywhere, so all of Aura listens on one device.
 
 ### Manual Record
 
@@ -203,8 +208,9 @@ trigger in Play Mode), the card's "⋯" menu, the record title, its image
 grid, the **Library Group** dropdown, and the **Cleaned Play Mode Trigger
 Text** field with its **✎** edit icon — everything else is collapsed.
 
-The image grid stays visible either way. Each image has its own "⋯" menu:
-**Open** (view full-size), **Make Primary** (choose which image displays by
+The image grid stays visible either way. **Click any image to view it full
+size**; press Escape or click anywhere to close it again. Each image also
+has its own "⋯" menu: **Make Primary** (choose which image displays by
 default for this record), **Move** (reassign this image to a different
 record), and **Delete Image** (soft-delete it — see
 [Trash](#trash--purge)).
@@ -247,7 +253,101 @@ mark them complete once you're happy with them.
 
 ---
 
-## 5. Play Mode — how live matching works
+## 5. Aura Conference — turning a meeting into records
+
+Conference turns a real conversation into library records. You record a
+meeting you're already in, and Aura transcribes it, breaks it into the
+subjects that were actually discussed, and builds a draft record for each
+one — with a generated image, searched images, or both.
+
+### Recording
+
+Pick your **Audio Sources**. **System audio** captures the other
+participants — it taps whatever Windows is playing, so headphones are fine.
+**Microphone** captures you. Most calls want both; system audio on its own
+hears everyone except you.
+
+Give the session a **Session Title** if you like, or leave it blank to have
+it named by date. Choose a **Target Group** on the right if you want the
+records this meeting produces to land pre-organized.
+
+Click **Start Recording**. A pulsing amber microphone appears next to
+**Record a Meeting**, and the status line shows what is being captured, how
+long it has been running, and how many segments have been saved. Click
+**Stop Recording** when the meeting ends.
+
+Aura records in short segments rather than one long file, so a crash or a
+power cut costs the current segment instead of the whole meeting. The
+counter only advances every five minutes or when you stop — "0 saved"
+during a short recording is normal, not a fault.
+
+**Everyone on the call is being recorded.** Make sure participants have
+agreed before you start; in many places recording without consent is
+unlawful. If the Aura Camera is running, a **RECORDING** badge appears in
+the top-right corner of the video other participants see. If the camera is
+off, Aura warns you that nobody on the call will see any indicator — the
+badge travels on your video, so there is nothing to show it on.
+
+### Processing
+
+When you are ready, click **Process Meeting** on the session card. Aura
+transcribes each segment through Whisper, then makes a single pass with
+Ollama that produces the meeting's summary and its list of subjects.
+
+This runs in the background and takes a few minutes — longer on a machine
+where ComfyUI is also holding graphics memory. The card updates itself
+while it works.
+
+Processing deliberately happens *after* the call rather than during it, so
+a live meeting never competes with Whisper, Ollama and ComfyUI for the
+graphics card. Recording itself is only audio to disk and costs almost
+nothing.
+
+Whisper does not identify who is speaking, so the transcript is one
+continuous block. Expect the participant list to be empty and most action
+items to have no owner attached.
+
+### Review
+
+Click **Review** once the card says it is ready.
+
+The top panel is the meeting's **Source Text** — an abstract, a narrative
+summary, key points, decisions, action items, open questions and keywords.
+This is the archival record of what was discussed.
+
+Below it is each **subject** Aura found, showing:
+
+- a strategy badge — **generate** (Aura will create an image), **search**
+  (Aura will find real ones), **both**, or **none**
+- **salience**, how much of the meeting this subject carried, and
+  **confidence**, how clean the transcript was for it
+- **Trigger phrases**, which decide when this record appears in Play Mode
+- the **ComfyUI positive prompt** or **SerpAPI query** that will be used
+
+Every field shown is editable and saves as you leave the box. Uncheck
+**Approve** on anything you do not want. This is the moment to fix a weak
+trigger phrase or a bad search query, because nothing has been generated or
+searched yet.
+
+### Generating the records
+
+Set **Images per searched subject**, then click **Generate Approved
+Subjects**. The line above the button says exactly what is about to happen
+— how many images will be generated, how many searches will run, and how
+many images will be downloaded — before anything is spent.
+
+Each approved subject becomes one **draft** record in the Library, carrying
+its trigger phrases and every image generated or found for it. As with
+Image Search imports, they start as drafts; review them in the Library and
+mark them complete when you are happy.
+
+Re-running is safe. Subjects that already produced a record are skipped, so
+a run interrupted halfway picks up where it stopped instead of duplicating
+what already landed.
+
+---
+
+## 6. Play Mode — how live matching works
 
 While Play Mode is running, Aura listens in short overlapping chunks,
 transcribes each with Whisper, and matches the rolling transcript against
@@ -283,7 +383,7 @@ The chosen image is composited into the Aura Camera output using whichever
 
 ---
 
-## 6. DB Manager — bulk record management
+## 7. DB Manager — bulk record management
 
 A spreadsheet-style view for managing many records at once, separate from
 the card-based Library view. Everything beyond Refresh and search lives in
@@ -336,7 +436,7 @@ DB Manager, is immediate and permanent and does not go through Trash.
 
 ---
 
-## 7. Settings
+## 8. Settings
 
 - **Language** — sets the UI's display language. Aura ships with 17
   languages: English, Spanish, Chinese, Hindi, Arabic, Portuguese, French,
@@ -357,7 +457,7 @@ DB Manager, is immediate and permanent and does not go through Trash.
     camera is already running, stop and start it again.
 - **Matching & Generation**:
   - **Semantic matching (embeddings) in Play Mode** — toggle described in
-    section 5; hover the ⓘ for the short version.
+    section 6; hover the ⓘ for the short version.
   - **Ollama Model Override** — use a specific Ollama model for
     summaries/prompts/triggers instead of the built-in default. Must
     already be pulled in Ollama.
@@ -381,6 +481,8 @@ DB Manager, is immediate and permanent and does not go through Trash.
 | Create a new record from text | Capture → Text Source |
 | Use my own image instead of generating one | Capture → Manual Record |
 | Pull images from the web | Image Search |
+| Build records from a meeting I was in | Aura Conference → Start Recording |
+| Check what a meeting produced before spending anything | Aura Conference → Review |
 | Fix a background that keeps mismatching | Library → edit that record's Trigger Text, or raise Minimum Match Score |
 | Restrict Play Mode to a topic | Create a Group, assign records to it, select it in Studio |
 | Recover an image I deleted | DB Manager → View Trash → Restore |
