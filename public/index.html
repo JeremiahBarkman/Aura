@@ -107,7 +107,7 @@
  <div class="capture-body"><div class="pipeline"><span id="indicatorRecording" class="pipe-step" data-i18n="cap.indRecording">Recording</span><span id="indicatorGenerating" class="pipe-step" data-i18n="cap.indGenerating">Generating</span><span id="indicatorCreating" class="pipe-step" data-i18n="cap.indCreating">Creating Record</span></div>
  <div class="capture-grid">
   <div class="stack"><div class="panel"><div class="panel-title" data-i18n="cap.textSource">Text Source</div><textarea id="rawText" name="rawText" rows="9" placeholder="Paste or type source text..." data-i18n-placeholder="cap.textPh"></textarea><div class="button-row" style="align-items:center"><button id="generateBtn" onclick="generateDraftRecord()" data-i18n="cap.generate">Generate Draft Record</button><span id="generateSpinner" class="aura-spinner" style="display:none"></span></div></div>
-   <div class="panel"><div class="panel-title" data-i18n="cap.audioSource">Audio Source</div><div class="button-row"><button id="startBtn" onclick="startRecording()" data-i18n="cap.startRec">Start Recording</button><button id="stopBtn" class="danger" onclick="stopRecording()" disabled data-i18n="cap.stop">Stop</button><button id="uploadBtn" class="secondary" onclick="uploadRecording()" disabled data-i18n="cap.saveRec">Save Recording</button></div><audio id="audioPlayback" controls style="width:100%;margin-top:12px"></audio><div class="terminal-label" data-i18n="cap.whisper">WHISPER TRANSCRIPTION</div><div id="audioStatus">No recording yet.</div></div>
+   <div class="panel"><div class="panel-title" data-i18n="cap.audioSource">Audio Source</div><label data-i18n="play.mic">Microphone</label><select id="captureMicSelect"></select><div class="button-row"><button id="startBtn" onclick="startRecording()" data-i18n="cap.startRec">Start Recording</button><button id="stopBtn" class="danger" onclick="stopRecording()" disabled data-i18n="cap.stop">Stop</button><button id="uploadBtn" class="secondary" onclick="uploadRecording()" disabled data-i18n="cap.saveRec">Save Recording</button></div><audio id="audioPlayback" controls style="width:100%;margin-top:12px"></audio><div class="terminal-label" data-i18n="cap.whisper">WHISPER TRANSCRIPTION</div><div id="audioStatus">No recording yet.</div></div>
   </div>
   <div class="panel"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:12px"><div class="panel-title" style="margin:0;flex-shrink:0" data-i18n="cap.manual">Manual Record</div><span id="recordSavedStatus" class="active-meta" style="display:none;text-align:right"></span></div><label data-i18n="rec.sourceText">Original Source Text</label><textarea id="manualRawText" rows="5"></textarea><label data-i18n="cap.summary">AI Summary</label><textarea id="manualSummaryText" rows="4"></textarea><label data-i18n="cap.prompt">Image Prompt</label><textarea id="manualImagePrompt" rows="4"></textarea><label data-i18n="cap.triggers">Trigger Phrases</label><textarea id="manualCleanedTriggerText" rows="4"></textarea></div>
   <div class="panel"><div class="panel-title" data-i18n="cap.image">Image</div><label data-i18n="cap.uploadExisting">Upload Existing Image</label><input id="manualImageFile" type="file" accept="image/*" onchange="onManualImageChosen()"><div id="manualImageChip" class="file-chip" style="display:none"><span class="file-chip-name" id="manualImageChipName"></span><button type="button" class="file-chip-x" title="Remove" onclick="clearManualImage()">&times;</button></div><div class="button-row"><button onclick="saveRecord()" data-i18n="cap.saveRecord">Save Record</button><button class="secondary" onclick="clearCurrentRecord()" data-i18n="cap.clear">Clear</button></div><div id="currentImageCard" class="gen-image-card" style="display:none"><img id="currentImage" alt=""><div class="button-row"><button class="danger" onclick="deleteCurrentRecord()" data-i18n="cap.deleteRecord">Delete Record</button></div></div></div>
@@ -979,7 +979,20 @@ async function startRecording() {
     const audioStatus = document.getElementById('audioStatus');
 
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // Capture used to pass a bare `audio: true`, which takes whatever
+        // Windows considers the default input -- so it could record a webcam
+        // mic while Play Mode and Conference were both using the interface
+        // chosen in Settings, with nothing in the UI showing the difference.
+        // All three now resolve the same microphoneDeviceId.
+        const microphoneDeviceId =
+            document.getElementById('captureMicSelect')?.value || '';
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+            audio: microphoneDeviceId
+                ? { deviceId: { exact: microphoneDeviceId } }
+                : true
+        });
+
         recordedChunks = [];
         recordedBlob = null;
 
@@ -3031,7 +3044,7 @@ async function loadMicrophoneDevices() {
         devices.filter(device => device.kind === 'audioinput');
 
     populateDeviceSelects(
-        ['microphoneDeviceSelect', 'settingsMicrophoneDeviceSelect', 'conferenceMicSelect'],
+        ['microphoneDeviceSelect', 'settingsMicrophoneDeviceSelect', 'conferenceMicSelect', 'captureMicSelect'],
         microphones,
         'microphoneDeviceId',
         'Microphone'
