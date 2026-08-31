@@ -46,6 +46,169 @@ export class AuraFrameExportService {
         this.bgraBuffer = null;
         this.bufferWidth = 0;
         this.bufferHeight = 0;
+
+        // Recording indicator. Composited into the outgoing frame here rather
+        // than drawn onto the live canvas, because the canvas is never read on
+        // this path -- the provider hands pixels straight to submitFrame, and
+        // anything drawn on auraLiveCanvas reaches only the local preview and
+        // the Aura Output window. This is also the one seam both segmentation
+        // providers pass through, so the badge does not have to be duplicated
+        // into two render loops that already duplicate each other.
+        this.recordingIndicator = false;
+        this.badge = null;
+    }
+
+    /**
+     * Shows or hides the recording badge on the outgoing camera frame.
+     *
+     * This is what other participants on a call see. It is Aura stating what
+     * Aura is doing -- no meeting platform is told anything, because a local
+     * loopback capture is invisible to Teams, Meet and Zoom by construction.
+     */
+    setRecordingIndicator(active) {
+        this.recordingIndicator = Boolean(active);
+    }
+
+    /**
+     * Rasterizes the badge once and caches its pixels.
+     *
+     * Re-rasterized only when the frame size changes, so the steady-state cost
+     * per frame is the blit alone. Sized from frame height so it stays legible
+     * at 720p without dominating at 1080p.
+     */
+    ensureBadge(frameWidth, frameHeight) {
+        if (
+            this.badge &&
+            this.badge.frameWidth === frameWidth &&
+            this.badge.frameHeight === frameHeight
+        ) {
+            return this.badge;
+        }
+
+        const height = Math.max(26, Math.round(frameHeight * 0.05));
+        const fontSize = Math.round(height * 0.44);
+        const dotRadius = Math.round(height * 0.16);
+        const padding = Math.round(height * 0.38);
+        const gap = Math.round(height * 0.30);
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Text is intentionally not localized: the audience is the other
+        // people on the call, who do not necessarily share this user's UI
+        // language.
+        const label = 'RECORDING';
+
+        ctx.font = `700 ${fontSize}px 'IBM Plex Mono', monospace`;
+
+        const textWidth = ctx.measureText(label).width;
+        const width = Math.round(padding * 2 + dotRadius * 2 + gap + textWidth);
+
+        canvas.width = width;
+        canvas.height = height;
+
+        // Re-fetching the context's font after resizing: setting width/height
+        // resets all canvas state.
+        ctx.font = `700 ${fontSize}px 'IBM Plex Mono', monospace`;
+        ctx.textBaseline = 'middle';
+
+        const radius = height / 2;
+
+        ctx.beginPath();
+        ctx.moveTo(radius, 0);
+        ctx.lineTo(width - radius, 0);
+        ctx.arcTo(width, 0, width, radius, radius);
+        ctx.lineTo(width, height - radius);
+        ctx.arcTo(width, height, width - radius, height, radius);
+        ctx.lineTo(radius, height);
+        ctx.arcTo(0, height, 0, height - radius, radius);
+        ctx.lineTo(0, radius);
+        ctx.arcTo(0, 0, radius, 0, radius);
+        ctx.closePath();
+
+        ctx.fillStyle = 'rgba(12, 10, 8, 0.72)';
+        ctx.fill();
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.20)';
+        ctx.lineWidth = Math.max(1, Math.round(height * 0.03));
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(padding + dotRadius, height / 2, dotRadius, 0, Math.PI * 2);
+        ctx.fillStyle = '#e0503a';
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(label, padding + dotRadius * 2 + gap, height / 2 + 1);
+
+        const margin = Math.round(height * 0.6);
+
+        this.badge = {
+            frameWidth,
+            frameHeight,
+            width,
+            height,
+            // Top-right: the corner least often occupied by platform overlays
+            // (names and mute badges sit bottom-left in Teams, Meet and Zoom).
+            x: Math.max(0, frameWidth - width - margin),
+            y: margin,
+            pixels: ctx.getImageData(0, 0, width, height).data
+        };
+
+        return this.badge;
+    }
+
+    /**
+     * Alpha-composites the cached badge into the BGRA frame buffer.
+     *
+     * Runs after the RGBA->BGRA conversion so it writes in the destination's
+     * byte order and the provider's own pixel buffer is never mutated. Touches
+     * only the badge rectangle -- roughly 1% of a 720p frame.
+     */
+    blitBadge(bgra, frameWidth, frameHeight) {
+        const badge = this.ensureBadge(frameWidth, frameHeight);
+        const source = badge.pixels;
+
+        for (let row = 0; row < badge.height; row++) {
+            const frameY = badge.y + row;
+
+            if (frameY < 0 || frameY >= frameHeight) {
+                continue;
+            }
+
+            for (let col = 0; col < badge.width; col++) {
+                const frameX = badge.x + col;
+
+                if (frameX < 0 || frameX >= frameWidth) {
+                    continue;
+                }
+
+                const src = (row * badge.width + col) << 2;
+                const alpha = source[src + 3];
+
+                if (alpha === 0) {
+                    continue;
+                }
+
+                const dst = (frameY * frameWidth + frameX) << 2;
+
+                if (alpha === 255) {
+                    bgra[dst + 0] = source[src + 2];
+                    bgra[dst + 1] = source[src + 1];
+                    bgra[dst + 2] = source[src + 0];
+                    bgra[dst + 3] = 255;
+                    continue;
+                }
+
+                const a = alpha / 255;
+                const inverse = 1 - a;
+
+                bgra[dst + 0] = source[src + 2] * a + bgra[dst + 0] * inverse;
+                bgra[dst + 1] = source[src + 1] * a + bgra[dst + 1] * inverse;
+                bgra[dst + 2] = source[src + 0] * a + bgra[dst + 2] * inverse;
+                bgra[dst + 3] = 255;
+            }
+        }
     }
 
     start() {
@@ -191,6 +354,10 @@ export class AuraFrameExportService {
             const bgra = this.ensureOutputBuffer(width, height);
 
             this.convertRgbaToOpaqueBgra(imageData.data, bgra);
+
+            if (this.recordingIndicator) {
+                this.blitBadge(bgra, width, height);
+            }
 
             this.inFlight++;
 

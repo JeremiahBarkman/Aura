@@ -1073,6 +1073,39 @@ const CONFERENCE_CHUNK_MS = 5 * 60 * 1000;
 
 let conferenceState = null;
 
+/*
+    Whether the Aura Camera should be showing the recording badge.
+
+    Tracked separately from conferenceState because the two lifecycles are
+    independent: the camera can be started or restarted mid-recording, and the
+    frame export service is recreated each time. Kept as a plain flag so
+    startAuraFrameExport can apply it to a service that did not exist when
+    recording began.
+*/
+let conferenceRecordingActive = false;
+
+/*
+    Puts the recording badge on the outgoing camera frame.
+
+    This is the only signal other participants get. Teams, Meet and Zoom each
+    have an API that notifies a call it is being recorded, but all three
+    require the recorder to be in the meeting as a platform-registered
+    participant -- Aura taps the Windows audio endpoint and is invisible to
+    them by construction. Aura owns the video it sends, so that is where the
+    disclosure goes.
+*/
+function setConferenceRecordingIndicator(active) {
+    conferenceRecordingActive = Boolean(active);
+
+    if (auraFrameExportService) {
+        auraFrameExportService.setRecordingIndicator(conferenceRecordingActive);
+    }
+}
+
+function isAuraCameraBroadcasting() {
+    return Boolean(auraFrameExportService && auraFrameExportService.isRunning);
+}
+
 function conferenceSetStatus(message) {
     const el = document.getElementById('conferenceStatus');
     if (el) el.textContent = message;
@@ -1346,8 +1379,20 @@ async function startConferenceRecording() {
         document.getElementById('conferenceMicIndicator').style.display = 'inline-block';
         document.getElementById('conferenceStopBtn').disabled = false;
 
+        setConferenceRecordingIndicator(true);
+
         if (missing.length > 0) {
             showToast(`Conference could not capture ${missing.join(' and ')}.`, true);
+        }
+
+        // The badge rides on the Aura Camera frame, so with the camera off
+        // nobody on the call is told anything. Say so rather than letting the
+        // indicator be silently absent.
+        if (!isAuraCameraBroadcasting()) {
+            showToast(
+                'Aura Camera is off, so participants will not see the recording indicator.',
+                true
+            );
         }
     } catch (error) {
         if (audio) {
@@ -1383,6 +1428,12 @@ function stopConferenceRecording() {
     // it never implies Aura is still listening while a segment uploads.
     document.getElementById('conferenceMicIndicator').style.display = 'none';
     document.getElementById('conferenceStopBtn').disabled = true;
+
+    // Cleared with the microphone indicator, not at finishConferenceSession:
+    // capture has stopped, and leaving the badge up through the final upload
+    // would tell the call it is still being recorded when it is not.
+    setConferenceRecordingIndicator(false);
+
     conferenceSetStatus('Saving the last segment...');
 
     if (conferenceState.recorder && conferenceState.recorder.state !== 'inactive') {
@@ -3677,6 +3728,11 @@ async function startAuraFrameExport() {
         new AuraFrameExportService(liveCanvas);
 
     auraFrameExportService.start();
+
+    // The camera can be started after a recording is already running, so the
+    // badge state is applied on creation rather than only on the start/stop
+    // transitions.
+    auraFrameExportService.setRecordingIndicator(conferenceRecordingActive);
 
     updateAuraActivity(
         'Aura frame export service started.',
