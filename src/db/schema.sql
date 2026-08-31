@@ -164,6 +164,7 @@ CREATE TABLE IF NOT EXISTS conference_topics (
     is_sensitive INTEGER NOT NULL DEFAULT 0,
     is_approved INTEGER NOT NULL DEFAULT 1,
     status TEXT NOT NULL DEFAULT 'pending',
+    error TEXT,
     source_item_id INTEGER,
     raw_json TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,

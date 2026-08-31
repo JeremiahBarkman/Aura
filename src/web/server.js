@@ -48,6 +48,8 @@ const conferenceService = require('../conference/conferenceService');
 
 const conferenceProcessingService = require('../conference/conferenceProcessingService');
 
+const conferenceDispatchService = require('../conference/conferenceDispatchService');
+
 // -----------------------------------------------------------------------------
 // Express Application State
 // -----------------------------------------------------------------------------
@@ -155,6 +157,10 @@ ensureColumn('generated_images', 'deleted_at', 'TEXT');
 // from schema.sql.
 ensureColumn('conferences', 'source_text_json', 'TEXT');
 
+// conference_topics shipped before dispatch existed and had nowhere to record
+// why a single subject failed to produce an image.
+ensureColumn('conference_topics', 'error', 'TEXT');
+
 for (const dir of [paths.audioDir, paths.conferenceAudioDir, path.join(paths.imagesDir, 'manual'), path.join(paths.imagesDir, 'imports'), paths.generatedImagesDir, paths.backgroundsDir, paths.importsDir]) {
     fs.mkdirSync(dir, { recursive: true });
 }
@@ -197,6 +203,7 @@ app.use(createPlayRoutes({
 app.use(createConferenceRoutes({
     conferenceService,
     conferenceProcessingService,
+    conferenceDispatchService,
     chunkUpload: conferenceChunkUpload
 }));
 

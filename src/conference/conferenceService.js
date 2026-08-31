@@ -280,6 +280,21 @@ const saveExtraction = db.transaction((conferenceId, { sourceText, language, top
     }
 });
 
+/**
+ * Sets a topic's dispatch status.
+ *
+ * Like the session-level equivalent, `error` is cleared on any transition that
+ * does not supply one, so a message from a failed attempt cannot survive into
+ * a later successful retry.
+ */
+function setTopicStatus(topicId, status, error = null) {
+    db.prepare(`
+        UPDATE conference_topics
+        SET status = ?, error = ?
+        WHERE id = ?
+    `).run(status, error, topicId);
+}
+
 function listTopics(conferenceId) {
     const rows = db.prepare(`
         SELECT * FROM conference_topics
@@ -366,14 +381,24 @@ function updateTopic(topicId, patch = {}) {
  * transcribing/extracting by a restart has nothing working on it.
  */
 function resetInFlightStatuses() {
-    const result = db.prepare(`
+    // 'generating' returns to 'review' rather than 'recorded': the transcript
+    // and subjects are already there, and re-processing would discard edits
+    // made on the review screen. Subjects that completed keep their records --
+    // a resumed dispatch skips anything that already has one.
+    const conferences = db.prepare(`
         UPDATE conferences
-        SET status = 'recorded',
+        SET status = CASE WHEN status = 'generating' THEN 'review' ELSE 'recorded' END,
             error = 'Processing was interrupted by a restart.'
-        WHERE status IN ('transcribing', 'extracting')
+        WHERE status IN ('transcribing', 'extracting', 'generating')
     `).run();
 
-    return result.changes;
+    const topics = db.prepare(`
+        UPDATE conference_topics
+        SET status = 'pending'
+        WHERE status = 'generating'
+    `).run();
+
+    return conferences.changes + topics.changes;
 }
 
 /**
@@ -463,6 +488,7 @@ module.exports = {
     listSessions,
     deleteSession,
     setStatus,
+    setTopicStatus,
     saveTranscript,
     saveExtraction,
     listTopics,

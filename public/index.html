@@ -143,6 +143,12 @@
   <div id="conferenceReview" style="display:none">
    <div style="display:flex;align-items:baseline;gap:12px;margin:24px 0 4px"><div class="panel-title" style="margin:0" data-i18n="conf.review">Review</div><span id="conferenceReviewMeta" class="active-meta"></span><button class="secondary" style="margin-left:auto" onclick="closeConferenceReview()" data-i18n="conf.closeReview">Close</button></div>
    <div class="panel" id="conferenceSourceText"></div>
+   <div class="panel" style="margin-top:16px"><div class="panel-title" data-i18n="conf.generate">Generate Draft Records</div>
+    <label><span data-i18n="conf.imagesPerSearch">Images per searched subject</span>: <span id="conferenceImagesPerSearchValue">3</span></label>
+    <input id="conferenceImagesPerSearch" type="range" min="1" max="10" value="3" oninput="conferenceImagesPerSearchValue.textContent=this.value;updateConferenceDispatchPlan()">
+    <div id="conferenceDispatchPlan" class="conference-meta"></div>
+    <div class="button-row" style="align-items:center"><button id="conferenceGenerateBtn" onclick="startConferenceDispatch()" data-i18n="conf.generateBtn">Generate Approved Subjects</button><span id="conferenceGenerateSpinner" class="aura-spinner" style="display:none"></span></div>
+   </div>
    <div class="panel-title" style="margin-top:20px" data-i18n="conf.subjects">Subjects</div>
    <div id="conferenceTopics"></div>
   </div>
@@ -1427,7 +1433,11 @@ async function finishConferenceSession() {
 
 // Statuses where work is running server-side and the list should refresh
 // itself rather than waiting for the user to click something.
-const CONFERENCE_BUSY_STATUSES = new Set(['transcribing', 'extracting']);
+const CONFERENCE_BUSY_STATUSES = new Set(['transcribing', 'extracting', 'generating']);
+
+// The subjects of the review currently on screen, so the dispatch plan can be
+// costed without re-fetching on every slider movement.
+let conferenceReviewTopics = [];
 
 let conferencePollTimer = null;
 let openConferenceReviewId = null;
@@ -1476,6 +1486,8 @@ function renderConferenceSessionCard(session) {
         transcribing: 'Transcribing...',
         extracting: 'Extracting subjects...',
         review: `Ready for review · ${session.topic_count} subject(s)`,
+        generating: 'Generating draft records...',
+        complete: `Complete · ${session.topic_count} subject(s)`,
         failed: 'Failed'
     }[session.status] || session.status;
 
@@ -1485,7 +1497,7 @@ function renderConferenceSessionCard(session) {
         actions.push(`<button onclick="startConferenceProcessing(${session.id})">${session.status === 'failed' ? 'Retry Processing' : 'Process Meeting'}</button>`);
     }
 
-    if (session.status === 'review') {
+    if (session.status === 'review' || session.status === 'complete') {
         actions.push(`<button onclick="openConferenceReview(${session.id})">Review</button>`);
         actions.push(`<button class="secondary" onclick="startConferenceProcessing(${session.id})">Re-process</button>`);
     }
@@ -1560,9 +1572,88 @@ async function openConferenceReview(sessionId, quiet = false) {
     document.getElementById('conferenceTopics').innerHTML =
         session.topics.map(renderConferenceTopic).join('');
 
+    conferenceReviewTopics = session.topics;
+    updateConferenceDispatchPlan();
+
+    const dispatching = session.status === 'generating';
+
+    document.getElementById('conferenceGenerateBtn').disabled = dispatching;
+    document.getElementById('conferenceGenerateSpinner').style.display =
+        dispatching ? 'inline-block' : 'none';
+
     if (!quiet) {
         panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+}
+
+/*
+    Says what pressing Generate will actually do before it is pressed.
+
+    SerpAPI is metered and the one path that sends anything off the machine, so
+    the number of searches and downloads is stated up front rather than
+    discovered afterwards on a bill.
+*/
+function updateConferenceDispatchPlan() {
+    const planEl = document.getElementById('conferenceDispatchPlan');
+
+    if (!planEl) return;
+
+    const perSearch = Number(
+        document.getElementById('conferenceImagesPerSearch').value
+    );
+
+    const pending = conferenceReviewTopics.filter(
+        t => t.is_approved && !t.source_item_id && t.image_strategy !== 'none'
+    );
+
+    const generations = pending.filter(
+        t => t.image_strategy === 'generate' || t.image_strategy === 'both'
+    ).length;
+
+    const searches = pending.filter(
+        t => t.image_strategy === 'search' || t.image_strategy === 'both'
+    ).length;
+
+    const alreadyDone = conferenceReviewTopics.filter(t => t.source_item_id).length;
+
+    if (pending.length === 0) {
+        planEl.textContent = alreadyDone > 0
+            ? `Nothing pending. ${alreadyDone} subject(s) already have draft records.`
+            : 'No approved subjects to generate.';
+        return;
+    }
+
+    planEl.textContent =
+        `${pending.length} subject(s) pending → ` +
+        `${generations} generated image(s) (~${Math.round(generations * 21 / 60 * 10) / 10} min), ` +
+        `${searches} SerpAPI search(es) downloading up to ${searches * perSearch} image(s).` +
+        (alreadyDone > 0 ? ` ${alreadyDone} already done, skipped.` : '');
+}
+
+async function startConferenceDispatch() {
+    if (!openConferenceReviewId) return;
+
+    const imagesPerSearch = Number(
+        document.getElementById('conferenceImagesPerSearch').value
+    );
+
+    const response = await fetch(
+        `/api/conference/sessions/${openConferenceReviewId}/generate`,
+        {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imagesPerSearch })
+        }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+        return showToast(result.error || 'Could not start generating.', true);
+    }
+
+    showToast('Generating draft records. This runs in the background.');
+    loadConferenceSessions().catch(console.error);
 }
 
 function renderConferenceSourceText(session) {
@@ -1610,10 +1701,18 @@ function renderConferenceTopic(topic) {
         </div>
     `;
 
+    const statusBadge = {
+        generating: '<span class="conf-badge generate">generating...</span>',
+        done: '<span class="conf-badge search">record created</span>',
+        partial: '<span class="conf-badge sensitive">record, no image</span>',
+        failed: '<span class="conf-badge sensitive">failed</span>'
+    }[topic.status] || '';
+
     return `
         <div class="conf-topic${topic.is_approved ? '' : ' rejected'}" id="confTopic${topic.id}">
             <div class="conf-topic-head">
                 <h4>${escapeHtml(topic.title)}</h4>
+                ${statusBadge}
                 <span class="conf-badge ${escapeHtml(strategy)}">${escapeHtml(strategy)}</span>
                 ${topic.is_sensitive ? '<span class="conf-badge sensitive">sensitive</span>' : ''}
                 <span class="conf-badge">salience ${Number(topic.salience || 0).toFixed(2)}</span>
@@ -1625,6 +1724,7 @@ function renderConferenceTopic(topic) {
                 </label>
             </div>
             <div class="conf-desc">${escapeHtml(topic.description || '')}</div>
+            ${topic.error ? `<div class="conference-meta" style="color:var(--coral)">${escapeHtml(topic.error)}</div>` : ''}
             ${field('Trigger phrases (Play Mode matching)', topic.cleaned_trigger_text, topic.id, 'cleaned_trigger_text')}
             ${showPrompt ? field('ComfyUI positive prompt', topic.positive_prompt, topic.id, 'positive_prompt') : ''}
             ${showSearch ? field('SerpAPI query', topic.search_query, topic.id, 'search_query') : ''}

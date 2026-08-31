@@ -33,6 +33,7 @@ function discardUploadedChunk(file) {
 function createConferenceRoutes({
     conferenceService,
     conferenceProcessingService,
+    conferenceDispatchService,
     chunkUpload
 }) {
     const router = express.Router();
@@ -206,6 +207,33 @@ function createConferenceRoutes({
             });
         } catch (error) {
             console.error('Conference processing failed to start:', error);
+
+            res.status(400).json({
+                success: false,
+                error: error.message
+            });
+        }
+    });
+
+    /**
+     * Generates images and draft records for the approved subjects.
+     *
+     * Like processing, this returns as soon as the job is accepted; ComfyUI
+     * alone runs about 20 seconds per image.
+     */
+    router.post('/api/conference/sessions/:id/generate', (req, res) => {
+        try {
+            const session = conferenceDispatchService.dispatchConference(
+                Number(req.params.id),
+                { imagesPerSearch: req.body ? req.body.imagesPerSearch : undefined }
+            );
+
+            res.json({
+                success: true,
+                session
+            });
+        } catch (error) {
+            console.error('Conference dispatch failed to start:', error);
 
             res.status(400).json({
                 success: false,

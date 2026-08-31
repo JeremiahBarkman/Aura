@@ -495,5 +495,9 @@ async function importImageSearchResults({
 
 module.exports = {
     importImageSearchResult,
-    importImageSearchResults
+    importImageSearchResults,
+    // Conference dispatch attaches several search results to one record rather
+    // than creating a record per image, so it reuses the download half of this
+    // service without the record-building half.
+    downloadImageToLocalFile
 };

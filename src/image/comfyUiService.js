@@ -119,15 +119,20 @@ function injectPrompt(workflow, positivePrompt, negativePrompt = DEFAULT_NEGATIV
     return workflow;
 }
 
-async function queueWorkflow(positivePrompt = null) {
+async function queueWorkflow(positivePrompt = null, negativePrompt = null) {
     let workflow = refreshWorkflowSeeds(loadWorkflowTemplate());
 
     if (positivePrompt) {
-        // Settings UI override takes precedence over the built-in default.
-        const negativePrompt =
-            auraConfig.readConfig().negativePrompt || DEFAULT_NEGATIVE_PROMPT;
+        // Precedence: a negative supplied for this specific image, then the
+        // Settings UI override, then the built-in default. Conference subjects
+        // carry their own subject-specific exclusions; everything else passes
+        // null and keeps the previous behaviour exactly.
+        const resolvedNegative =
+            negativePrompt ||
+            auraConfig.readConfig().negativePrompt ||
+            DEFAULT_NEGATIVE_PROMPT;
 
-        workflow = injectPrompt(workflow, positivePrompt, negativePrompt);
+        workflow = injectPrompt(workflow, positivePrompt, resolvedNegative);
     }
 
     const response = await fetch(`${comfyBaseUrl}/prompt`, {
@@ -237,8 +242,8 @@ function persistGeneratedImageToStorage(sourcePath) {
     }
 }
 
-async function generateImageFromWorkflow(positivePrompt = null) {
-    const queued = await queueWorkflow(positivePrompt);
+async function generateImageFromWorkflow(positivePrompt = null, negativePrompt = null) {
+    const queued = await queueWorkflow(positivePrompt, negativePrompt);
 
     const promptId = queued.prompt_id;
 
