@@ -32,11 +32,18 @@ async function checkComfyUiHealth() {
 }
 
 /**
- * Asks ComfyUI to drop its models out of VRAM.
+ * Asks ComfyUI to drop its models out of VRAM, so the extraction model has the
+ * card to itself.
  *
- * Aura's other GPU consumers do not fit alongside it on a smaller card: with
- * ComfyUI holding SDXL, a 24B extraction model sat 48% GPU-resident on an 8 GB
- * board and one 38-minute meeting took 18 minutes to process.
+ * Measured benefit on an 8 GB RTX 4060 Ti: none. The 24B extraction model
+ * needs 10.8 GB at a 21.5k context, so it cannot fit either way, and it loaded
+ * at exactly 48% GPU-resident whether ComfyUI held 4 GB or nothing -- Windows
+ * WDDM oversubscribes VRAM and pages the idle allocation out under pressure,
+ * so the contention this was written to remove was already being handled.
+ *
+ * Kept because that result is specific to a card the model cannot fit on. Where
+ * it can fit, 4 GB is the difference between fitting and not, and the call
+ * costs about a second.
  *
  * Deliberately not "stop ComfyUI". Aura only holds a handle to that process
  * when it spawned it (COMFYUI_AUTOSTART with port 8188 free at launch), so a
@@ -80,7 +87,15 @@ async function freeMemory() {
     }
 }
 
-async function readTorchVram() {
+/**
+ * Free VRAM on the device, as ComfyUI reports it.
+ *
+ * Deliberately vram_free and not torch_vram_total. On a device using the
+ * cudaMallocAsync allocator, torch's own pool reads 32 MB while SDXL occupies
+ * nearly 4 GB -- measured on an RTX 4060 Ti -- so watching the torch figure
+ * would see almost nothing move.
+ */
+async function readFreeVram() {
     const response = await fetch(`${comfyBaseUrl}/system_stats`);
 
     if (!response.ok) {
@@ -90,7 +105,7 @@ async function readTorchVram() {
     const stats = await response.json();
     const device = (stats.devices || [])[0];
 
-    return device ? Number(device.torch_vram_total) || 0 : null;
+    return device ? Number(device.vram_free) || 0 : null;
 }
 
 /**
@@ -107,42 +122,59 @@ async function readTorchVram() {
  * blocking a conference on a service that is only an optimization.
  */
 async function waitForVramRelease(timeoutMs = 15000, pollMs = 250) {
-    const before = await readTorchVram();
+    const initial = await readFreeVram();
 
-    if (before === null) {
+    if (initial === null) {
         return true;
     }
 
-    if (before === 0) {
-        console.log('[AURA COMFY] ComfyUI was already holding no VRAM.');
-        return true;
-    }
+    const startedAt = Date.now();
+    const deadline = startedAt + timeoutMs;
 
-    const deadline = Date.now() + timeoutMs;
+    // Waits for free VRAM to stop rising rather than for a fixed target,
+    // because how much is about to come back depends on which checkpoints
+    // ComfyUI happens to have loaded. A plateau means the unload finished; a
+    // plateau at the starting value means there was nothing to unload.
+    const NOISE_BYTES = 10 * 1024 * 1024;
+    const STABLE_POLLS = 3;
+
+    let best = initial;
+    let stablePolls = 0;
 
     while (Date.now() < deadline) {
         await sleep(pollMs);
 
-        const now = await readTorchVram();
+        const now = await readFreeVram();
 
         if (now === null) {
             return true;
         }
 
-        // Released rather than merely reduced. A little residue is normal --
-        // the allocator does not return every block.
-        if (now <= before * 0.25) {
+        if (now > best + NOISE_BYTES) {
+            best = now;
+            stablePolls = 0;
+            continue;
+        }
+
+        stablePolls += 1;
+
+        if (stablePolls >= STABLE_POLLS) {
+            const released = best - initial;
+            const seconds = ((Date.now() - startedAt) / 1000).toFixed(1);
+
             console.log(
-                `[AURA COMFY] Released ${((before - now) / 1e9).toFixed(2)} GB of VRAM ` +
-                `in ${((timeoutMs - (deadline - Date.now())) / 1000).toFixed(1)}s.`
+                released > NOISE_BYTES
+                    ? `[AURA COMFY] Released ${(released / 1e9).toFixed(2)} GB of VRAM in ${seconds}s ` +
+                      `(${(best / 1e9).toFixed(2)} GB now free).`
+                    : `[AURA COMFY] ComfyUI had no VRAM to release (${(best / 1e9).toFixed(2)} GB free).`
             );
+
             return true;
         }
     }
 
     console.warn(
-        `[AURA COMFY] ComfyUI still holds ${(before / 1e9).toFixed(2)} GB after ` +
-        `${timeoutMs / 1000}s; continuing anyway.`
+        `[AURA COMFY] Free VRAM was still moving after ${timeoutMs / 1000}s; continuing anyway.`
     );
 
     return false;

@@ -147,14 +147,17 @@ async function runPipeline(id) {
         conferenceService.setStatus(id, 'extracting');
 
         /*
-            Extraction is the most memory-hungry thing Aura does -- a 24B model
-            with a context sized to the whole transcript. ComfyUI holding SDXL
-            alongside it is what pushes the model onto the CPU and turns a long
-            meeting into a long wait.
+            Give the extraction model as much of the card as possible. It is
+            the most memory-hungry thing Aura does -- a 24B model with a context
+            sized to the whole transcript.
+
+            This measurably changes nothing on an 8 GB card, where the model
+            cannot fit regardless (see comfyUiService.freeMemory). It is here
+            for hardware where it can, and costs about a second.
 
             Asked for after transcription rather than before, so Whisper is
-            already done with the GPU and this is not paid for a session that
-            fails before it reaches the model.
+            already done with the GPU and a session that fails earlier never
+            pays for it.
         */
         await comfyUiService.freeMemory();
 
