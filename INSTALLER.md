@@ -8,10 +8,23 @@ Packaging and deployment.
 npm run stage         # scripts/stage-resources.js — stages native binaries for packaging
 npm run check:docs    # scripts/check-docs-sync.js — fails if the two doc copies differ
 npm run sync:docs     # same script with --fix: copies docs/ over installer/
-npm run dist          # electron-builder NSIS installer (predist runs `check:docs` + `stage`)
+npm run dist          # electron-builder NSIS installer (predist runs `check:docs` + `stage`; postdist stages the .exe into installer/)
 npm run dist:dir      # unpacked build output only, no installer (predist:dir runs the same two)
+npm run stage:installer  # scripts/stage-installer.js — copy the built .exe into installer/ on its own
 npm run build:prereq  # scripts/build-prereq-bundle.js — rebuilds installer/prerequisites.zip
 ```
+
+## scripts/stage-installer.js
+
+electron-builder writes to `dist/`, but `installer/` is the folder testers actually receive — `START HERE.txt`, `prerequisites.zip`, the documentation set and the `.exe`. Nothing moved the build into it, so that copy was done by hand and stopped being done. After the 0.7.0 build, `installer/` still held `Aura Installer v0.6.7.exe` while `START HERE.txt` told testers to run `v0.7.0` — a file that was not there, next to one the instructions did not mention.
+
+Runs from `postdist`. It removes superseded `.exe` files from `installer/`, copies in the current one, and verifies the copy is byte-complete. The build output stays in `dist/`, so nothing it removes is unrecoverable.
+
+Before touching anything it **hard-fails if `START HERE.txt` names a version other than the one just built** — the specific mistake that shipped, since the instructions named `v0.6.6` through an entire `0.6.7` release. A failure leaves the existing tester package untouched rather than half-updated.
+
+The artifact filename is derived from `build.artifactName`, not hardcoded, so changing that template does not leave this looking for a file electron-builder no longer produces. The `.exe.blockmap` is deliberately not staged: it exists for differential auto-updates and Aura has no updater.
+
+`dist/` accumulates every build (v0.6.6, v0.6.7 and v0.7.0 are all there, ~400 MB). electron-builder does not prune it and neither does this — `installer/` is the folder that has to be right.
 
 ## scripts/check-docs-sync.js
 

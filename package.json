@@ -11,6 +11,8 @@
     "sync:docs": "node scripts/check-docs-sync.js --fix",
     "predist": "node scripts/check-docs-sync.js && node scripts/stage-resources.js",
     "dist": "electron-builder",
+    "postdist": "node scripts/stage-installer.js",
+    "stage:installer": "node scripts/stage-installer.js",
     "predist:dir": "node scripts/check-docs-sync.js && node scripts/stage-resources.js",
     "dist:dir": "electron-builder --dir",
     "build:prereq": "node scripts/build-prereq-bundle.js"
