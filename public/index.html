@@ -41,7 +41,7 @@
   .studio-side #activePlayMatch{margin-top:7px!important;max-height:116px;overflow:auto}
   .studio-side input[type=range]{height:16px}
 }
-.conference-sources{display:flex;flex-direction:column;gap:8px;margin-top:4px}.conference-check{display:flex;align-items:center;gap:9px;margin:0;font:14px 'IBM Plex Sans',sans-serif;color:var(--secondary);text-transform:none;letter-spacing:0}.conference-check input{width:auto;margin:0}#conferenceStatus:empty{display:none}.conference-consent{margin-top:14px;padding:11px 13px;border:1px solid var(--b2);border-left:3px solid var(--amber);border-radius:8px;background:rgba(227,181,127,.06);font:13px/1.55 'IBM Plex Sans',sans-serif;color:var(--secondary)}.conference-hint{margin-top:10px;font:13px/1.6 'IBM Plex Sans',sans-serif;color:var(--secondary)}.conference-meta{font:13px 'IBM Plex Mono';color:var(--label);margin-top:6px}
+.conference-sources{display:flex;flex-direction:column;gap:8px;margin-top:4px}.conference-check{display:flex;align-items:center;gap:9px;margin:0;font:14px 'IBM Plex Sans',sans-serif;color:var(--secondary);text-transform:none;letter-spacing:0}.conference-check input{width:auto;margin:0}#conferenceStatus:empty{display:none}.conf-topic{border:1px solid var(--b1);background:var(--panel);border-radius:12px;padding:14px;margin-bottom:12px}.conf-topic.rejected{opacity:.5}.conf-topic-head{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}.conf-topic-head h4{margin:0;font-size:15px;flex:1;min-width:160px}.conf-badge{font:11px 'IBM Plex Mono';letter-spacing:.06em;padding:3px 9px;border-radius:20px;border:1px solid var(--b3);color:var(--label);white-space:nowrap}.conf-badge.generate{background:#2a2016;border-color:var(--b4);color:var(--amber)}.conf-badge.search{background:#12301d;border-color:#2e7d4f;color:#7ee7a5}.conf-badge.both{background:#1e2438;border-color:#3d4a75;color:#9fb4e8}.conf-badge.sensitive{background:#3a2a12;border-color:#7d5a1f;color:#e0b15c}.conf-field{margin-top:9px}.conf-field label{font:11px 'IBM Plex Mono';letter-spacing:.1em;color:var(--label);display:block;margin-bottom:4px;text-transform:uppercase}.conf-field textarea{min-height:52px;font-size:13px;margin:0}.conf-desc{font:13px/1.6 'IBM Plex Sans',sans-serif;color:var(--secondary);margin-bottom:4px}.conf-approve{display:flex;align-items:center;gap:7px;font:13px 'IBM Plex Sans',sans-serif;color:var(--secondary);margin:0;text-transform:none;letter-spacing:0}.conf-approve input{width:auto;margin:0}.conf-st dt{font:11px 'IBM Plex Mono';letter-spacing:.1em;color:var(--label);text-transform:uppercase;margin-top:12px}.conf-st dd{margin:5px 0 0;font:13px/1.6 'IBM Plex Sans',sans-serif;color:var(--secondary)}.conf-st ul{margin:5px 0 0;padding-left:18px;color:var(--secondary);font:13px/1.7 'IBM Plex Sans',sans-serif}.conference-consent{margin-top:14px;padding:11px 13px;border:1px solid var(--b2);border-left:3px solid var(--amber);border-radius:8px;background:rgba(227,181,127,.06);font:13px/1.55 'IBM Plex Sans',sans-serif;color:var(--secondary)}.conference-hint{margin-top:10px;font:13px/1.6 'IBM Plex Sans',sans-serif;color:var(--secondary)}.conference-meta{font:13px 'IBM Plex Mono';color:var(--label);margin-top:6px}
 </style></head>
 <body>
 <div class="app-shell">
@@ -140,6 +140,12 @@
   </div>
   <div class="panel-title" style="margin-top:20px" data-i18n="conf.sessions">Recorded Sessions</div>
   <div id="conferenceSessions" class="records-grid"><div class="empty">Loading...</div></div>
+  <div id="conferenceReview" style="display:none">
+   <div style="display:flex;align-items:baseline;gap:12px;margin:24px 0 4px"><div class="panel-title" style="margin:0" data-i18n="conf.review">Review</div><span id="conferenceReviewMeta" class="active-meta"></span><button class="secondary" style="margin-left:auto" onclick="closeConferenceReview()" data-i18n="conf.closeReview">Close</button></div>
+   <div class="panel" id="conferenceSourceText"></div>
+   <div class="panel-title" style="margin-top:20px" data-i18n="conf.subjects">Subjects</div>
+   <div id="conferenceTopics"></div>
+  </div>
  </div>
  <aside class="import-side"><div style="display:flex;align-items:center;gap:6px;margin-bottom:12px"><div class="panel-title" data-i18n="conf.target" style="margin-bottom:0">Conference Target</div><span class="info-icon" title="Records produced from this meeting will be assigned to this group as drafts."><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.6"></circle><circle cx="8" cy="4.6" r="1.1" fill="currentColor"></circle><rect x="7.1" y="6.8" width="1.8" height="5.3" rx="0.9" fill="currentColor"></rect></svg></span></div><label data-i18n="conf.targetGroup">Target Group</label><select id="conferenceGroupSelect"><option value="" data-i18n="rec.noGroup">No Specific Group</option></select>
   <div class="eyebrow" style="margin-top:24px" data-i18n="conf.howItWorks">HOW IT WORKS</div>
@@ -1419,6 +1425,13 @@ async function finishConferenceSession() {
     loadConferenceSessions().catch(console.error);
 }
 
+// Statuses where work is running server-side and the list should refresh
+// itself rather than waiting for the user to click something.
+const CONFERENCE_BUSY_STATUSES = new Set(['transcribing', 'extracting']);
+
+let conferencePollTimer = null;
+let openConferenceReviewId = null;
+
 async function loadConferenceSessions() {
     const container = document.getElementById('conferenceSessions');
 
@@ -1431,23 +1444,216 @@ async function loadConferenceSessions() {
 
     if (sessions.length === 0) {
         container.innerHTML = '<div class="empty">No conferences recorded yet.</div>';
-        return;
+    } else {
+        container.innerHTML = sessions.map(renderConferenceSessionCard).join('');
     }
 
-    container.innerHTML = sessions.map(session => `
+    // Processing runs for minutes in the background; poll while any session is
+    // mid-flight and stop as soon as none is, so an idle Conference view is
+    // not making requests forever.
+    const busy = sessions.some(s => CONFERENCE_BUSY_STATUSES.has(s.status));
+
+    clearTimeout(conferencePollTimer);
+
+    if (busy) {
+        conferencePollTimer = setTimeout(
+            () => loadConferenceSessions().catch(console.error),
+            4000
+        );
+    }
+
+    if (openConferenceReviewId) {
+        await openConferenceReview(openConferenceReviewId, true);
+    }
+}
+
+function renderConferenceSessionCard(session) {
+    const busy = CONFERENCE_BUSY_STATUSES.has(session.status);
+
+    const statusLabel = {
+        recording: 'Recording',
+        recorded: 'Recorded',
+        transcribing: 'Transcribing...',
+        extracting: 'Extracting subjects...',
+        review: `Ready for review · ${session.topic_count} subject(s)`,
+        failed: 'Failed'
+    }[session.status] || session.status;
+
+    const actions = [];
+
+    if (session.status === 'recorded' || session.status === 'failed') {
+        actions.push(`<button onclick="startConferenceProcessing(${session.id})">${session.status === 'failed' ? 'Retry Processing' : 'Process Meeting'}</button>`);
+    }
+
+    if (session.status === 'review') {
+        actions.push(`<button onclick="openConferenceReview(${session.id})">Review</button>`);
+        actions.push(`<button class="secondary" onclick="startConferenceProcessing(${session.id})">Re-process</button>`);
+    }
+
+    actions.push(`<button class="danger" onclick="deleteConferenceSession(${session.id})">Delete</button>`);
+
+    return `
         <div class="record-card">
             <h3>${escapeHtml(session.title)}</h3>
             <div class="conference-meta">
                 ${escapeHtml(formatConferenceTimestamp(session.created_at))}<br>
                 ${formatConferenceDuration(session.duration_ms)} ·
-                ${session.chunk_count} segment(s) ·
-                ${escapeHtml(session.status)}
+                ${session.chunk_count} segment(s)<br>
+                ${busy ? '<span class="aura-spinner" style="margin:0 6px 0 0"></span>' : ''}${escapeHtml(statusLabel)}
             </div>
-            <div class="button-row">
-                <button class="danger" onclick="deleteConferenceSession(${session.id})">Delete</button>
-            </div>
+            ${session.error ? `<div class="conference-meta" style="color:var(--coral)">${escapeHtml(session.error)}</div>` : ''}
+            <div class="button-row">${actions.join('')}</div>
         </div>
-    `).join('');
+    `;
+}
+
+async function startConferenceProcessing(sessionId) {
+    const response = await fetch(`/api/conference/sessions/${sessionId}/process`, {
+        method: 'POST'
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+        return showToast(result.error || 'Could not start processing.', true);
+    }
+
+    showToast('Processing started. Transcription and extraction run in the background.');
+    loadConferenceSessions().catch(console.error);
+}
+
+function closeConferenceReview() {
+    openConferenceReviewId = null;
+    document.getElementById('conferenceReview').style.display = 'none';
+}
+
+/*
+    Renders the review for one session.
+
+    `quiet` is passed by the poll loop: it re-renders in place without
+    scrolling, so a background refresh while the user is reading does not yank
+    the page back to the top.
+*/
+async function openConferenceReview(sessionId, quiet = false) {
+    const response = await fetch(`/api/conference/sessions/${sessionId}`);
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+        return showToast(result.error || 'Could not load the conference.', true);
+    }
+
+    const session = result.session;
+
+    openConferenceReviewId = sessionId;
+
+    const panel = document.getElementById('conferenceReview');
+    panel.style.display = 'block';
+
+    const approved = session.topics.filter(t => t.is_approved).length;
+
+    document.getElementById('conferenceReviewMeta').textContent =
+        `${escapeHtml(session.title)} · ${approved} of ${session.topics.length} subject(s) approved`;
+
+    document.getElementById('conferenceSourceText').innerHTML =
+        renderConferenceSourceText(session);
+
+    document.getElementById('conferenceTopics').innerHTML =
+        session.topics.map(renderConferenceTopic).join('');
+
+    if (!quiet) {
+        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+function renderConferenceSourceText(session) {
+    const st = session.sourceText;
+
+    if (!st) {
+        return '<div class="empty">No source text was produced.</div>';
+    }
+
+    const list = (items) => items.length
+        ? `<ul>${items.map(i => `<li>${escapeHtml(i)}</li>`).join('')}</ul>`
+        : '<dd>None.</dd>';
+
+    const actions = (st.action_items || []).map(a =>
+        `${escapeHtml(a.task || '')}${a.owner ? ` — ${escapeHtml(a.owner)}` : ''}${a.due ? ` (${escapeHtml(a.due)})` : ''}`
+    );
+
+    return `
+        <div class="panel-title" style="margin:0 0 10px">Source Text</div>
+        <dl class="conf-st" style="margin:0">
+            <dt>Abstract</dt><dd>${escapeHtml(st.abstract || '')}</dd>
+            <dt>Summary</dt><dd>${escapeHtml(st.summary || '')}</dd>
+            <dt>Key Points</dt>${list(st.key_points || [])}
+            <dt>Decisions</dt>${list(st.decisions || [])}
+            <dt>Action Items</dt>${list(actions)}
+            <dt>Open Questions</dt>${list(st.open_questions || [])}
+            <dt>Keywords</dt><dd>${escapeHtml((st.keywords || []).join(', '))}</dd>
+            <dt>Sensitivity</dt><dd>${escapeHtml(st.sensitivity || '')}</dd>
+        </dl>
+    `;
+}
+
+function renderConferenceTopic(topic) {
+    const strategy = topic.image_strategy || 'none';
+
+    // Only show the fields the strategy will actually dispatch, so the review
+    // reflects what Aura is going to do rather than everything the model said.
+    const showPrompt = strategy === 'generate' || strategy === 'both';
+    const showSearch = strategy === 'search' || strategy === 'both';
+
+    const field = (label, value, topicId, key) => `
+        <div class="conf-field">
+            <label>${label}</label>
+            <textarea onchange="saveConferenceTopicField(${topicId}, '${key}', this.value)">${escapeHtml(value || '')}</textarea>
+        </div>
+    `;
+
+    return `
+        <div class="conf-topic${topic.is_approved ? '' : ' rejected'}" id="confTopic${topic.id}">
+            <div class="conf-topic-head">
+                <h4>${escapeHtml(topic.title)}</h4>
+                <span class="conf-badge ${escapeHtml(strategy)}">${escapeHtml(strategy)}</span>
+                ${topic.is_sensitive ? '<span class="conf-badge sensitive">sensitive</span>' : ''}
+                <span class="conf-badge">salience ${Number(topic.salience || 0).toFixed(2)}</span>
+                <span class="conf-badge">confidence ${Number(topic.confidence || 0).toFixed(2)}</span>
+                <label class="conf-approve">
+                    <input type="checkbox" ${topic.is_approved ? 'checked' : ''}
+                        onchange="saveConferenceTopicField(${topic.id}, 'is_approved', this.checked)">
+                    Approve
+                </label>
+            </div>
+            <div class="conf-desc">${escapeHtml(topic.description || '')}</div>
+            ${field('Trigger phrases (Play Mode matching)', topic.cleaned_trigger_text, topic.id, 'cleaned_trigger_text')}
+            ${showPrompt ? field('ComfyUI positive prompt', topic.positive_prompt, topic.id, 'positive_prompt') : ''}
+            ${showSearch ? field('SerpAPI query', topic.search_query, topic.id, 'search_query') : ''}
+        </div>
+    `;
+}
+
+async function saveConferenceTopicField(topicId, key, value) {
+    const response = await fetch(`/api/conference/topics/${topicId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [key]: value })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+        return showToast(result.error || 'Could not save the change.', true);
+    }
+
+    if (key === 'is_approved') {
+        const card = document.getElementById(`confTopic${topicId}`);
+        if (card) card.classList.toggle('rejected', !value);
+
+        // Keep the approved count in the header honest without a full reload.
+        if (openConferenceReviewId) {
+            openConferenceReview(openConferenceReviewId, true).catch(console.error);
+        }
+    }
 }
 
 async function deleteConferenceSession(sessionId) {

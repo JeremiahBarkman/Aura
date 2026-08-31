@@ -156,7 +156,11 @@ function getSessionRow(conferenceId) {
 }
 
 /**
- * Returns one session with its chunks in capture order.
+ * Returns one session with its chunks in capture order and its topics.
+ *
+ * source_text_json is parsed here so callers never deal with the raw column. A
+ * malformed value degrades to null rather than throwing -- it is display data,
+ * and losing it should not make the session unreadable.
  *
  * @param {number} conferenceId
  * @returns {Object|null}
@@ -175,10 +179,201 @@ function getSession(conferenceId) {
         ORDER BY chunk_index
     `).all(conferenceId);
 
+    let sourceText = null;
+
+    if (session.source_text_json) {
+        try {
+            sourceText = JSON.parse(session.source_text_json);
+        } catch (error) {
+            console.warn(
+                `[AURA CONFERENCE] Unreadable source_text_json on conference ${conferenceId}:`,
+                error.message
+            );
+        }
+    }
+
     return {
         ...session,
-        chunks
+        sourceText,
+        chunks,
+        topics: listTopics(conferenceId)
     };
+}
+
+/**
+ * Sets the session status, and the error message that goes with it.
+ *
+ * `error` is cleared on every transition that does not supply one, so a
+ * message from a failed run cannot outlive the run and appear against a
+ * later, successful one.
+ */
+function setStatus(conferenceId, status, error = null) {
+    db.prepare(`
+        UPDATE conferences
+        SET status = ?, error = ?
+        WHERE id = ?
+    `).run(status, error, conferenceId);
+}
+
+function saveTranscript(conferenceId, transcript, language = null) {
+    db.prepare(`
+        UPDATE conferences
+        SET transcript = ?,
+            language = COALESCE(?, language)
+        WHERE id = ?
+    `).run(transcript, language, conferenceId);
+}
+
+/**
+ * Replaces a conference's extraction output.
+ *
+ * Topics are deleted and rewritten rather than merged, so re-processing a
+ * meeting produces the same result as processing it the first time. Written in
+ * one transaction because a half-replaced topic list is worse than either the
+ * old one or the new one.
+ */
+const saveExtraction = db.transaction((conferenceId, { sourceText, language, topics }) => {
+    db.prepare(`
+        UPDATE conferences
+        SET source_text_json = ?,
+            language = COALESCE(?, language)
+        WHERE id = ?
+    `).run(
+        sourceText ? JSON.stringify(sourceText) : null,
+        language,
+        conferenceId
+    );
+
+    db.prepare('DELETE FROM conference_topics WHERE conference_id = ?')
+        .run(conferenceId);
+
+    const insert = db.prepare(`
+        INSERT INTO conference_topics (
+            conference_id, subject_id, order_index, title, description,
+            visual_concept, image_strategy, positive_prompt, negative_prompt,
+            search_query, alt_queries, original_trigger_text,
+            cleaned_trigger_text, salience, confidence, is_sensitive, raw_json
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    for (const topic of topics) {
+        insert.run(
+            conferenceId,
+            topic.subjectId,
+            topic.orderIndex,
+            topic.title,
+            topic.description,
+            topic.visualConcept,
+            topic.imageStrategy,
+            topic.positivePrompt,
+            topic.negativePrompt,
+            topic.searchQuery,
+            JSON.stringify(topic.altQueries || []),
+            topic.triggerCandidateText,
+            topic.cleanedTriggerText,
+            topic.salience,
+            topic.confidence,
+            topic.isSensitive ? 1 : 0,
+            JSON.stringify(topic.raw || {})
+        );
+    }
+});
+
+function listTopics(conferenceId) {
+    const rows = db.prepare(`
+        SELECT * FROM conference_topics
+        WHERE conference_id = ?
+        ORDER BY order_index, id
+    `).all(conferenceId);
+
+    return rows.map(row => ({
+        ...row,
+        alt_queries: parseJsonColumn(row.alt_queries, [])
+    }));
+}
+
+function parseJsonColumn(value, fallback) {
+    if (!value) {
+        return fallback;
+    }
+
+    try {
+        return JSON.parse(value);
+    } catch (error) {
+        return fallback;
+    }
+}
+
+/**
+ * Fields the review screen may correct before anything is dispatched.
+ *
+ * Restricted to the four the user actually reviews. Letting the client patch
+ * arbitrary columns would put status and foreign keys within reach of the
+ * review form for no benefit.
+ */
+const EDITABLE_TOPIC_FIELDS = new Set([
+    'title',
+    'description',
+    'positive_prompt',
+    'search_query',
+    'cleaned_trigger_text',
+    'image_strategy',
+    'is_approved'
+]);
+
+function updateTopic(topicId, patch = {}) {
+    const assignments = [];
+    const values = [];
+
+    for (const [key, value] of Object.entries(patch)) {
+        if (!EDITABLE_TOPIC_FIELDS.has(key)) {
+            continue;
+        }
+
+        assignments.push(`${key} = ?`);
+
+        values.push(
+            key === 'is_approved'
+                ? (value ? 1 : 0)
+                : value
+        );
+    }
+
+    if (assignments.length === 0) {
+        throw new Error('No editable fields were supplied.');
+    }
+
+    values.push(topicId);
+
+    const result = db.prepare(`
+        UPDATE conference_topics
+        SET ${assignments.join(', ')}
+        WHERE id = ?
+    `).run(...values);
+
+    if (result.changes === 0) {
+        throw new Error(`Conference topic ${topicId} not found.`);
+    }
+
+    return db.prepare('SELECT * FROM conference_topics WHERE id = ?').get(topicId);
+}
+
+/**
+ * Returns conferences stuck in a transient status to 'recorded'.
+ *
+ * Called at startup: the job registry is in-process, so anything left in
+ * transcribing/extracting by a restart has nothing working on it.
+ */
+function resetInFlightStatuses() {
+    const result = db.prepare(`
+        UPDATE conferences
+        SET status = 'recorded',
+            error = 'Processing was interrupted by a restart.'
+        WHERE status IN ('transcribing', 'extracting')
+    `).run();
+
+    return result.changes;
 }
 
 /**
@@ -188,14 +383,17 @@ function getSession(conferenceId) {
  * @returns {Array}
  */
 function listSessions(limit = 50) {
+    // Counted with scalar subqueries rather than two JOINs: joining both child
+    // tables multiplies their rows against each other, which would report
+    // chunks x topics for every session that has both.
     return db.prepare(`
         SELECT
             c.*,
-            COUNT(ch.id) AS chunk_count
+            (SELECT COUNT(*) FROM conference_chunks ch
+              WHERE ch.conference_id = c.id) AS chunk_count,
+            (SELECT COUNT(*) FROM conference_topics t
+              WHERE t.conference_id = c.id) AS topic_count
         FROM conferences c
-        LEFT JOIN conference_chunks ch
-            ON ch.conference_id = c.id
-        GROUP BY c.id
         ORDER BY c.id DESC
         LIMIT ?
     `).all(limit);
@@ -263,5 +461,11 @@ module.exports = {
     finishSession,
     getSession,
     listSessions,
-    deleteSession
+    deleteSession,
+    setStatus,
+    saveTranscript,
+    saveExtraction,
+    listTopics,
+    updateTopic,
+    resetInFlightStatuses
 };

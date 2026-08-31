@@ -36,6 +36,7 @@ en: {
     'conf.title': 'Aura Conference', 'conf.record': 'Record a Meeting', 'conf.sessionTitle': 'Session Title', 'conf.sessionTitlePh': 'Leave blank to name it by date',
     'conf.audioSources': 'Audio Sources', 'conf.systemAudio': 'System audio (other participants)', 'conf.micAudio': 'Microphone (you)', 'conf.mic': 'Microphone',
     'conf.start': 'Start Recording', 'conf.stop': 'Stop Recording', 'conf.recordingTitle': 'Aura Conference is recording', 'conf.sessions': 'Recorded Sessions',
+    'conf.review': 'Review', 'conf.closeReview': 'Close', 'conf.subjects': 'Subjects',
     'conf.consent': 'Everyone on the call is being recorded. Make sure participants have agreed before you start — in many places recording without consent is unlawful.',
     'conf.target': 'Conference Target', 'conf.targetGroup': 'Target Group', 'conf.howItWorks': 'HOW IT WORKS',
     'conf.howItWorksBody': 'Aura records the meeting in short segments so nothing is lost if something goes wrong. Transcription and record generation run after you stop, so the call itself stays fast.',

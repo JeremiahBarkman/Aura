@@ -99,6 +99,11 @@ CREATE TABLE IF NOT EXISTS conferences (
     language TEXT,
     group_id INTEGER,
     error TEXT,
+    -- The meeting-level source_text object from the extraction model: the
+    -- archival summary plus key points, decisions, action items, open
+    -- questions and keywords. Stored whole rather than split into columns
+    -- because Aura displays it and does not query into it.
+    source_text_json TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (group_id)
@@ -126,6 +131,50 @@ CREATE TABLE IF NOT EXISTS conference_chunks (
     FOREIGN KEY (conference_id)
         REFERENCES conferences(id)
         ON DELETE CASCADE
+);
+
+-- One subject of discussion extracted from a conference transcript.
+--
+-- The extraction model returns considerably more per subject than Aura
+-- dispatches (style tags, shot type, span markers, entities, search intent and
+-- rejection hints). The fields Aura acts on or displays are columns; raw_json
+-- keeps the whole subject object so nothing is lost to a column list written
+-- before the dispatch step exists.
+--
+-- Topics point forward to source_items rather than the other way round, so a
+-- generated draft record is an ordinary Aura record with no conference-shaped
+-- columns bolted onto source_items.
+CREATE TABLE IF NOT EXISTS conference_topics (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    conference_id INTEGER NOT NULL,
+    subject_id TEXT,
+    order_index INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    visual_concept TEXT,
+    image_strategy TEXT NOT NULL DEFAULT 'none',
+    positive_prompt TEXT,
+    negative_prompt TEXT,
+    search_query TEXT,
+    alt_queries TEXT,
+    original_trigger_text TEXT,
+    cleaned_trigger_text TEXT,
+    salience REAL,
+    confidence REAL,
+    is_sensitive INTEGER NOT NULL DEFAULT 0,
+    is_approved INTEGER NOT NULL DEFAULT 1,
+    status TEXT NOT NULL DEFAULT 'pending',
+    source_item_id INTEGER,
+    raw_json TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (conference_id)
+        REFERENCES conferences(id)
+        ON DELETE CASCADE,
+
+    FOREIGN KEY (source_item_id)
+        REFERENCES source_items(id)
+        ON DELETE SET NULL
 );
 
 -- Cached embedding vector for each record's cleaned trigger text, used by
@@ -164,3 +213,6 @@ CREATE INDEX IF NOT EXISTS idx_source_items_group_status
 -- Chunks are always read as a complete session in capture order.
 CREATE INDEX IF NOT EXISTS idx_conference_chunks_conference
     ON conference_chunks(conference_id, chunk_index);
+
+CREATE INDEX IF NOT EXISTS idx_conference_topics_conference
+    ON conference_topics(conference_id, order_index);

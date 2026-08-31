@@ -46,6 +46,8 @@ const createConferenceRoutes = require('./routes/conferenceRoutes');
 
 const conferenceService = require('../conference/conferenceService');
 
+const conferenceProcessingService = require('../conference/conferenceProcessingService');
+
 // -----------------------------------------------------------------------------
 // Express Application State
 // -----------------------------------------------------------------------------
@@ -148,6 +150,11 @@ ensureColumn('generated_images', 'is_active', 'INTEGER NOT NULL DEFAULT 1');
 ensureColumn('generated_images', 'is_favorite', 'INTEGER NOT NULL DEFAULT 0');
 ensureColumn('generated_images', 'deleted_at', 'TEXT');
 
+// conferences shipped before the extraction step existed, so installs created
+// by the capture-only release need this column added rather than picked up
+// from schema.sql.
+ensureColumn('conferences', 'source_text_json', 'TEXT');
+
 for (const dir of [paths.audioDir, paths.conferenceAudioDir, path.join(paths.imagesDir, 'manual'), path.join(paths.imagesDir, 'imports'), paths.generatedImagesDir, paths.backgroundsDir, paths.importsDir]) {
     fs.mkdirSync(dir, { recursive: true });
 }
@@ -189,8 +196,13 @@ app.use(createPlayRoutes({
 
 app.use(createConferenceRoutes({
     conferenceService,
+    conferenceProcessingService,
     chunkUpload: conferenceChunkUpload
 }));
+
+// The processing job registry is in-process, so anything the previous run left
+// in transcribing/extracting has nothing working on it now.
+conferenceProcessingService.resetStaleProcessing();
 
 // -----------------------------------------------------------------------------
 // Record Mode Routes

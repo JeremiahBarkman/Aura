@@ -32,6 +32,7 @@ function discardUploadedChunk(file) {
  */
 function createConferenceRoutes({
     conferenceService,
+    conferenceProcessingService,
     chunkUpload
 }) {
     const router = express.Router();
@@ -181,6 +182,53 @@ function createConferenceRoutes({
             console.error('Conference read failed:', error);
 
             res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+    });
+
+    /**
+     * Starts transcription and extraction.
+     *
+     * Returns as soon as the job is accepted -- the work runs for minutes, and
+     * the client follows it by polling GET /api/conference/sessions/:id.
+     */
+    router.post('/api/conference/sessions/:id/process', async (req, res) => {
+        try {
+            const session = await conferenceProcessingService.processConference(
+                Number(req.params.id)
+            );
+
+            res.json({
+                success: true,
+                session
+            });
+        } catch (error) {
+            console.error('Conference processing failed to start:', error);
+
+            res.status(400).json({
+                success: false,
+                error: error.message
+            });
+        }
+    });
+
+    router.patch('/api/conference/topics/:id', (req, res) => {
+        try {
+            const topic = conferenceService.updateTopic(
+                Number(req.params.id),
+                req.body || {}
+            );
+
+            res.json({
+                success: true,
+                topic
+            });
+        } catch (error) {
+            console.error('Conference topic update failed:', error);
+
+            res.status(400).json({
                 success: false,
                 error: error.message
             });
