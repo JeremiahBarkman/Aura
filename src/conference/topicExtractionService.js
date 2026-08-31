@@ -31,18 +31,37 @@ const OLLAMA_MODEL =
     process.env.OLLAMA_MODEL ||
     'hf.co/byteshape/Devstral-Small-2-24B-Instruct-2512-GGUF:latest';
 
-/**
- * Context budget.
- *
- * Ollama defaults num_ctx to 2048 when a request does not set it. This schema
- * alone runs past that, so leaving it unset means Ollama silently drops the
- * front of the transcript and the model confidently summarises whatever
- * survived. It has to be set explicitly, and sized to the transcript.
- *
- * RESERVED_TOKENS covers the system prompt (~1.6k) plus the response, which
- * for a dozen subjects at this schema runs 3.5-4k.
- */
-const RESERVED_TOKENS = 6500;
+/*
+    Context budget.
+
+    num_ctx has to hold the system prompt, the transcript AND the whole
+    response. Ollama defaults it to 2048 when unset, which this schema exceeds
+    on its own.
+
+    The reserve is computed rather than fixed. A fixed one was the bug behind
+    the first real meeting to fail: 6500 tokens covered a 3-minute test fine,
+    but a 38-minute transcript is ~9.7k tokens on its own, which left about 5k
+    for a response that needed three times that. Generation stopped mid-string,
+    so the JSON never closed and the parse failed with "no JSON object found" --
+    a confusing symptom for what was really an exhausted context window.
+
+    A longer meeting yields more subjects and therefore more output, so the
+    reserve grows with the transcript.
+*/
+
+// Measured: a 3-subject extraction produced ~2,715 output tokens, of which the
+// meeting-level source_text is roughly fixed overhead and the rest scales per
+// subject.
+const SOURCE_TEXT_TOKENS = 1200;
+const TOKENS_PER_SUBJECT = 700;
+const SYSTEM_PROMPT_TOKENS = 1800;
+
+// The prompt asks for 3-12 subjects. Roughly one per 800 transcript tokens
+// (about five minutes of speech) between those bounds.
+const TRANSCRIPT_TOKENS_PER_SUBJECT = 800;
+const MIN_SUBJECTS = 3;
+const MAX_SUBJECTS = 12;
+
 const MIN_CONTEXT_TOKENS = 8192;
 const MAX_CONTEXT_TOKENS = 32768;
 
@@ -59,33 +78,61 @@ function resolveModel() {
 }
 
 /**
- * Picks a context window large enough to hold the transcript and the response.
+ * Sizes the context window and the output allowance for one transcript.
  *
- * Throws rather than truncating. A transcript quietly cut in half produces a
- * plausible, complete-looking result that is wrong about the meeting, which is
- * worse than a clear refusal.
+ * Throws rather than truncating the transcript. A transcript quietly cut in
+ * half produces a plausible, complete-looking result that is wrong about the
+ * meeting, which is worse than a clear refusal.
+ *
+ * @returns {{contextSize: number, outputBudget: number, expectedSubjects: number}}
  */
-function resolveContextSize(transcript) {
-    const needed = estimateTokens(transcript) + RESERVED_TOKENS;
+function resolveBudget(transcript) {
+    const transcriptTokens = estimateTokens(transcript);
+
+    const expectedSubjects = Math.min(
+        MAX_SUBJECTS,
+        Math.max(
+            MIN_SUBJECTS,
+            Math.ceil(transcriptTokens / TRANSCRIPT_TOKENS_PER_SUBJECT)
+        )
+    );
+
+    const outputBudget =
+        SOURCE_TEXT_TOKENS + expectedSubjects * TOKENS_PER_SUBJECT;
+
+    const needed = SYSTEM_PROMPT_TOKENS + transcriptTokens + outputBudget;
 
     if (needed > MAX_CONTEXT_TOKENS) {
-        const minutes = Math.round(estimateTokens(transcript) / 150);
+        // ~250 tokens per minute, measured from a real 38-minute recording
+        // (38,846 transcript characters). Only used to phrase the error in
+        // terms the user recognises.
+        const minutes = Math.round(transcriptTokens / 250);
 
         throw new Error(
-            `Transcript is too long for a single extraction pass ` +
-            `(~${estimateTokens(transcript)} tokens, roughly ${minutes} minutes of speech). ` +
-            `The limit is ${MAX_CONTEXT_TOKENS - RESERVED_TOKENS} tokens.`
+            `Transcript is too long for a single extraction pass: ` +
+            `~${transcriptTokens} tokens (roughly ${minutes} minutes of speech), ` +
+            `which needs a ${needed}-token context once the instructions and a ` +
+            `${outputBudget}-token response are allowed for. The ceiling is ` +
+            `${MAX_CONTEXT_TOKENS}. Record shorter sessions, or process the ` +
+            `meeting in parts.`
         );
     }
 
-    // Round up to a power of two; llama.cpp allocates the KV cache from this
-    // and odd sizes buy nothing.
-    let size = MIN_CONTEXT_TOKENS;
-    while (size < needed) {
-        size *= 2;
-    }
+    /*
+        Rounded to a 512-token boundary, not up to a power of two.
 
-    return Math.min(size, MAX_CONTEXT_TOKENS);
+        The power-of-two version asked for 32768 to cover a 21k requirement --
+        a 55% larger KV cache than needed. On an 8 GB card already sharing VRAM
+        with ComfyUI that was the difference between the model sitting 64% on
+        the GPU and 41%, and generation died mid-stream. The KV cache is
+        allocated from this number, so overshooting it costs real memory.
+    */
+    const contextSize = Math.min(
+        MAX_CONTEXT_TOKENS,
+        Math.max(MIN_CONTEXT_TOKENS, Math.ceil(needed / 512) * 512)
+    );
+
+    return { contextSize, outputBudget, expectedSubjects };
 }
 
 const SYSTEM_PROMPT = `You are the transcript processing engine inside Aura. You receive a raw meeting transcript and return a single structured JSON object. Downstream services consume your output directly: the summary is archived as the meeting's canonical source text, and the per-subject prompts are dispatched to ComfyUI for image generation and to SerpAPI for image search. Nothing you produce is read by a human before it is used, so it must be valid, complete, and self-contained on the first pass.
@@ -298,6 +345,7 @@ async function readStreamedContent(response) {
     let content = '';
     let buffer = '';
     let tokenCount = 0;
+    let doneReason = null;
 
     for await (const chunk of response.body) {
         buffer += decoder.decode(chunk, { stream: true });
@@ -330,13 +378,50 @@ async function readStreamedContent(response) {
                 content += payload.message.content;
                 tokenCount += 1;
             }
+
+            if (payload.done && payload.done_reason) {
+                doneReason = payload.done_reason;
+            }
         }
     }
 
     console.log(
         `[AURA CONFERENCE] Extraction produced ${content.length} chars ` +
-        `across ${tokenCount} streamed tokens.`
+        `across ${tokenCount} streamed tokens (done_reason: ${doneReason || 'unknown'}).`
     );
+
+    /*
+        Ollama reports "length" when generation stopped because it ran out of
+        room rather than because the model finished. Without this the caller
+        sees a truncated response and reports "no JSON object found", which
+        describes the symptom and hides the cause -- exactly what happened to
+        the first real meeting put through this.
+    */
+    if (doneReason === 'length') {
+        throw new Error(
+            'The model ran out of output space before finishing the JSON ' +
+            `(stopped after ${tokenCount} tokens). The meeting produced more ` +
+            'subjects than the response budget allowed for.'
+        );
+    }
+
+    /*
+        Ollama always ends a stream with a done message. Reaching here without
+        one means the connection dropped mid-generation, which on a local model
+        is almost always memory: the requested context pushed more of the model
+        off the GPU than the machine could carry.
+
+        Worth naming, because the visible symptom is a half-written JSON object
+        and every instinct is to go looking at the prompt.
+    */
+    if (!doneReason) {
+        throw new Error(
+            `The model stopped responding after ${tokenCount} tokens without ` +
+            'finishing. This usually means it ran out of memory for the ' +
+            'requested context — close ComfyUI (it holds GPU memory) and try ' +
+            'again, or record shorter sessions.'
+        );
+    }
 
     return content;
 }
@@ -352,13 +437,34 @@ function extractJsonObject(text) {
     const firstBrace = cleaned.indexOf('{');
     const lastBrace = cleaned.lastIndexOf('}');
 
-    if (firstBrace === -1 || lastBrace === -1) {
+    // The full response is logged rather than carried in the error: a failure
+    // here follows a recording and several minutes of generation, and a
+    // 500-character prefix is not enough to tell a truncation from a refusal.
+    // The message itself stays short enough to show in the UI.
+    if (firstBrace === -1 || lastBrace === -1 || lastBrace < firstBrace) {
+        console.error(
+            '[AURA CONFERENCE] Unparseable extraction response:\n' + cleaned
+        );
+
         throw new Error(
-            `No JSON object found in the extraction response:\n${cleaned.slice(0, 500)}`
+            firstBrace === -1
+                ? 'The model returned no JSON at all. See the server log for the full response.'
+                : 'The model\'s JSON was cut off before it closed. See the server log for the full response.'
         );
     }
 
-    return JSON.parse(cleaned.slice(firstBrace, lastBrace + 1));
+    try {
+        return JSON.parse(cleaned.slice(firstBrace, lastBrace + 1));
+    } catch (error) {
+        console.error(
+            '[AURA CONFERENCE] Malformed extraction JSON:\n' + cleaned
+        );
+
+        throw new Error(
+            `The model's JSON did not parse (${error.message}). ` +
+            'See the server log for the full response.'
+        );
+    }
 }
 
 function asString(value) {
@@ -452,7 +558,15 @@ async function extractTopics({ transcript, metadata = {} }) {
     }
 
     const model = resolveModel();
-    const contextSize = resolveContextSize(cleanTranscript);
+
+    const { contextSize, outputBudget, expectedSubjects } =
+        resolveBudget(cleanTranscript);
+
+    console.log(
+        `[AURA CONFERENCE] Extracting ${estimateTokens(cleanTranscript)} transcript tokens ` +
+        `| num_ctx ${contextSize} | output budget ${outputBudget} ` +
+        `(planning for up to ${expectedSubjects} subjects)`
+    );
 
     const userMessage = [
         metadata.title ? `meeting_metadata.title: ${metadata.title}` : null,
@@ -493,10 +607,10 @@ async function extractTopics({ transcript, metadata = {} }) {
                 temperature: 0,
                 seed: 42,
                 num_ctx: contextSize,
-                // Without a ceiling a runaway response can spin for a very long
-                // time on a local model; this is comfortably above what the
-                // schema needs for twelve subjects.
-                num_predict: 8192
+                // Matched to the same budget num_ctx was sized for, so the two
+                // limits agree. A flat value would either cut a response the
+                // context could have held, or let one run past what it can.
+                num_predict: outputBudget
             }
         })
     });
@@ -548,6 +662,6 @@ async function extractTopics({ transcript, metadata = {} }) {
 module.exports = {
     extractTopics,
     // Exported for tests and diagnostics, not used elsewhere in the app.
-    resolveContextSize,
+    resolveBudget,
     estimateTokens
 };
