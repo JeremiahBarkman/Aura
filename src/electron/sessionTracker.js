@@ -8,11 +8,11 @@
 // detect and clean up whatever was left running, instead of hitting port
 // conflicts or duplicate processes.
 //
-// A PID alone is not a safe identity check: Windows recycles PIDs, so a
-// recorded PID from a dead session can end up reassigned to an unrelated
-// process by the time the next launch looks at it. Every cleanup check
-// here verifies both the process image name and a command-line substring
-// before touching anything.
+// A PID alone is not a safe identity check: both Windows and Linux recycle
+// PIDs, so a recorded PID from a dead session can end up reassigned to an
+// unrelated process by the time the next launch looks at it. Every cleanup
+// check here verifies both the process image name and a command-line
+// substring before touching anything.
 // ============================================================================
 
 const fs = require('fs');
@@ -66,17 +66,13 @@ function recordChildProcess(childKey, pid) {
 // -----------------------------------------------------------------------------
 // Process Identity Check
 // -----------------------------------------------------------------------------
-// Returns { name, commandLine } for a live PID, or null if nothing is
-// running at that PID. Uses PowerShell/WMI rather than tasklist.exe because
+// getProcessInfo below returns { name, commandLine } for a live PID, or
+// null if nothing is running at that PID, via one of these two backends.
+//
+// The Windows one uses PowerShell/WMI rather than tasklist.exe because
 // tasklist does not expose the command line, which is needed to tell apart
 // Aura's own python.exe/node.exe children from unrelated ones.
-function getProcessInfo(pid) {
-    const numericPid = Number(pid);
-
-    if (!Number.isInteger(numericPid) || numericPid <= 0) {
-        return null;
-    }
-
+function getWindowsProcessInfo(numericPid) {
     let output;
 
     try {
@@ -120,6 +116,56 @@ function getProcessInfo(pid) {
     }
 }
 
+// POSIX equivalent. `ps -o comm=,args=` gives the same two facts the WMI
+// query does: the executable name and the full command line. A non-zero
+// exit just means no such process, which is the normal case here (the
+// recorded PID belongs to a session that already ended), so it is not
+// warned about the way a genuine query failure on Windows is.
+function getPosixProcessInfo(numericPid) {
+    let output;
+
+    try {
+        output = execFileSync(
+            'ps',
+            ['-p', String(numericPid), '-o', 'comm=,args='],
+            { encoding: 'utf8' }
+        );
+    } catch {
+        return null;
+    }
+
+    const line = output.split('\n')[0].trim();
+
+    if (!line) {
+        return null;
+    }
+
+    // ps pads comm to a fixed column width, so the first whitespace run
+    // separates the executable name from the full command line.
+    const separator = line.search(/\s/);
+
+    if (separator === -1) {
+        return { name: line, commandLine: '' };
+    }
+
+    return {
+        name: line.slice(0, separator),
+        commandLine: line.slice(separator).trim()
+    };
+}
+
+function getProcessInfo(pid) {
+    const numericPid = Number(pid);
+
+    if (!Number.isInteger(numericPid) || numericPid <= 0) {
+        return null;
+    }
+
+    return process.platform === 'win32'
+        ? getWindowsProcessInfo(numericPid)
+        : getPosixProcessInfo(numericPid);
+}
+
 function matchesExpectedChild(processInfo, expected) {
     if (!processInfo || !expected) {
         return false;
@@ -149,16 +195,30 @@ function matchesExpectedChild(processInfo, expected) {
 
 function killPid(pid) {
     try {
-        // /T (tree-kill) matters here: several tracked children are
-        // spawned with shell:true, so the recorded PID is the cmd.exe
-        // wrapper, not the real process. Killing just the wrapper leaves
-        // its child (the actual python.exe/node.exe) running as an orphan
-        // of an orphan.
-        execFileSync(
-            'taskkill.exe',
-            ['/F', '/T', '/PID', String(pid)],
-            { windowsHide: true }
-        );
+        if (process.platform === 'win32') {
+            // /T (tree-kill) matters here: several tracked children are
+            // spawned with shell:true, so the recorded PID is the cmd.exe
+            // wrapper, not the real process. Killing just the wrapper leaves
+            // its child (the actual python.exe/node.exe) running as an orphan
+            // of an orphan.
+            execFileSync(
+                'taskkill.exe',
+                ['/F', '/T', '/PID', String(pid)],
+                { windowsHide: true }
+            );
+
+            return;
+        }
+
+        // POSIX has no taskkill /T equivalent that is safe to use blind:
+        // killing a process group would need the child to have been
+        // spawned detached, which Aura's services deliberately are not.
+        // Every tracked child is spawned with shell:false, so this PID is
+        // the real process rather than a wrapper, and SIGKILL on it is
+        // what /F /T was there to guarantee. Grandchildren an abandoned
+        // ComfyUI left behind are not reaped on POSIX -- a known gap, not a
+        // silent one.
+        process.kill(Number(pid), 'SIGKILL');
     } catch (error) {
         console.warn(
             `[SESSION TRACKER] Could not kill PID ${pid}:`,

@@ -7,6 +7,14 @@ const {
 } = require('child_process');
 const path = require('path');
 
+// Aura's process supervision, native camera stack and installer layout are
+// all Windows-shaped. Linux runs the same Electron shell and the same
+// services, but reaches them through POSIX equivalents (ps/kill instead of
+// PowerShell/taskkill, venv/bin instead of venv/Scripts, a Unix domain
+// socket instead of a named pipe). Everything platform-dependent branches
+// on this one constant rather than re-testing process.platform inline.
+const IS_WINDOWS = process.platform === 'win32';
+
 // Aura is a live virtual camera: the whole frame pipeline (camera capture,
 // PsySeg segmentation, compositing, and export to the native bridge) runs in
 // the renderer. By default Chromium treats a minimized/occluded window as a
@@ -117,7 +125,9 @@ function reportEnvHealth() {
             '',
             'Fix: run the Aura Prerequisites wizard, or copy an existing',
             'config into place, e.g.',
-            `  copy "%APPDATA%\\Aura\\.env" "${path.join(__dirname, '.env')}"`
+            IS_WINDOWS
+                ? `  copy "%APPDATA%\\Aura\\.env" "${path.join(__dirname, '.env')}"`
+                : `  cp "$HOME/.config/Aura/.env" "${path.join(__dirname, '.env')}"`
         ]);
         return;
     }
@@ -254,13 +264,26 @@ const SERVICE_STDIO = ['ignore', 'pipe', 'pipe'];
 // Accept either name; the command-line substring does the real
 // discriminating. auraFrameBridgeProcess/auraCameraHostProcess spawn with
 // shell:false, so their PID is always the real executable directly.
-const EXPECTED_CHILD_PROCESSES = {
-    comfyProcess: { names: ['cmd.exe', 'python.exe'], commandLineIncludes: 'main.py' },
-    serverProcess: { names: ['cmd.exe', 'node.exe'], commandLineIncludes: 'server.js' },
-    speechProcess: { names: ['cmd.exe', 'python.exe'], commandLineIncludes: 'speech_server.py' },
-    auraFrameBridgeProcess: { name: 'AuraFrameBridge.exe' },
-    auraCameraHostProcess: { name: path.basename(getAuraCameraHostPath()) }
-};
+//
+// The names are what the OS reports for a live process, so they differ per
+// platform: Windows keeps the .exe suffix, POSIX `ps -o comm=` reports the
+// bare executable name. Python in particular is 'python.exe' on Windows but
+// whichever of python3/python the venv's interpreter is named on Linux, so
+// both are accepted there. The command-line substring is unchanged either
+// way and remains what actually identifies the process as Aura's.
+const EXPECTED_CHILD_PROCESSES = IS_WINDOWS
+    ? {
+        comfyProcess: { names: ['cmd.exe', 'python.exe'], commandLineIncludes: 'main.py' },
+        serverProcess: { names: ['cmd.exe', 'node.exe'], commandLineIncludes: 'server.js' },
+        speechProcess: { names: ['cmd.exe', 'python.exe'], commandLineIncludes: 'speech_server.py' },
+        auraFrameBridgeProcess: { name: 'AuraFrameBridge.exe' },
+        auraCameraHostProcess: { name: path.basename(getAuraCameraHostPath()) }
+    }
+    : {
+        comfyProcess: { names: ['python3', 'python'], commandLineIncludes: 'main.py' },
+        serverProcess: { names: ['node'], commandLineIncludes: 'server.js' },
+        speechProcess: { names: ['python3', 'python'], commandLineIncludes: 'speech_server.py' }
+    };
 
 let serverProcess = null;
 let speechProcess = null;
@@ -360,6 +383,68 @@ async function ensureComfyUiRunning() {
     });
 }
 
+// Enumerate PIDs of node processes running Aura's own src/web/server.js.
+// Deliberately narrow: matching the command line (not just the port holder)
+// is what keeps this from killing an unrelated process that happens to have
+// bound 5150. Returns [] on any failure -- a stale server left running is
+// far less bad than a failed startup.
+function findStaleAuraServerPids() {
+    let output = '';
+
+    try {
+        output = IS_WINDOWS
+            ? execFileSync(
+                'powershell.exe',
+                [
+                    '-NoProfile',
+                    '-NonInteractive',
+                    '-Command',
+                    "Get-CimInstance Win32_Process -Filter \"Name='node.exe'\" | " +
+                    "Where-Object { $_.CommandLine -like '*src*web*server.js*' } | " +
+                    'Select-Object -ExpandProperty ProcessId'
+                ],
+                { encoding: 'utf8', windowsHide: true }
+            )
+            : execFileSync('ps', ['-eo', 'pid=,comm=,args='], { encoding: 'utf8' });
+    } catch (error) {
+        console.warn('[AURA] Could not enumerate stale servers:', error.message);
+
+        return [];
+    }
+
+    if (IS_WINDOWS) {
+        return output
+            .split(/\s+/)
+            .map(value => value.trim())
+            .filter(Boolean);
+    }
+
+    // ps lists every process, so filter here for what the WMI query filtered
+    // on server-side: a node process whose command line runs Aura's server.
+    // The name check matters as much as the command line: a shell wrapper
+    // that merely mentions src/web/server.js in its own argv would otherwise
+    // match. Our own PID is excluded because Electron's main process is not
+    // the stale server even if its argv mentions one.
+    return output
+        .split('\n')
+        .map(line => line.trim())
+        .filter(Boolean)
+        .map(line => {
+            const match = /^(\d+)\s+(\S+)\s+(.*)$/.exec(line);
+
+            return match
+                ? { pid: match[1], name: match[2], commandLine: match[3] }
+                : null;
+        })
+        .filter(entry =>
+            entry &&
+            entry.name === 'node' &&
+            /src[\\/]web[\\/]server\.js/.test(entry.commandLine) &&
+            Number(entry.pid) !== process.pid
+        )
+        .map(entry => entry.pid);
+}
+
 // If port 5150 is already held when we start up, the app would silently talk
 // to that stranger instead of its own server -- and our spawned server would
 // just fail with EADDRINUSE and exit. That stranger is almost always a stale
@@ -383,34 +468,16 @@ async function clearStaleAuraServer() {
             `Checking for a stale Aura server to clear...`
         );
 
-        let pidOutput = '';
-
-        try {
-            pidOutput = execFileSync(
-                'powershell.exe',
-                [
-                    '-NoProfile',
-                    '-NonInteractive',
-                    '-Command',
-                    "Get-CimInstance Win32_Process -Filter \"Name='node.exe'\" | " +
-                    "Where-Object { $_.CommandLine -like '*src*web*server.js*' } | " +
-                    'Select-Object -ExpandProperty ProcessId'
-                ],
-                { encoding: 'utf8', windowsHide: true }
-            );
-        } catch (error) {
-            console.warn('[AURA] Could not enumerate stale servers:', error.message);
-        }
-
-        const pids = pidOutput
-            .split(/\s+/)
-            .map(value => value.trim())
-            .filter(Boolean);
+        const pids = findStaleAuraServerPids();
 
         for (const pid of pids) {
             console.warn(`[AURA] Terminating stale Aura server PID ${pid}.`);
             try {
-                execFileSync('taskkill.exe', ['/F', '/T', '/PID', pid], { windowsHide: true });
+                if (IS_WINDOWS) {
+                    execFileSync('taskkill.exe', ['/F', '/T', '/PID', pid], { windowsHide: true });
+                } else {
+                    process.kill(Number(pid), 'SIGKILL');
+                }
             } catch (error) {
                 console.warn(`[AURA] Could not kill PID ${pid}:`, error.message);
             }
@@ -461,8 +528,11 @@ async function startAuraServer() {
     // packed archive. The script path itself stays __dirname-relative
     // (fine, since Node loading a script IS asar-transparent); only cwd
     // needs to be a real directory.
+    //
+    // The bundled interpreter is 'node.exe' on Windows and 'node' on Linux;
+    // scripts/stage-resources.js copies whichever one built the package.
     const nodeExe = app.isPackaged
-        ? path.join(process.resourcesPath, 'node.exe')
+        ? path.join(process.resourcesPath, IS_WINDOWS ? 'node.exe' : 'node')
         : 'node';
 
     serverProcess = spawn(
@@ -501,9 +571,13 @@ function startSpeechService() {
     // Python environment too large to bundle, so it stays an external
     // prerequisite. Unset, this resolves relative to __dirname exactly as
     // it always has in dev mode.
+    // A venv puts its interpreter in Scripts/python.exe on Windows and
+    // bin/python on POSIX -- same virtual environment, different layout.
     const speechPython =
         process.env.SPEECH_PYTHON ||
-        path.join(__dirname, 'services', 'speech', 'venv', 'Scripts', 'python.exe');
+        (IS_WINDOWS
+            ? path.join(__dirname, 'services', 'speech', 'venv', 'Scripts', 'python.exe')
+            : path.join(__dirname, 'services', 'speech', 'venv', 'bin', 'python'));
 
     const speechScript =
         process.env.SPEECH_SCRIPT ||
@@ -1047,6 +1121,10 @@ function isOwnedProcessRunning(processHandle) {
 }
 
 function isWindowsProcessRunning(executableName) {
+    if (!IS_WINDOWS) {
+        return false;
+    }
+
     try {
         const output = execFileSync(
             'tasklist.exe',
@@ -1085,7 +1163,7 @@ function isWindowsProcessRunning(executableName) {
 // to that exact process after launch, while leaving the process running.
 
 function hideAuraCameraHostWindows(processId) {
-    if (!processId) {
+    if (!processId || !IS_WINDOWS) {
         return;
     }
 
@@ -1325,6 +1403,23 @@ cameraHostProcess.once(
 ipcMain.handle(
     'aura-native:ensure-running',
     async () => {
+        // The virtual camera is a Windows Media Foundation device
+        // (AuraFrameBridge + the vendored VCamSample host, see
+        // VIRTUAL_CAMERA.md). There is no Linux build of either, and the
+        // Linux equivalent would be a v4l2loopback sink rather than a port
+        // of these two. Say that plainly instead of letting the renderer
+        // report a missing AuraFrameBridge.exe, which reads as a broken
+        // install rather than an unimplemented platform.
+        if (!IS_WINDOWS) {
+            return {
+                success: false,
+                error:
+                    'The Aura virtual camera is Windows-only. Studio, Play ' +
+                    'Mode and the Slide Output window all work on this ' +
+                    'platform; only the virtual camera device does not.'
+            };
+        }
+
         try {
             const bridgeResult =
                 await ensureAuraFrameBridgeRunning();
@@ -1375,8 +1470,14 @@ ipcMain.handle(
 // Proof-test version:
 // Opens pipe, sends one complete AFTS frame, closes pipe.
 
-const AURA_FRAME_PIPE_PATH =
-    '\\\\.\\pipe\\AuraFrameBridgePipe';
+// Windows names pipes in a dedicated kernel namespace; POSIX has no
+// equivalent, so the same net.createConnection({ path }) call takes a Unix
+// domain socket on disk instead. The Linux path is defined here so the
+// transport is ready for a Linux frame bridge, but nothing serves it today
+// (see the aura-native:ensure-running guard above).
+const AURA_FRAME_PIPE_PATH = IS_WINDOWS
+    ? '\\\\.\\pipe\\AuraFrameBridgePipe'
+    : path.join(app.getPath('userData'), 'AuraFrameBridgePipe.sock');
 
 const AURA_FRAME_HEADER_SIZE = 44;
 

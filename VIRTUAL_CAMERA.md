@@ -2,6 +2,8 @@
 
 Native virtual camera architecture. This is Aura's core product feature — a real Windows virtual camera device that other apps (Teams/OBS/Zoom/Camera app) can select, fed by frames composited inside Aura.
 
+**Windows only.** Both native components below are Media Foundation / COM code with no Linux build, and the Linux equivalent would not be a port of them — it would be a v4l2loopback sink fed by the same composited frames. On Linux, `aura-native:ensure-running` returns an explicit "the Aura virtual camera is Windows-only" error and everything else in Aura (Studio, Play Mode, the Slide Output window, segmentation) works normally. `AURA_FRAME_PIPE_PATH` resolves to a Unix domain socket in `userData` there so the Electron-side transport is ready for a Linux bridge, but nothing serves it today.
+
 ## Stack
 
 Two native C++ projects plus a vendored third-party base:

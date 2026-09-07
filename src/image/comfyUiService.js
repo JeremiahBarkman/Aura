@@ -1,4 +1,5 @@
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const auraConfig = require('../config/auraConfig');
 const paths = require('../config/paths');
@@ -14,8 +15,14 @@ const workflowPath = path.join(
     '../../comfy/workflows/aura_background_api.json'
 );
 
+// A guess at where an unconfigured ComfyUI writes its images, per platform.
+// Both are only a fallback for COMFYUI_OUTPUT_DIR being unset -- neither is
+// a location Aura creates or relies on existing.
 const comfyOutputDir =
-    process.env.COMFYUI_OUTPUT_DIR || 'C:\\AI\\ComfyUI\\output';
+    process.env.COMFYUI_OUTPUT_DIR ||
+    (process.platform === 'win32'
+        ? 'C:\\AI\\ComfyUI\\output'
+        : path.join(os.homedir(), 'ComfyUI', 'output'));
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));

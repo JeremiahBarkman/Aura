@@ -2,19 +2,40 @@
 
 Current system architecture and execution flow. This is a factual description derived from reading the code — it is not aspirational and should be kept in sync when the underlying code changes.
 
+## Platform support
+
+Aura is Windows-first, and Windows is the only platform where every feature works. Linux runs the same Electron shell, the same Express/SQLite backend and the same renderer, with these differences:
+
+| Area | Windows | Linux |
+| --- | --- | --- |
+| Backend, DB, Studio, Play Mode, Slide Output | works | works |
+| Segmentation (PsySeg / PaddleSeg) | works | works — both run in the renderer |
+| ComfyUI / Ollama / Whisper services | works | works — HTTP clients, no platform code |
+| **Virtual camera device** | works | **not implemented** |
+| Prerequisites wizard | `installer/prerequisites/*.ps1` | not ported |
+
+Everything platform-dependent in `electron-main.js` branches on a single `IS_WINDOWS` constant rather than re-testing `process.platform` inline. The differences it covers:
+
+- **Process supervision** — Windows enumerates processes with PowerShell/WMI and kills with `taskkill /F /T`; POSIX uses `ps -eo pid=,comm=,args=` and `process.kill(pid, 'SIGKILL')`. Both check the process name *and* a command-line substring before killing anything, so a shell wrapper that merely mentions `src/web/server.js` is never matched. `taskkill /T` has no safe POSIX equivalent (killing a process group would need the children spawned detached, which they deliberately are not), so an abandoned ComfyUI's own workers are not reaped on Linux.
+- **Bundled Node runtime** — `resources/node.exe` vs `resources/node`, staged by `scripts/stage-resources.js` from whichever interpreter ran the build.
+- **Python venv layout** — `venv/Scripts/python.exe` vs `venv/bin/python`.
+- **Frame transport path** — the `\\.\pipe\AuraFrameBridgePipe` named pipe vs a Unix domain socket in `userData`. The Linux path is defined so the transport is ready, but nothing serves it (see VIRTUAL_CAMERA.md).
+
+`aura-native:ensure-running` returns an explicit "the Aura virtual camera is Windows-only" error on Linux rather than a missing-`AuraFrameBridge.exe` path, which would read as a broken install rather than an unimplemented platform.
+
 ## Process model
 
 `electron-main.js` is a process orchestrator only — it contains no application logic. It spawns and supervises up to 5 child processes and points a `BrowserWindow` at them:
 
-1. **`serverProcess`** — the actual app backend, `src/web/server.js` (Express + better-sqlite3), run via a **bundled standalone `node.exe`** rather than Electron's own Node, because Electron's Node ABI doesn't match the precompiled `better-sqlite3` binding. The main window loads `http://localhost:5150`.
+1. **`serverProcess`** — the actual app backend, `src/web/server.js` (Express + better-sqlite3), run via a **bundled standalone Node binary** (`node.exe` on Windows, `node` on Linux) rather than Electron's own Node, because Electron's Node ABI doesn't match the precompiled `better-sqlite3` binding. The main window loads `http://localhost:5150`.
 2. **`comfyProcess`** — ComfyUI (`python main.py --listen`), autostarted if `COMFYUI_AUTOSTART=true` and port 8188 is free.
 3. **`speechProcess`** — `services/speech/speech_server.py`, a Flask app wrapping `faster_whisper`, listening on `127.0.0.1:8765`. Node talks to it over plain HTTP (`src/speech/localWhisperService.js`), not a subprocess call per request.
-4. **`auraFrameBridgeProcess`** — `native/AuraFrameBridge.exe`, started on demand via IPC. See VIRTUAL_CAMERA.md.
-5. **`auraCameraHostProcess`** — `native/VCamSample.exe`, also on demand. See VIRTUAL_CAMERA.md.
+4. **`auraFrameBridgeProcess`** — `native/AuraFrameBridge.exe`, started on demand via IPC. Windows only. See VIRTUAL_CAMERA.md.
+5. **`auraCameraHostProcess`** — `native/VCamSample.exe`, also on demand. Windows only. See VIRTUAL_CAMERA.md.
 
 A second `BrowserWindow` (`createOutputWindow`, loading `/aura-output/`) is a clean output surface for screen-sharing, independent of the main UI window.
 
-`src/electron/sessionTracker.js` records spawned child PIDs to `data/run/aura-session.json` so a crashed session's orphaned children (Windows recycles PIDs, so matching also checks process name + command-line substring) get cleaned up on next launch. `stopAuraServices()` tree-kills everything (`taskkill /F /T`) on quit. `npm start` (`node src/web/server.js`) runs only process 1, with no Electron shell and no camera/native/speech/ComfyUI stack — useful for iterating on web/API/DB code alone.
+`src/electron/sessionTracker.js` records spawned child PIDs to `data/run/aura-session.json` so a crashed session's orphaned children (both Windows and Linux recycle PIDs, so matching also checks process name + command-line substring) get cleaned up on next launch. The expected process names are per-platform — `node.exe`/`python.exe` on Windows, `node`/`python3` as `ps` reports them on Linux. `stopAuraServices()` tree-kills everything (`taskkill /F /T`, or `SIGKILL` per PID on POSIX) on quit. `npm start` (`node src/web/server.js`) runs only process 1, with no Electron shell and no camera/native/speech/ComfyUI stack — useful for iterating on web/API/DB code alone.
 
 ## src/ module map
 
