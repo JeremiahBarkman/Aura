@@ -41,7 +41,7 @@
   .studio-side #activePlayMatch{margin-top:7px!important;max-height:116px;overflow:auto}
   .studio-side input[type=range]{height:16px}
 }
-.conference-sources{display:flex;flex-direction:column;gap:8px;margin-top:4px}.conference-check{display:flex;align-items:center;gap:9px;margin:0;font:14px 'IBM Plex Sans',sans-serif;color:var(--secondary);text-transform:none;letter-spacing:0}.conference-check input{width:auto;margin:0}#conferenceStatus:empty{display:none}.conf-topic{border:1px solid var(--b1);background:var(--panel);border-radius:12px;padding:14px;margin-bottom:12px}.conf-topic.rejected{opacity:.5}.conf-topic-head{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}.conf-topic-head h4{margin:0;font-size:15px;flex:1;min-width:160px}.conf-badge{font:11px 'IBM Plex Mono';letter-spacing:.06em;padding:3px 9px;border-radius:20px;border:1px solid var(--b3);color:var(--label);white-space:nowrap}.conf-badge.generate{background:#2a2016;border-color:var(--b4);color:var(--amber)}.conf-badge.search{background:#12301d;border-color:#2e7d4f;color:#7ee7a5}.conf-badge.both{background:#1e2438;border-color:#3d4a75;color:#9fb4e8}.conf-badge.sensitive{background:#3a2a12;border-color:#7d5a1f;color:#e0b15c}.conf-field{margin-top:9px}.conf-field label{font:11px 'IBM Plex Mono';letter-spacing:.1em;color:var(--label);display:block;margin-bottom:4px;text-transform:uppercase}.conf-field textarea{min-height:52px;font-size:13px;margin:0}.conf-desc{font:13px/1.6 'IBM Plex Sans',sans-serif;color:var(--secondary);margin-bottom:4px}.conf-approve{display:flex;align-items:center;gap:7px;font:13px 'IBM Plex Sans',sans-serif;color:var(--secondary);margin:0;text-transform:none;letter-spacing:0}.conf-approve input{width:auto;margin:0}.conf-st dt{font:11px 'IBM Plex Mono';letter-spacing:.1em;color:var(--label);text-transform:uppercase;margin-top:12px}.conf-st dd{margin:5px 0 0;font:13px/1.6 'IBM Plex Sans',sans-serif;color:var(--secondary)}.conf-st ul{margin:5px 0 0;padding-left:18px;color:var(--secondary);font:13px/1.7 'IBM Plex Sans',sans-serif}.conference-consent{margin-top:14px;padding:11px 13px;border:1px solid var(--b2);border-left:3px solid var(--amber);border-radius:8px;background:rgba(227,181,127,.06);font:13px/1.55 'IBM Plex Sans',sans-serif;color:var(--secondary)}.conference-hint{margin-top:10px;font:13px/1.6 'IBM Plex Sans',sans-serif;color:var(--secondary)}.conference-meta{font:13px 'IBM Plex Mono';color:var(--label);margin-top:6px}
+.audio-sources{display:flex;flex-direction:column;gap:8px;margin-top:4px}.audio-check{display:flex;align-items:center;gap:9px;margin:0;font:14px 'IBM Plex Sans',sans-serif;color:var(--secondary);text-transform:none;letter-spacing:0}.audio-check input{width:auto;margin:0}#conferenceStatus:empty{display:none}.conf-topic{border:1px solid var(--b1);background:var(--panel);border-radius:12px;padding:14px;margin-bottom:12px}.conf-topic.rejected{opacity:.5}.conf-topic-head{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}.conf-topic-head h4{margin:0;font-size:15px;flex:1;min-width:160px}.conf-badge{font:11px 'IBM Plex Mono';letter-spacing:.06em;padding:3px 9px;border-radius:20px;border:1px solid var(--b3);color:var(--label);white-space:nowrap}.conf-badge.generate{background:#2a2016;border-color:var(--b4);color:var(--amber)}.conf-badge.search{background:#12301d;border-color:#2e7d4f;color:#7ee7a5}.conf-badge.both{background:#1e2438;border-color:#3d4a75;color:#9fb4e8}.conf-badge.sensitive{background:#3a2a12;border-color:#7d5a1f;color:#e0b15c}.conf-field{margin-top:9px}.conf-field label{font:11px 'IBM Plex Mono';letter-spacing:.1em;color:var(--label);display:block;margin-bottom:4px;text-transform:uppercase}.conf-field textarea{min-height:52px;font-size:13px;margin:0}.conf-desc{font:13px/1.6 'IBM Plex Sans',sans-serif;color:var(--secondary);margin-bottom:4px}.conf-approve{display:flex;align-items:center;gap:7px;font:13px 'IBM Plex Sans',sans-serif;color:var(--secondary);margin:0;text-transform:none;letter-spacing:0}.conf-approve input{width:auto;margin:0}.conf-st dt{font:11px 'IBM Plex Mono';letter-spacing:.1em;color:var(--label);text-transform:uppercase;margin-top:12px}.conf-st dd{margin:5px 0 0;font:13px/1.6 'IBM Plex Sans',sans-serif;color:var(--secondary)}.conf-st ul{margin:5px 0 0;padding-left:18px;color:var(--secondary);font:13px/1.7 'IBM Plex Sans',sans-serif}.conference-consent{margin-top:14px;padding:11px 13px;border:1px solid var(--b2);border-left:3px solid var(--amber);border-radius:8px;background:rgba(227,181,127,.06);font:13px/1.55 'IBM Plex Sans',sans-serif;color:var(--secondary)}.conference-hint{margin-top:10px;font:13px/1.6 'IBM Plex Sans',sans-serif;color:var(--secondary)}.conference-meta{font:13px 'IBM Plex Mono';color:var(--label);margin-top:6px}
 </style></head>
 <body>
 <div class="app-shell">
@@ -107,7 +107,7 @@
  <div class="capture-body"><div class="pipeline"><span id="indicatorRecording" class="pipe-step" data-i18n="cap.indRecording">Recording</span><span id="indicatorGenerating" class="pipe-step" data-i18n="cap.indGenerating">Generating</span><span id="indicatorCreating" class="pipe-step" data-i18n="cap.indCreating">Creating Record</span></div>
  <div class="capture-grid">
   <div class="stack"><div class="panel"><div class="panel-title" data-i18n="cap.textSource">Text Source</div><textarea id="rawText" name="rawText" rows="9" placeholder="Paste or type source text..." data-i18n-placeholder="cap.textPh"></textarea><div class="button-row" style="align-items:center"><button id="generateBtn" onclick="generateDraftRecord()" data-i18n="cap.generate">Generate Draft Record</button><span id="generateSpinner" class="aura-spinner" style="display:none"></span></div></div>
-   <div class="panel"><div class="panel-title" data-i18n="cap.audioSource">Audio Source</div><label data-i18n="play.mic">Microphone</label><select id="captureMicSelect"></select><div class="button-row"><button id="startBtn" onclick="startRecording()" data-i18n="cap.startRec">Start Recording</button><button id="stopBtn" class="danger" onclick="stopRecording()" disabled data-i18n="cap.stop">Stop</button><button id="uploadBtn" class="secondary" onclick="uploadRecording()" disabled data-i18n="cap.saveRec">Save Recording</button></div><audio id="audioPlayback" controls style="width:100%;margin-top:12px"></audio><div class="terminal-label" data-i18n="cap.whisper">WHISPER TRANSCRIPTION</div><div id="audioStatus">No recording yet.</div></div>
+   <div class="panel"><div class="panel-title" data-i18n="cap.audioSource">Audio Source</div><div class="audio-sources"><label class="audio-check"><input type="checkbox" id="captureUseMic" checked><span data-i18n="play.mic">Microphone</span></label><label class="audio-check"><input type="checkbox" id="captureUseSystem"><span data-i18n="cap.sysAudio">System audio (meeting or media)</span></label></div><label style="margin-top:14px" data-i18n="play.mic">Microphone</label><select id="captureMicSelect"></select><div class="button-row"><button id="startBtn" onclick="startRecording()" data-i18n="cap.startRec">Start Recording</button><button id="stopBtn" class="danger" onclick="stopRecording()" disabled data-i18n="cap.stop">Stop</button><button id="uploadBtn" class="secondary" onclick="uploadRecording()" disabled data-i18n="cap.saveRec">Save Recording</button></div><audio id="audioPlayback" controls style="width:100%;margin-top:12px"></audio><div class="terminal-label" data-i18n="cap.whisper">WHISPER TRANSCRIPTION</div><div id="audioStatus">No recording yet.</div></div>
   </div>
   <div class="panel"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:12px"><div class="panel-title" style="margin:0;flex-shrink:0" data-i18n="cap.manual">Manual Record</div><span id="recordSavedStatus" class="active-meta" style="display:none;text-align:right"></span></div><label data-i18n="rec.sourceText">Original Source Text</label><textarea id="manualRawText" rows="5"></textarea><label data-i18n="cap.summary">AI Summary</label><textarea id="manualSummaryText" rows="4"></textarea><label data-i18n="cap.prompt">Image Prompt</label><textarea id="manualImagePrompt" rows="4"></textarea><label data-i18n="cap.triggers">Trigger Phrases</label><textarea id="manualCleanedTriggerText" rows="4"></textarea></div>
   <div class="panel"><div class="panel-title" data-i18n="cap.image">Image</div><label data-i18n="cap.uploadExisting">Upload Existing Image</label><input id="manualImageFile" type="file" accept="image/*" onchange="onManualImageChosen()"><div id="manualImageChip" class="file-chip" style="display:none"><span class="file-chip-name" id="manualImageChipName"></span><button type="button" class="file-chip-x" title="Remove" onclick="clearManualImage()">&times;</button></div><div class="button-row"><button onclick="saveRecord()" data-i18n="cap.saveRecord">Save Record</button><button class="secondary" onclick="clearCurrentRecord()" data-i18n="cap.clear">Clear</button></div><div id="currentImageCard" class="gen-image-card" style="display:none"><img id="currentImage" alt=""><div class="button-row"><button class="danger" onclick="deleteCurrentRecord()" data-i18n="cap.deleteRecord">Delete Record</button></div></div></div>
@@ -129,9 +129,9 @@
   <div class="panel"><div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><div class="panel-title" style="margin:0" data-i18n="conf.record">Record a Meeting</div><svg id="conferenceMicIndicator" class="mic-indicator" style="display:none" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title data-i18n="conf.recordingTitle">Aura Conference is recording</title><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg></div>
    <label data-i18n="conf.sessionTitle">Session Title</label><input id="conferenceTitle" placeholder="Leave blank to name it by date" data-i18n-placeholder="conf.sessionTitlePh">
    <label style="margin-top:14px" data-i18n="conf.audioSources">Audio Sources</label>
-   <div class="conference-sources">
-    <label class="conference-check"><input type="checkbox" id="conferenceUseSystem" checked><span data-i18n="conf.systemAudio">System audio (other participants)</span></label>
-    <label class="conference-check"><input type="checkbox" id="conferenceUseMic" checked><span data-i18n="conf.micAudio">Microphone (you)</span></label>
+   <div class="audio-sources">
+    <label class="audio-check"><input type="checkbox" id="conferenceUseSystem" checked><span data-i18n="conf.systemAudio">System audio (other participants)</span></label>
+    <label class="audio-check"><input type="checkbox" id="conferenceUseMic" checked><span data-i18n="conf.micAudio">Microphone (you)</span></label>
    </div>
    <label style="margin-top:14px" data-i18n="conf.mic">Microphone</label><select id="conferenceMicSelect"></select>
    <div class="button-row" style="align-items:center"><button id="conferenceStartBtn" onclick="startConferenceRecording()" data-i18n="conf.start">Start Recording</button><button id="conferenceStopBtn" class="danger" onclick="stopConferenceRecording()" disabled data-i18n="conf.stop">Stop Recording</button></div>
@@ -357,6 +357,11 @@ document.querySelectorAll('.nav-item').forEach(btn=>btn.addEventListener('click'
 let mediaRecorder;
 let recordedChunks = [];
 let recordedBlob = null;
+
+// The audio graph feeding mediaRecorder (see buildMixedAudioStream). Held
+// separately because the recorder only knows about the mixed output and cannot
+// release the microphone or loopback capture behind it.
+let captureAudio = null;
 let activeEdit = null;
 let expandedRecordIds = new Set();
 let currentLibraryRecords = [];
@@ -971,12 +976,120 @@ function setActiveVisual(imageUrl) {
 }
 
 // -----------------------------------------------------------------------------
+// Shared Audio Capture
+// -----------------------------------------------------------------------------
+/*
+    Builds the stream Aura records, from the microphone, Windows system audio,
+    or both mixed together. Used by Record Mode capture and Aura Conference.
+
+    System audio comes from getDisplayMedia, which is the only way Chromium
+    exposes loopback capture; electron-main answers that request with
+    audio:'loopback' and no picker. The video track it forces us to request is
+    stopped immediately -- only sound is wanted here, and leaving an unused
+    screen-capture track running costs real CPU.
+
+    Mixing happens through a Web Audio destination node so both sources arrive
+    as one track. Recording them separately would leave two files to align
+    afterwards, and Whisper has no use for the separation.
+
+    A source that fails is dropped rather than aborting the recording; the
+    caller reads `captured` to see what it actually got. Only an empty result
+    throws, because that is the one case with nothing left to record.
+*/
+async function buildMixedAudioStream({ useMic, useSystem, micDeviceId }) {
+    const audioContext = new AudioContext();
+    const destination = audioContext.createMediaStreamDestination();
+    const sourceStreams = [];
+    const captured = [];
+
+    if (useSystem) {
+        try {
+            const displayStream = await navigator.mediaDevices.getDisplayMedia({
+                video: true,
+                audio: true
+            });
+
+            displayStream.getVideoTracks().forEach(track => {
+                track.stop();
+                displayStream.removeTrack(track);
+            });
+
+            if (displayStream.getAudioTracks().length === 0) {
+                throw new Error('No system audio track was returned.');
+            }
+
+            audioContext.createMediaStreamSource(displayStream).connect(destination);
+            sourceStreams.push(displayStream);
+            captured.push('system audio');
+        } catch (error) {
+            console.warn('System audio unavailable:', error);
+        }
+    }
+
+    if (useMic) {
+        try {
+            const micStream = await navigator.mediaDevices.getUserMedia({
+                audio: micDeviceId ? { deviceId: { exact: micDeviceId } } : true
+            });
+
+            audioContext.createMediaStreamSource(micStream).connect(destination);
+            sourceStreams.push(micStream);
+            captured.push('microphone');
+        } catch (error) {
+            console.warn('Microphone unavailable:', error);
+        }
+    }
+
+    if (captured.length === 0) {
+        await audioContext.close();
+        throw new Error('No audio source could be captured.');
+    }
+
+    return {
+        audioContext,
+        destination,
+        sourceStreams,
+        captured
+    };
+}
+
+/*
+    Names the sources the user asked for but did not get.
+
+    A missing source is easy to miss until the transcript comes back half
+    empty, so both callers report it instead of recording quietly.
+*/
+function missingAudioSources({ useMic, useSystem }, captured) {
+    const missing = [];
+
+    if (useSystem && !captured.includes('system audio')) missing.push('system audio');
+    if (useMic && !captured.includes('microphone')) missing.push('microphone');
+
+    return missing;
+}
+
+// -----------------------------------------------------------------------------
 // Record Mode: Browser Audio Capture
 // -----------------------------------------------------------------------------
-// Captures microphone audio in the browser, lets the user review playback, then
-// uploads the WebM blob to the server-side Record Mode pipeline.
+// Captures audio in the browser, lets the user review playback, then uploads
+// the WebM blob to the server-side Record Mode pipeline.
+//
+// Capture takes the same source choice as Conference: the microphone, the
+// Windows system mix, or both. Recording what the machine is playing is what
+// makes a Teams call or a video the user is watching into a record, and mixing
+// the microphone in keeps the user's own side of that conversation.
 async function startRecording() {
     const audioStatus = document.getElementById('audioStatus');
+
+    const sources = {
+        useMic: document.getElementById('captureUseMic').checked,
+        useSystem: document.getElementById('captureUseSystem').checked
+    };
+
+    if (!sources.useMic && !sources.useSystem) {
+        audioStatus.textContent = 'Select at least one audio source.';
+        return;
+    }
 
     try {
         // Capture used to pass a bare `audio: true`, which takes whatever
@@ -984,46 +1097,71 @@ async function startRecording() {
         // mic while Play Mode and Conference were both using the interface
         // chosen in Settings, with nothing in the UI showing the difference.
         // All three now resolve the same microphoneDeviceId.
-        const microphoneDeviceId =
-            document.getElementById('captureMicSelect')?.value || '';
-
-        const stream = await navigator.mediaDevices.getUserMedia({
-            audio: microphoneDeviceId
-                ? { deviceId: { exact: microphoneDeviceId } }
-                : true
+        captureAudio = await buildMixedAudioStream({
+            ...sources,
+            micDeviceId: document.getElementById('captureMicSelect')?.value || ''
         });
 
         recordedChunks = [];
         recordedBlob = null;
 
-        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+        mediaRecorder = new MediaRecorder(captureAudio.destination.stream, {
+            mimeType: 'audio/webm'
+        });
 
         mediaRecorder.ondataavailable = event => {
             if (event.data.size > 0) recordedChunks.push(event.data);
         };
 
         mediaRecorder.onstop = () => {
+            releaseCaptureAudio();
+
             recordedBlob = new Blob(recordedChunks, { type: 'audio/webm' });
             document.getElementById('audioPlayback').src = URL.createObjectURL(recordedBlob);
             document.getElementById('uploadBtn').disabled = false;
             audioStatus.textContent = 'Recording complete. Review playback, then save.';
         };
 
+        const missing = missingAudioSources(sources, captureAudio.captured);
+
         mediaRecorder.start();
         setCaptureActivity('recording', true);
         document.getElementById('startBtn').disabled = true;
         document.getElementById('stopBtn').disabled = false;
         document.getElementById('uploadBtn').disabled = true;
-        audioStatus.textContent = 'Recording... speak now.';
+
+        audioStatus.textContent = missing.length > 0
+            ? `Recording ${captureAudio.captured.join(' + ')} — could not capture ${missing.join(' and ')}.`
+            : `Recording ${captureAudio.captured.join(' + ')}...`;
     } catch (error) {
-        audioStatus.textContent = 'ERROR: Could not access microphone.\n' + error.message;
+        releaseCaptureAudio();
+        audioStatus.textContent = 'ERROR: Could not access the selected audio sources.\n' + error.message;
     }
+}
+
+/*
+    Tears down the capture audio graph.
+
+    Runs from the recorder's onstop rather than stopRecording so the last of
+    the audio still reaches the blob -- cutting the sources first truncates the
+    tail. Every source stream has to be stopped by hand: what MediaRecorder
+    sees is a Web Audio destination, and stopping its track would leave the
+    microphone and the loopback capture live.
+*/
+function releaseCaptureAudio() {
+    if (!captureAudio) return;
+
+    captureAudio.sourceStreams.forEach(stream =>
+        stream.getTracks().forEach(track => track.stop())
+    );
+
+    captureAudio.audioContext.close();
+    captureAudio = null;
 }
 
 function stopRecording() {
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
         mediaRecorder.stop();
-        mediaRecorder.stream.getTracks().forEach(track => track.stop());
         setCaptureActivity('recording', false);
         document.getElementById('startBtn').disabled = false;
         document.getElementById('stopBtn').disabled = true;
@@ -1157,76 +1295,6 @@ function formatConferenceDuration(ms) {
         : `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
 }
 
-/*
-    Builds the stream Aura actually records.
-
-    System audio comes from getDisplayMedia, which is the only way Chromium
-    exposes loopback capture; electron-main answers that request with
-    audio:'loopback' and no picker. The video track it forces us to request is
-    stopped immediately -- Conference wants sound only, and leaving an unused
-    screen-capture track running costs real CPU.
-
-    Mixing happens through a Web Audio destination node so both sources arrive
-    as one track. Recording them separately would leave two files per segment
-    to align later, and Whisper has no use for the separation.
-*/
-async function buildConferenceStream({ useMic, useSystem, micDeviceId }) {
-    const audioContext = new AudioContext();
-    const destination = audioContext.createMediaStreamDestination();
-    const sourceStreams = [];
-    const captured = [];
-
-    if (useSystem) {
-        try {
-            const displayStream = await navigator.mediaDevices.getDisplayMedia({
-                video: true,
-                audio: true
-            });
-
-            displayStream.getVideoTracks().forEach(track => {
-                track.stop();
-                displayStream.removeTrack(track);
-            });
-
-            if (displayStream.getAudioTracks().length === 0) {
-                throw new Error('No system audio track was returned.');
-            }
-
-            audioContext.createMediaStreamSource(displayStream).connect(destination);
-            sourceStreams.push(displayStream);
-            captured.push('system audio');
-        } catch (error) {
-            console.warn('Conference system audio unavailable:', error);
-        }
-    }
-
-    if (useMic) {
-        try {
-            const micStream = await navigator.mediaDevices.getUserMedia({
-                audio: micDeviceId ? { deviceId: { exact: micDeviceId } } : true
-            });
-
-            audioContext.createMediaStreamSource(micStream).connect(destination);
-            sourceStreams.push(micStream);
-            captured.push('microphone');
-        } catch (error) {
-            console.warn('Conference microphone unavailable:', error);
-        }
-    }
-
-    if (captured.length === 0) {
-        await audioContext.close();
-        throw new Error('No audio source could be captured.');
-    }
-
-    return {
-        audioContext,
-        destination,
-        sourceStreams,
-        captured
-    };
-}
-
 async function uploadConferenceChunk(blob, chunkIndex, durationMs) {
     const formData = new FormData();
 
@@ -1340,7 +1408,7 @@ async function startConferenceRecording() {
     let audio = null;
 
     try {
-        audio = await buildConferenceStream({
+        audio = await buildMixedAudioStream({
             useMic,
             useSystem,
             micDeviceId: document.getElementById('conferenceMicSelect').value
@@ -1361,11 +1429,8 @@ async function startConferenceRecording() {
             throw new Error(result.error || 'Could not start the session.');
         }
 
-        // Say what was actually captured, not what was requested: a missing
-        // source is easy to miss until the transcript comes back half empty.
-        const missing = [];
-        if (useSystem && !audio.captured.includes('system audio')) missing.push('system audio');
-        if (useMic && !audio.captured.includes('microphone')) missing.push('microphone');
+        // Say what was actually captured, not what was requested.
+        const missing = missingAudioSources({ useMic, useSystem }, audio.captured);
 
         conferenceState = {
             sessionId: result.session.id,

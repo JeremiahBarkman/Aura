@@ -615,22 +615,24 @@ function createMainWindow() {
     });
 
     /*
-    Aura Conference records the meeting the user is already sitting in, which
-    means capturing what Windows is playing (the remote participants) and not
-    just the microphone. Chromium exposes that only through getDisplayMedia,
-    and Electron only answers that call if the app installs a handler.
+    Aura records the audio the user is already listening to -- a meeting, or
+    media they are watching -- which means capturing what Windows is playing
+    and not just the microphone. Chromium exposes that only through
+    getDisplayMedia, and Electron only answers that call if the app installs a
+    handler.
 
     audio: 'loopback' taps the Windows audio render endpoint, so it works with
     headphones and needs no virtual audio device.
 
     Two deliberate details:
-    - A video source is still returned even though Conference discards the
+    - A video source is still returned even though the renderer discards the
       video track immediately. Chromium rejects an audio-only getDisplayMedia
       request outright, so there is no way to ask for just the audio.
     - There is no picker. The renderer never offers a choice of what to
-      capture -- Conference wants the system mix and nothing else -- so a
-      picker would only be a dialog with one correct answer. Aura makes no
-      other getDisplayMedia call, so this handler has exactly one caller.
+      capture -- both callers want the system mix and nothing else -- so a
+      picker would only be a dialog with one correct answer. Every
+      getDisplayMedia call in Aura comes from buildMixedAudioStream in
+      public/index.html, which Capture and Conference share.
 */
 mainWindow.webContents.session.setDisplayMediaRequestHandler(
     async (request, callback) => {
