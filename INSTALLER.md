@@ -10,7 +10,7 @@ npm run check:docs    # scripts/check-docs-sync.js — fails if the two doc copi
 npm run sync:docs     # same script with --fix: copies docs/ over installer/
 npm run dist          # electron-builder installer — NSIS on Windows, AppImage + deb on Linux (predist runs `check:docs` + `stage`; postdist stages the .exe into installer/)
 npm run dist:dir      # unpacked build output only, no installer (predist:dir runs the same two)
-npm run stage:installer  # scripts/stage-installer.js — copy the built .exe into installer/ on its own
+npm run stage:installer  # scripts/stage-installer.js — copy the built .exe into installer/ on its own (Windows only; skips elsewhere)
 npm run build:prereq  # scripts/build-prereq-bundle.js — rebuilds installer/prerequisites.zip
 ```
 

@@ -173,7 +173,21 @@ function stage() {
 }
 
 try {
-    stage();
+    // The tester package this stages is a Windows deliverable end to end:
+    // START HERE.txt names an .exe, and installer/prerequisites/ is .ps1 and
+    // .bat. A Linux `npm run dist` produces an AppImage and a .deb via
+    // linux.artifactName, which expectedArtifactName() -- reading the global
+    // build.artifactName and a hardcoded .exe -- would never find. Skip
+    // rather than fail a build that otherwise succeeded. Matches how
+    // stage-resources.js reports the Windows-only native binaries.
+    if (process.platform !== 'win32') {
+        console.log(
+            `Skipping tester-package staging: installer/ is a Windows package ` +
+            `and this is ${process.platform}. The build output is in dist/.`
+        );
+    } else {
+        stage();
+    }
 } catch (error) {
     console.error(`\n${error.message}\n`);
     process.exit(1);
