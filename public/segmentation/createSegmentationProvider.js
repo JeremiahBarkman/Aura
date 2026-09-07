@@ -15,7 +15,12 @@
  * and picking paddleseg must not load the PsySeg SDK.
  */
 
-export const DEFAULT_ENGINE = 'psyseg';
+// paddleseg, not psyseg: the PP-HumanSeg ONNX model is bundled and needs no
+// credentials, so it is the engine that always works. psyseg needs a
+// Personify SDK licence and produces black frames without one -- not what a
+// fallback should degrade to. Keep in sync with segmentationEngine's default
+// in src/config/auraConfig.js.
+export const DEFAULT_ENGINE = 'paddleseg';
 
 const ENGINES = {
     psyseg: {

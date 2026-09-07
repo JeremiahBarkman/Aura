@@ -18,8 +18,14 @@ const defaultConfig = Object.freeze({
 
     // Which segmentation engine backs the live camera pipeline. Engine ids
     // are registered in public/segmentation/createSegmentationProvider.js;
-    // an unknown value falls back to psyseg.
-    segmentationEngine: 'psyseg',
+    // an unknown value falls back to paddleseg.
+    //
+    // paddleseg is the default because it is the only engine that works out
+    // of the box: the PP-HumanSeg ONNX model is bundled (Apache 2.0) and
+    // needs no credentials, whereas psyseg needs a Personify SDK licence in
+    // .env and renders BLACK FRAMES without one. psyseg stays selectable in
+    // Settings for anyone who has that licence.
+    segmentationEngine: 'paddleseg',
 
     // PsySeg segmentation edge/blur controls (Webcam Live View sliders).
     // psySegErode smooths the segmentation edge (blur/remove/replace);

@@ -28,7 +28,8 @@ function check(name, cond, detail = '') {
 const mod = await import('/segmentation/createSegmentationProvider.js');
 const { createSegmentationProvider, listSegmentationEngines, DEFAULT_ENGINE } = mod;
 
-check('default engine is psyseg (behaviour unchanged)', DEFAULT_ENGINE === 'psyseg', DEFAULT_ENGINE);
+check('default engine is paddleseg (bundled model, no licence needed)',
+    DEFAULT_ENGINE === 'paddleseg', DEFAULT_ENGINE);
 
 const engines = listSegmentationEngines();
 log('registered: ' + JSON.stringify(engines));
@@ -67,11 +68,11 @@ check('psyseg implements full consumer contract',
 
 // Unknown id must degrade to the working engine, not throw.
 const fallback = await createSegmentationProvider('does-not-exist');
-check('unknown engine falls back to psyseg (no throw)',
-    fallback.engineId === 'psyseg', fallback.engineId);
+check('unknown engine falls back to paddleseg (no throw)',
+    fallback.engineId === 'paddleseg', fallback.engineId);
 
 const undef = await createSegmentationProvider(undefined);
-check('undefined engine falls back to default', undef.engineId === 'psyseg', undef.engineId);
+check('undefined engine falls back to default', undef.engineId === 'paddleseg', undef.engineId);
 
 const failed = results.filter(r => !r.ok);
 log(`\n${results.length - failed.length}/${results.length} passed`, failed.length ? 'fail' : 'pass');
