@@ -38,10 +38,18 @@ const path = require('path');
 const root = path.join(__dirname, '..');
 const stageDir = path.join(root, 'native', 'runtime');
 
-// node.exe comes from the interpreter running this script. That is the same
-// standalone node.exe whose ABI the prebuilt native modules (better-sqlite3)
+const IS_WINDOWS = process.platform === 'win32';
+
+// The three native binaries below are Windows Media Foundation components
+// (see VIRTUAL_CAMERA.md) with no Linux counterpart, so a Linux build stages
+// only the Node runtime. Everything else Aura ships is portable JavaScript.
+//
+// node comes from the interpreter running this script. That is the same
+// standalone runtime whose ABI the prebuilt native modules (better-sqlite3)
 // already match, and it works on any machine regardless of install location.
-const items = [
+// It is staged under the name the target platform's launcher expects, which
+// electron-main.js resolves the same way.
+const windowsNativeItems = [
     {
         label: 'AuraFrameBridge.exe',
         source: path.join(root, 'native/AuraFrameBridge/AuraFrameBridge/x64/Release/AuraFrameBridge.exe'),
@@ -64,12 +72,17 @@ const items = [
         fallback: path.join(root, 'native/external/VCamSample/x64/Debug/VCamSampleSource.dll'),
         hint: 'Build VCamSample.sln (x64 Release).'
     },
-    {
-        label: 'node.exe',
-        source: process.execPath,
-        hint: 'Should be impossible - this script is running under node.'
-    }
 ];
+
+const nodeRuntimeItem = {
+    label: IS_WINDOWS ? 'node.exe' : 'node',
+    source: process.execPath,
+    hint: 'Should be impossible - this script is running under node.'
+};
+
+const items = IS_WINDOWS
+    ? [...windowsNativeItems, nodeRuntimeItem]
+    : [nodeRuntimeItem];
 
 function mb(bytes) {
     return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
@@ -79,6 +92,13 @@ fs.mkdirSync(stageDir, { recursive: true });
 
 let missing = 0;
 console.log(`Staging shipped binaries -> ${path.relative(root, stageDir)}`);
+
+if (!IS_WINDOWS) {
+    console.log(
+        `  skip    ${'virtual camera'.padEnd(22)} ` +
+        `${windowsNativeItems.length} Windows-only binaries (no ${process.platform} build exists)`
+    );
+}
 
 for (const item of items) {
     const dest = path.join(stageDir, item.label);

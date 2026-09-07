@@ -8,7 +8,7 @@ Packaging and deployment.
 npm run stage         # scripts/stage-resources.js — stages native binaries for packaging
 npm run check:docs    # scripts/check-docs-sync.js — fails if the two doc copies differ
 npm run sync:docs     # same script with --fix: copies docs/ over installer/
-npm run dist          # electron-builder NSIS installer (predist runs `check:docs` + `stage`; postdist stages the .exe into installer/)
+npm run dist          # electron-builder installer — NSIS on Windows, AppImage + deb on Linux (predist runs `check:docs` + `stage`; postdist stages the .exe into installer/)
 npm run dist:dir      # unpacked build output only, no installer (predist:dir runs the same two)
 npm run stage:installer  # scripts/stage-installer.js — copy the built .exe into installer/ on its own
 npm run build:prereq  # scripts/build-prereq-bundle.js — rebuilds installer/prerequisites.zip
@@ -45,10 +45,12 @@ It exists because the bundle was hand-zipped and drifted: four of its nine files
 
 ## scripts/stage-resources.js
 
-Copies the 4 binaries the installer needs into a tracked `native/runtime/` staging directory:
+Copies the binaries the installer needs into a tracked `native/runtime/` staging directory. On **Windows**, all 4:
 - `AuraFrameBridge.exe` from `x64/Release`
 - `VCamSample.exe` / `VCamSampleSource.dll` from `x64/Release`, falling back to `x64/Debug` with a warning
 - The currently-running `node.exe` itself (the same standalone Node bundled to run `src/web/server.js` — see ARCHITECTURE.md for why Electron's own Node isn't used)
+
+On **Linux**, only the Node runtime (staged as `node`, not `node.exe`). The three native binaries are Windows Media Foundation components with no Linux build, so they are skipped with a one-line notice rather than counted as missing — everything else Aura ships is portable JavaScript.
 
 It's copy-only and non-destructive, skips byte-identical copies to keep git clean, and hard-fails (`process.exit(1)`) if a required binary is missing with no staged fallback available. It runs automatically via the `predist`/`predist:dir` npm hooks before `electron-builder` runs.
 
@@ -60,8 +62,11 @@ It's copy-only and non-destructive, skips byte-identical copies to keep git clea
 - `npmRebuild: false` — deliberately does not rebuild native modules for Electron's ABI; the bundled standalone `node.exe` is used instead (see ARCHITECTURE.md).
 - `files`: `electron-main.js`, `electron-preload.js`, `package.json`, `.env.example`, `public/**/*`, `src/**/*`, `comfy/**/*`, `node_modules/**/*`.
   - Because `public/**/*` and `node_modules/**/*` are both included, the PaddleSeg ONNX model (`public/models/paddleseg/pp_humanseg.onnx`, 6.1 MB) and `onnxruntime-web` ship automatically — neither is an external prerequisite. `onnxruntime-web` is ~129 MB on disk, almost all of it alternative WASM builds (`jsep`, `asyncify`, `jspi`, plain) and 34 bundle variants, when the app only ever fetches two files. Since v0.6.7 the `files` list excludes `node_modules/onnxruntime-web/dist/**` and re-includes only `ort.webgpu.bundle.min.mjs`, `ort-wasm-simd-threaded.asyncify.mjs` and `ort-wasm-simd-threaded.asyncify.wasm` — packaged size 28 MB instead of 129 MB. The exclusion was verified by moving every other file out of the package and re-running the PaddleSeg suite, so it is measured rather than inferred; if a future ONNX runtime or execution provider is adopted, that list has to be revisited or the app will fail to load its WASM at runtime.
-- `extraResources`: copies the 4 staged `native/runtime/*` binaries into `resources/native/*.exe` and `resources/node.exe` (flattened out of `native/runtime/`).
+- `extraResources` is declared **per platform**, not globally, so a Linux build never demands files that cannot exist:
+  - `win.extraResources`: the 4 staged `native/runtime/*` binaries → `resources/native/*.exe` and `resources/node.exe`.
+  - `linux.extraResources`: `native/runtime/node` → `resources/node`.
 - `win.target: nsis`, icon at `build/icon.ico`.
+- `linux.target: [AppImage, deb]`, `category: AudioVideo`, icon at `build/icon.png` (the 256×256 PNG extracted losslessly from `icon.ico`, which already embedded it — electron-builder will not take an `.ico` for Linux). `linux.artifactName` overrides the global `"Aura Installer v${version}.${ext}"` with `"Aura-${version}-${arch}.${ext}"`, because the global one puts spaces in a `.deb` filename.
 - `nsis`: `oneClick: false`, `perMachine: true`, user-choosable install directory, desktop + Start Menu shortcuts, `shortcutName: "Aura"`.
 
 ## First-run config seeding

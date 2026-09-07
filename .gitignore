@@ -114,9 +114,11 @@ x86/
 # directory, so it is tracked normally.
 !native/runtime/
 
-# ...except node.exe, which is 85 MB and is re-staged on every build from the
-# interpreter running the build (process.execPath). No reason to carry it.
+# ...except the staged Node runtime, which is ~100 MB and is re-staged on
+# every build from the interpreter running the build (process.execPath). No
+# reason to carry it. Named node.exe on Windows, node on Linux.
 native/runtime/node.exe
+native/runtime/node
 
 # -----------------------------------------------------------------------------
 # Editor / tooling
