@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from faster_whisper import WhisperModel
+import ctypes
+import glob
 import tempfile
 import os
 import sys
@@ -39,21 +41,57 @@ WHISPER_DEVICE = env_or("WHISPER_DEVICE", "cpu")
 WHISPER_COMPUTE_TYPE = env_or("WHISPER_COMPUTE_TYPE", "int8")
 
 # CTranslate2 lazy-loads cuBLAS/cuDNN from its own internal thread pool on
-# first inference, which does not inherit os.add_dll_directory() on Windows --
-# PATH is the only DLL search mechanism that reaches it. A system-wide CUDA
-# Toolkit + cuDNN install already puts these on PATH; this covers the lighter
-# alternative (no multi-GB installer, no reboot):
+# first inference. A system-wide CUDA Toolkit + cuDNN install is already
+# visible to it; the block below covers the lighter alternative (no multi-GB
+# installer, no reboot):
 #   pip install nvidia-cublas-cu12 nvidia-cudnn-cu12
-# into this venv. No-ops (and CTranslate2 raises its own clear error) if
+# into this venv. It no-ops (and CTranslate2 raises its own clear error) if
 # neither is present.
-if WHISPER_DEVICE == "cuda":
-    _venv_site_packages = os.path.join(
-        os.path.dirname(sys.executable), "..", "Lib", "site-packages"
+#
+# The two platforms need genuinely different mechanisms, not just different
+# paths:
+#
+#   Windows -- that thread pool does not inherit os.add_dll_directory(), so
+#   PATH is the only DLL search mechanism that reaches it. Prepending the
+#   package's bin/ is enough.
+#
+#   Linux -- mutating LD_LIBRARY_PATH here would do nothing: glibc's loader
+#   reads it once at process start, so a later dlopen() ignores the change.
+#   Loading each .so explicitly with RTLD_GLOBAL instead puts the symbols in
+#   the process before CTranslate2 asks for them, which is what it actually
+#   needs.
+def _prepare_cuda_libraries():
+    venv_root = os.path.dirname(os.path.dirname(sys.executable))
+
+    if sys.platform == "win32":
+        site_packages = os.path.join(venv_root, "Lib", "site-packages")
+
+        for nvidia_pkg in ("cublas", "cudnn", "cuda_nvrtc"):
+            dll_dir = os.path.join(site_packages, "nvidia", nvidia_pkg, "bin")
+
+            if os.path.isdir(dll_dir):
+                os.environ["PATH"] = dll_dir + os.pathsep + os.environ["PATH"]
+
+        return
+
+    # The venv's site-packages is under a version-named directory
+    # (lib/python3.12/site-packages), so glob rather than hardcode it.
+    candidates = glob.glob(
+        os.path.join(venv_root, "lib", "python*", "site-packages", "nvidia", "*", "lib", "*.so*")
     )
-    for _nvidia_pkg in ("cublas", "cudnn", "cuda_nvrtc"):
-        _dll_dir = os.path.join(_venv_site_packages, "nvidia", _nvidia_pkg, "bin")
-        if os.path.isdir(_dll_dir):
-            os.environ["PATH"] = _dll_dir + os.pathsep + os.environ["PATH"]
+
+    for library_path in sorted(candidates):
+        try:
+            ctypes.CDLL(library_path, mode=ctypes.RTLD_GLOBAL)
+        except OSError:
+            # Not every .so in those directories is loadable standalone;
+            # the ones CTranslate2 needs are, and it reports its own error
+            # if they turn out to be missing.
+            pass
+
+
+if WHISPER_DEVICE == "cuda":
+    _prepare_cuda_libraries()
 
 print(f"Loading Whisper model '{WHISPER_MODEL}' on {WHISPER_DEVICE} ({WHISPER_COMPUTE_TYPE})...")
 
