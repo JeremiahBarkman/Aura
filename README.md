@@ -9,6 +9,12 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/JeremiahBarkman/Aura/actions/workflows/ci.yml">
+    <img src="https://github.com/JeremiahBarkman/Aura/actions/workflows/ci.yml/badge.svg" alt="CI status">
+  </a>
+</p>
+
+<p align="center">
   <img src="docs/images/aura-studio.png" alt="Aura Studio: the composited camera feed, live webcam controls, Play Mode with a rolling transcript and an active background match" width="100%">
 </p>
 
