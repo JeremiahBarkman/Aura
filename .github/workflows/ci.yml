@@ -1,0 +1,87 @@
+# Static checks for Aura.
+#
+# Deliberately does not run `npm ci`. Nothing checked here needs dependencies --
+# check-docs-sync.js uses only fs and path -- and skipping the install avoids
+# building better-sqlite3 on a runner that never uses it. Keeps the job fast.
+#
+# There is no test suite to run yet. These are the checks that have actually
+# caught problems in this repository.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Static checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Pinned to the floor stated in README.md rather than "latest 22", so
+          # this verifies the minimum version Aura claims to support.
+          node-version: '22.12'
+
+      # docs/ and installer/ each carry a copy of the shipped documentation and
+      # must stay identical. `npm run predist` enforces this before a build;
+      # catching drift here means not discovering it mid-release.
+      - name: Documentation in sync
+        run: node scripts/check-docs-sync.js
+
+      - name: Parse CommonJS JavaScript
+        run: |
+          status=0
+          while IFS= read -r f; do
+            node --check "$f" || { echo "::error file=$f::syntax error"; status=1; }
+          done < <(git ls-files '*.js' | grep -v '^public/')
+          exit $status
+
+      # public/ is served to the browser as <script type="module">, so those
+      # files are ES modules even though package.json declares commonjs. Copying
+      # to .mjs makes node parse them in the right mode; checking them as
+      # CommonJS reports false failures on every `export` statement.
+      - name: Parse browser ES modules
+        run: |
+          status=0
+          tmp=$(mktemp -d)
+          while IFS= read -r f; do
+            copy="$tmp/$(echo "$f" | tr '/' '_').mjs"
+            cp "$f" "$copy"
+            node --check "$copy" || { echo "::error file=$f::syntax error"; status=1; }
+          done < <(git ls-files 'public/**/*.js')
+          exit $status
+
+      - name: Compile Python
+        run: |
+          status=0
+          while IFS= read -r f; do
+            python3 -m py_compile "$f" || { echo "::error file=$f::syntax error"; status=1; }
+          done < <(git ls-files '*.py')
+          exit $status
+
+      # The prerequisites wizard ships to testers as PowerShell. A parse error
+      # there breaks setup before Aura ever starts. Parsed, never executed.
+      - name: Parse PowerShell
+        shell: pwsh
+        run: |
+          $status = 0
+          foreach ($f in (git ls-files '*.ps1')) {
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile(
+              (Resolve-Path $f).Path, [ref]$null, [ref]$errors) | Out-Null
+            if ($errors -and $errors.Count) {
+              Write-Output "::error file=$f::$($errors.Count) parse error(s)"
+              foreach ($e in $errors) { Write-Output "  $($e.Message)" }
+              $status = 1
+            }
+          }
+          exit $status
