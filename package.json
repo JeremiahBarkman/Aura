@@ -1,6 +1,6 @@
 {
   "name": "aura",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "Local-first AI virtual camera that turns live speech into matching backgrounds.",
   "main": "electron-main.js",
   "scripts": {
@@ -17,9 +17,24 @@
     "dist:dir": "electron-builder --dir",
     "build:prereq": "node scripts/build-prereq-bundle.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "virtual-camera",
+    "electron",
+    "local-first",
+    "speech-to-text",
+    "whisper",
+    "ollama",
+    "comfyui",
+    "segmentation",
+    "windows"
+  ],
+  "author": "Jeremiah Barkman",
+  "license": "MIT",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JeremiahBarkman/Aura.git"
+  },
   "type": "commonjs",
   "dependencies": {
     "@personifyinc/psyseg-sdk": "^5.6.0",

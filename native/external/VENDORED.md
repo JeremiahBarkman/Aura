@@ -1,14 +1,15 @@
 # Vendored: VCamSample
 
-`VCamSample/` is a **vendored** copy of Microsoft's virtual-camera sample,
-modified for Aura. It is committed here as ordinary files, not as a submodule.
+`VCamSample/` is a **vendored** copy of Simon Mourier's VCamSample, a Media
+Foundation virtual-camera sample, modified for Aura. It is committed here as
+ordinary files, not as a submodule.
 
 | | |
 |---|---|
 | Upstream | https://github.com/smourier/VCamSample |
 | Upstream commit | `ae42a88` ("Updated C++/WinRT nuget") |
 | Aura commit on top | `3fab24b` |
-| License | MIT — see `VCamSample/LICENSE` |
+| License | MIT, Copyright (c) 2024-2026 Simon Mourier — see `VCamSample/LICENSE` |
 
 ## Why vendored rather than a submodule
 

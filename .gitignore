@@ -123,10 +123,14 @@ native/runtime/node
 # -----------------------------------------------------------------------------
 # Editor / tooling
 # -----------------------------------------------------------------------------
-# Machine-specific Claude Code permissions. The shared .claude/settings.json
-# and .claude/hooks/ ARE tracked - they use $CLAUDE_PROJECT_DIR rather than
-# absolute paths, so they work for anyone who clones.
-.claude/settings.local.json
+# Claude Code configuration is local-only and NOT tracked. The hooks under
+# .claude/hooks/ register this machine's CV-Hub integration: they POST session
+# metadata to the endpoint in CV_HUB_API using the token in CV_HUB_PAT. They
+# carry no secrets themselves and no-op without those credentials, but they are
+# developer tooling rather than part of Aura, and anything under .claude/ runs
+# automatically for whoever opens the repo. Keeping them out of the repository
+# means cloning Aura never executes someone else's telemetry hooks.
+.claude/
 
 # CV-Git per-machine state. Written by `cv init`, and it records an absolute
 # repository root ("C:\\Projects\\aura") plus a locally-generated repoId used
