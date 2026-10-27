@@ -17,7 +17,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execFileSync } = require('child_process');
+const { execFileSync, spawnSync } = require('child_process');
 const paths = require('../config/paths');
 
 const runDir = path.join(paths.dataDir, 'run');
@@ -66,13 +66,18 @@ function recordChildProcess(childKey, pid) {
 // -----------------------------------------------------------------------------
 // Process Identity Check
 // -----------------------------------------------------------------------------
-// getProcessInfo below returns { name, commandLine } for a live PID, or
-// null if nothing is running at that PID, via one of these two backends.
+// getProcessInfos below returns a Map of PID -> { name, commandLine } for
+// every requested PID that is alive, via one of these two backends. The
+// batch is one query on purpose: the Windows backend launches PowerShell,
+// which costs on the order of a second per launch, and startup cleanup has
+// up to six PIDs to look at.
 //
 // The Windows one uses PowerShell/WMI rather than tasklist.exe because
 // tasklist does not expose the command line, which is needed to tell apart
 // Aura's own python.exe/node.exe children from unrelated ones.
-function getWindowsProcessInfo(numericPid) {
+function getWindowsProcessInfos(numericPids) {
+    const filter = numericPids.map(pid => `ProcessId=${pid}`).join(' OR ');
+
     let output;
 
     try {
@@ -82,7 +87,10 @@ function getWindowsProcessInfo(numericPid) {
                 '-NoProfile',
                 '-NonInteractive',
                 '-Command',
-                `Get-CimInstance Win32_Process -Filter "ProcessId=${numericPid}" | Select-Object Name,CommandLine | ConvertTo-Json -Compress`
+                // -InputObject with an explicit array: piping into
+                // ConvertTo-Json would unwrap a single result into a bare
+                // object, and the parser below wants one shape.
+                `ConvertTo-Json -Compress -InputObject @(Get-CimInstance Win32_Process -Filter "${filter}" | Select-Object ProcessId,Name,CommandLine)`
             ],
             {
                 encoding: 'utf8',
@@ -91,79 +99,88 @@ function getWindowsProcessInfo(numericPid) {
         );
     } catch (error) {
         console.warn(
-            `[SESSION TRACKER] Could not query PID ${numericPid}:`,
+            '[SESSION TRACKER] Could not query processes:',
             error.message
         );
 
-        return null;
+        return new Map();
     }
 
+    const infos = new Map();
     const trimmed = output.trim();
 
     if (!trimmed) {
-        return null;
+        return infos;
     }
+
+    let parsed;
 
     try {
-        const parsed = JSON.parse(trimmed);
-
-        return {
-            name: parsed.Name || '',
-            commandLine: parsed.CommandLine || ''
-        };
+        parsed = JSON.parse(trimmed);
     } catch {
-        return null;
+        return infos;
     }
+
+    for (const row of Array.isArray(parsed) ? parsed : [parsed]) {
+        if (row && row.ProcessId !== undefined && row.ProcessId !== null) {
+            infos.set(Number(row.ProcessId), {
+                name: row.Name || '',
+                commandLine: row.CommandLine || ''
+            });
+        }
+    }
+
+    return infos;
 }
 
-// POSIX equivalent. `ps -o comm=,args=` gives the same two facts the WMI
-// query does: the executable name and the full command line. A non-zero
-// exit just means no such process, which is the normal case here (the
-// recorded PID belongs to a session that already ended), so it is not
-// warned about the way a genuine query failure on Windows is.
-function getPosixProcessInfo(numericPid) {
-    let output;
+// POSIX equivalent. `ps -o pid=,comm=,args=` gives the same facts the WMI
+// query does: the executable name and the full command line. ps exits
+// non-zero when any requested PID is gone, which is the normal case here
+// (a recorded PID whose session already ended), so the exit status is
+// ignored and whatever it printed is parsed.
+function getPosixProcessInfos(numericPids) {
+    const result = spawnSync(
+        'ps',
+        ['-p', numericPids.join(','), '-o', 'pid=,comm=,args='],
+        { encoding: 'utf8' }
+    );
 
-    try {
-        output = execFileSync(
-            'ps',
-            ['-p', String(numericPid), '-o', 'comm=,args='],
-            { encoding: 'utf8' }
-        );
-    } catch {
-        return null;
+    const infos = new Map();
+
+    for (const line of String(result.stdout || '').split('\n')) {
+        // ps pads each column, so whitespace runs separate pid, executable
+        // name and the full command line.
+        const match = /^\s*(\d+)\s+(\S+)\s*(.*)$/.exec(line);
+
+        if (match) {
+            infos.set(Number(match[1]), {
+                name: match[2],
+                commandLine: match[3].trim()
+            });
+        }
     }
 
-    const line = output.split('\n')[0].trim();
-
-    if (!line) {
-        return null;
-    }
-
-    // ps pads comm to a fixed column width, so the first whitespace run
-    // separates the executable name from the full command line.
-    const separator = line.search(/\s/);
-
-    if (separator === -1) {
-        return { name: line, commandLine: '' };
-    }
-
-    return {
-        name: line.slice(0, separator),
-        commandLine: line.slice(separator).trim()
-    };
+    return infos;
 }
 
-function getProcessInfo(pid) {
-    const numericPid = Number(pid);
+function getProcessInfos(pids) {
+    const numericPids = [...new Set(
+        pids
+            .map(Number)
+            .filter(pid => Number.isInteger(pid) && pid > 0)
+    )];
 
-    if (!Number.isInteger(numericPid) || numericPid <= 0) {
-        return null;
+    if (!numericPids.length) {
+        return new Map();
     }
 
     return process.platform === 'win32'
-        ? getWindowsProcessInfo(numericPid)
-        : getPosixProcessInfo(numericPid);
+        ? getWindowsProcessInfos(numericPids)
+        : getPosixProcessInfos(numericPids);
+}
+
+function getProcessInfo(pid) {
+    return getProcessInfos([pid]).get(Number(pid)) || null;
 }
 
 function matchesExpectedChild(processInfo, expected) {
@@ -238,7 +255,16 @@ async function cleanupAbandonedSession(expectedChildren) {
         return;
     }
 
-    const previousMainProcess = getProcessInfo(previousSession.pid);
+    const childRecords = Object.entries(previousSession.children || {})
+        .filter(([, record]) => record && record.pid);
+
+    // One query for the old main process and every child it recorded.
+    const infos = getProcessInfos([
+        previousSession.pid,
+        ...childRecords.map(([, record]) => record.pid)
+    ]);
+
+    const previousMainProcess = infos.get(Number(previousSession.pid));
 
     if (previousMainProcess) {
         console.warn(
@@ -256,13 +282,9 @@ async function cleanupAbandonedSession(expectedChildren) {
         'ended without cleaning up. Checking for abandoned processes...'
     );
 
-    for (const [childKey, record] of Object.entries(previousSession.children || {})) {
-        if (!record || !record.pid) {
-            continue;
-        }
-
+    for (const [childKey, record] of childRecords) {
         const expected = expectedChildren[childKey];
-        const info = getProcessInfo(record.pid);
+        const info = infos.get(Number(record.pid));
 
         if (!info) {
             continue;
@@ -291,5 +313,6 @@ module.exports = {
     clearSession,
     recordChildProcess,
     getProcessInfo,
+    getProcessInfos,
     cleanupAbandonedSession
 };

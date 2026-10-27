@@ -22,16 +22,6 @@ export class AuraFrameExportService {
 
         this.canvas = canvas;
 
-        this.ctx = canvas.getContext('2d', {
-            willReadFrequently: true
-        });
-
-        if (!this.ctx) {
-            throw new Error(
-                'AuraFrameExportService could not obtain a 2D canvas context.'
-            );
-        }
-
         this.isRunning = false;
 
         // Count of IPC sends dispatched but not yet acknowledged. Bounds

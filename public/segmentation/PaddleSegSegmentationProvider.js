@@ -15,10 +15,11 @@ import { SegmentationProvider } from './SegmentationProvider.js?v=2';
  * stamps (__auraFrameId / __auraBackgroundGeneration).
  *
  * A raw ONNX model returns only a mask, so this provider does its own
- * compositing. That is deliberately
- * done with canvas operations (drawImage / globalCompositeOperation /
- * ctx.filter), which Chromium runs on the GPU, rather than per-pixel JS loops
- * over a 720p frame every tick.
+ * compositing. That is deliberately done with canvas operations (drawImage /
+ * globalCompositeOperation / ctx.filter) directly on the attached, GPU-backed
+ * output canvas, rather than per-pixel JS loops over a 720p frame every tick.
+ * The frame is read back exactly once per tick, for the virtual-camera sink;
+ * everything else on the path stays on the GPU.
  */
 export class PaddleSegSegmentationProvider extends SegmentationProvider {
     /**
@@ -74,10 +75,6 @@ export class PaddleSegSegmentationProvider extends SegmentationProvider {
         this.personCanvas = document.createElement('canvas');
         this.personCtx = this.personCanvas.getContext('2d');
 
-        // Composite scratch -- what actually gets read back once per frame.
-        this.composeCanvas = document.createElement('canvas');
-        this.composeCtx = this.composeCanvas.getContext('2d', { willReadFrequently: true });
-
         // Webcam Live View sliders. erode softens the mask edge; blur is the
         // background blur strength in blur mode.
         this.erodeLevel = 1;
@@ -106,8 +103,10 @@ export class PaddleSegSegmentationProvider extends SegmentationProvider {
 
     async initialize() {
         // The bundle build inlines the WASM binary, so no ort.env.wasm.wasmPaths
-        // setup is needed -- important because Express serves /node_modules
-        // statically and relative wasm resolution from there is fragile.
+        // setup is needed -- important because Express serves only this dist
+        // folder out of node_modules and relative wasm resolution from there
+        // is fragile. The page is cross-origin isolated (COOP/COEP headers set
+        // by server.js), so the WASM fallback runs its threaded build.
         this.ort = await import(
             '/node_modules/onnxruntime-web/dist/ort.webgpu.bundle.min.mjs'
         );
@@ -162,11 +161,18 @@ export class PaddleSegSegmentationProvider extends SegmentationProvider {
         const FALLBACK_WIDTH = 192;
         const FALLBACK_HEIGHT = 192;
 
-        const meta =
-            this.session.inputMetadata &&
-            this.session.inputMetadata[this.inputName];
+        // onnxruntime-web exposes inputMetadata as an array of
+        // { name, shape, ... } entries; a name-keyed object is accepted too in
+        // case a build ever returns one. Looking it up by name as an object
+        // key on the array always missed, so every model fell back to the
+        // hardcoded size and the warning below fired on each start.
+        const metadata = this.session.inputMetadata;
 
-        const dims = meta && (meta.dimensions || meta.shape);
+        const meta = Array.isArray(metadata)
+            ? metadata.find(entry => entry && entry.name === this.inputName)
+            : metadata && metadata[this.inputName];
+
+        const dims = meta && (meta.shape || meta.dimensions);
 
         // NCHW -> [batch, channels, height, width]
         if (Array.isArray(dims) && dims.length === 4) {
@@ -201,12 +207,22 @@ export class PaddleSegSegmentationProvider extends SegmentationProvider {
     attachCanvas(canvasElement) {
         this.canvasElement = canvasElement;
 
-        // Claim the context first, with willReadFrequently: whoever calls
-        // getContext first decides the backing store, and the export service
-        // must not be the one that loses and turns every readback into a GPU
-        // stall.
+        // The frame is composited straight onto this canvas, so it has to be
+        // GPU-backed: the blur filter, the background draw and the person-layer
+        // draw are then GPU work, the preview costs nothing extra, and the one
+        // getImageData at the end of each frame is the only GPU->CPU transfer
+        // on the path. (A software scratch canvas was used before; drawing the
+        // GPU-backed person layer onto it was a hidden readback every frame,
+        // and the blur ran on the CPU.)
+        //
+        // willReadFrequently is set to false EXPLICITLY, not left undefined:
+        // Chromium's default heuristic demotes a canvas to software after a
+        // few consecutive getImageData calls, which would silently move all of
+        // the above back onto the CPU. Whoever calls getContext first decides
+        // the backing store, so this runs before anything else touches the
+        // canvas (the other call sites in index.html pass the same value).
         this.outputCtx = canvasElement.getContext('2d', {
-            willReadFrequently: true
+            willReadFrequently: false
         });
     }
 
@@ -338,8 +354,6 @@ export class PaddleSegSegmentationProvider extends SegmentationProvider {
                 const composited = this.composite(width, height);
 
                 if (composited) {
-                    this.outputCtx.putImageData(composited, 0, 0);
-
                     if (window.__auraFrameSink) {
                         window.__auraFrameSink.submitFrame(composited, width, height);
                     }
@@ -368,11 +382,9 @@ export class PaddleSegSegmentationProvider extends SegmentationProvider {
             this.canvasElement.height = height;
         }
 
-        for (const canvas of [this.personCanvas, this.composeCanvas]) {
-            if (canvas.width !== width || canvas.height !== height) {
-                canvas.width = width;
-                canvas.height = height;
-            }
+        if (this.personCanvas.width !== width || this.personCanvas.height !== height) {
+            this.personCanvas.width = width;
+            this.personCanvas.height = height;
         }
     }
 
@@ -555,12 +567,13 @@ export class PaddleSegSegmentationProvider extends SegmentationProvider {
     }
 
     /**
-     * Combines the person layer with whatever the current mode calls for and
-     * returns the finished frame. One getImageData per frame, at the end --
-     * the only full-frame readback on this path.
+     * Combines the person layer with whatever the current mode calls for,
+     * drawing straight onto the output canvas (so the preview is already
+     * done), and returns the finished frame for the frame sink. One
+     * getImageData per frame, at the end -- the only readback on this path.
      */
     composite(width, height) {
-        const ctx = this.composeCtx;
+        const ctx = this.outputCtx;
 
         ctx.globalAlpha = 1;
         ctx.filter = 'none';

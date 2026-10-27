@@ -42,10 +42,23 @@ const WHISPER_URL =
  * @returns {Promise<{text: string, language: string|null}>}
  */
 async function transcribeAudioFile(audioPath) {
-    const formData = new FormData();
+    return transcribeAudioBuffer(
+        fs.readFileSync(audioPath),
+        path.basename(audioPath)
+    );
+}
 
-    const audioBuffer = fs.readFileSync(audioPath);
-    const fileName = path.basename(audioPath);
+/**
+ * Transcribes audio already in memory -- Play Mode's live chunks, which are
+ * forwarded by the server as they arrive and never written to disk.
+ *
+ * @param {Buffer} audioBuffer
+ * @param {string} fileName Name reported to the service (extension matters
+ *        to ffmpeg's format sniffing on the Whisper side).
+ * @returns {Promise<{text: string, language: string|null}>}
+ */
+async function transcribeAudioBuffer(audioBuffer, fileName) {
+    const formData = new FormData();
 
     formData.append(
         'audio',
@@ -120,5 +133,6 @@ function getAudioDurationMs(audioPath) {
 
 module.exports = {
     transcribeAudioFile,
+    transcribeAudioBuffer,
     getAudioDurationMs
 };

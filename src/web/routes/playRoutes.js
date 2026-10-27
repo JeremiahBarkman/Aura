@@ -3,9 +3,44 @@ const express = require('express');
 function createPlayRoutes({
     playModeService,
     sceneSlotManager,
-    sceneState
+    sceneState,
+    speechService,
+    transcribeUpload
 }) {
     const router = express.Router();
+
+    // Play Mode's live speech chunks. The renderer used to post these straight
+    // to the Whisper service: a cross-origin request to a hardcoded address,
+    // a flask-cors dependency, and a second place that had to know
+    // WHISPER_URL. Forwarding through here keeps one owner for that address
+    // and lets the renderer stay same-origin. Chunks are forwarded from
+    // memory -- a few seconds of audio each, needed by nothing once
+    // transcribed, so writing them to the audio folder the way Record Mode
+    // does would only leave files behind.
+    router.post(
+        '/api/play/transcribe',
+        transcribeUpload.single('audio'),
+        async (req, res) => {
+            if (!req.file) {
+                return res.status(400).json({
+                    error: 'Audio chunk is required.'
+                });
+            }
+
+            try {
+                res.json(
+                    await speechService.transcribeAudioBuffer(
+                        req.file.buffer,
+                        req.file.originalname || 'play-chunk.webm'
+                    )
+                );
+            } catch (error) {
+                res.status(502).json({
+                    error: `Whisper transcription failed: ${error.message}`
+                });
+            }
+        }
+    );
 
     router.post('/api/play/match', async (req, res) => {
         const spokenText =

@@ -378,6 +378,11 @@ let cameraSceneSyncInProgress = false;
 let cameraSceneSyncStartedAt = 0;
 let auraBroadcastMirrorStarted = false;
 let auraBroadcastMirrorRunning = false;
+// Whether the Aura Camera (Electron output) window is open -- the only
+// listener for the broadcast mirror when running inside Electron.
+let auraCameraWindowOpen = false;
+// __auraFrameId of the last canvas frame handed to the output window.
+let lastBroadcastFrameId = -1;
 let auraOutputChannel = null;
 
 /**
@@ -3219,9 +3224,15 @@ window.stopAuraCamera = function () {
     const video = document.getElementById('auraLiveVideo');
     video.srcObject = null;
 
+    // Same context attributes as the provider's attachCanvas: the first
+    // getContext call on this canvas fixes its backing store for good, and
+    // this can run before a provider ever attached (Stop pressed first).
     const canvas = document.getElementById('auraLiveCanvas');
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const ctx = canvas.getContext('2d', { willReadFrequently: false });
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // A new frame id so the output window mirror sends the cleared frame.
+    canvas.__auraFrameId = (canvas.__auraFrameId || 0) + 1;
 
     document.getElementById('auraSegmentationStatus').textContent =
         'Camera stopped.';
@@ -3260,13 +3271,16 @@ window.resetAuraSegmentation = function () {
 
     const video = document.getElementById('auraLiveVideo');
     const canvas = document.getElementById('auraLiveCanvas');
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const ctx = canvas.getContext('2d', { willReadFrequently: false });
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (video.videoWidth) {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     }
+
+    // See stopAuraCamera.
+    canvas.__auraFrameId = (canvas.__auraFrameId || 0) + 1;
 
     document.getElementById('auraSegmentationStatus').textContent =
         'Segmentation reset.';
@@ -3763,12 +3777,25 @@ function startAuraBroadcastMirror() {
             return;
         }
 
+        // Only a frame nobody has seen yet, and only when someone is there
+        // to see it. rAF runs at the display rate (60 Hz) while the camera
+        // produces ~30 FPS, so without the frame-id check every frame was
+        // copied and posted twice; and with the Aura Camera window closed
+        // there is no listener at all. In a plain browser (no Electron
+        // bridge) the window state is unknown, so the mirror keeps running
+        // for anyone who opened /aura-output/ by hand.
+        const frameId = liveCanvas.__auraFrameId || 0;
+        const hasListener = !window.auraElectron || auraCameraWindowOpen;
+
         if (
             liveCanvas.width &&
             liveCanvas.height &&
-            !frameInProgress
+            !frameInProgress &&
+            hasListener &&
+            frameId !== lastBroadcastFrameId
         ) {
             frameInProgress = true;
+            lastBroadcastFrameId = frameId;
 
             try {
                 const bitmap = await createImageBitmap(liveCanvas);
@@ -3896,7 +3923,9 @@ async function transcribeLocalWhisperChunk(blob) {
     const formData = new FormData();
     formData.append('audio', blob, 'play-chunk.webm');
 
-    const response = await fetch('http://127.0.0.1:8765/transcribe', {
+    // Through the Aura server (which owns WHISPER_URL), not straight to the
+    // Whisper service: the renderer stays same-origin.
+    const response = await fetch('/api/play/transcribe', {
         method: 'POST',
         body: formData
     });
@@ -4180,15 +4209,28 @@ setInterval(() => {
     }
 }, 1000);
 
+function setAuraCameraWindowOpen(open) {
+    auraCameraWindowOpen = open;
+
+    // A window that just opened must receive the current frame even if the
+    // canvas is static (camera stopped, or showing the Reset frame), so the
+    // mirror's "already sent" marker is cleared.
+    if (open) {
+        lastBroadcastFrameId = -1;
+    }
+
+    setOutputWindowDot('auraCameraWindowDot', open);
+}
+
 if (window.auraElectron?.onOutputWindowStateChanged) {
     window.auraElectron.onOutputWindowStateChanged(state => {
-        setOutputWindowDot('auraCameraWindowDot', !!state?.open);
+        setAuraCameraWindowOpen(!!state?.open);
     });
 }
 
 if (window.auraElectron?.getOutputWindowState) {
     window.auraElectron.getOutputWindowState()
-        .then(state => setOutputWindowDot('auraCameraWindowDot', !!state?.open))
+        .then(state => setAuraCameraWindowOpen(!!state?.open))
         .catch(console.error);
 }
 

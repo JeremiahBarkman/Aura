@@ -677,7 +677,11 @@ function createMainWindow() {
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
-            webSecurity: false,
+            // Chromium's web security stays ON (the default). Every page is
+            // served from the one local origin, and the single cross-origin
+            // call the renderer used to make (Play Mode speech chunks posted
+            // straight to the Whisper service) now goes through the Express
+            // server, so nothing needs the same-origin policy relaxed.
             preload: path.join(__dirname, 'electron-preload.js'),
 
             // Keep Aura camera rendering active while the window is minimized.
@@ -772,7 +776,6 @@ function createOutputWindow() {
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
-            webSecurity: false,
 
             // The output window mirrors live frames too; keep it rendering
             // when minimized/backgrounded for the same reason as the main
