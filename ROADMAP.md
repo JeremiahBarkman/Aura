@@ -57,7 +57,7 @@ Both are mechanical to resolve and both are prerequisites for distributing
 builds, not for publishing source.
 
 Source: `docs/Aura Documentation v0.7/Aura Third-Party Licensing Report.md`
-lines 181, 188.
+lines 162, 169.
 
 ---
 
@@ -140,19 +140,12 @@ one would be easy and expensive.
   today because it talks to a separately-installed program over local HTTP and
   redistributes nothing. Bundling ComfyUI into the installer would change the
   licensing position entirely.
-  Source: Licensing Report §3, checklist line 194.
-
-- **PsySeg redistribution is unconfirmed.** The npm wrapper is tagged ISC but
-  real usage rights come from a paid agreement with Personify Inc. Whether it
-  covers redistribution to end users is still an open question on the
-  licensing checklist. PaddleSeg being the default keeps this off the critical
-  path.
-  Source: Licensing Report §4, checklist line 191.
+  Source: Licensing Report §3, checklist line 173.
 
 - **SerpAPI terms are unreviewed.** A paid service under its own ToS;
   commercial tier and the caching/display terms both need confirming before
   commercial use.
-  Source: Licensing Report checklist line 193.
+  Source: Licensing Report checklist line 172.
 
 - **Local-first is not negotiable.** Cloud services stay optional, and no
   existing local capability gets replaced by an online one.

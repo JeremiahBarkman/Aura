@@ -274,10 +274,14 @@ async function findBestImageMatches(
     const records =
         prepareCached(sql).all(...params);
 
+    // One config read per match (it is a file read + JSON parse, and this runs
+    // on every speech chunk); both settings below come from the same snapshot.
+    const config = auraConfig.readConfig();
+
     // Semantic side: embed candidates + the spoken input. Any failure
     // degrades to keyword-only matching (the original behavior).
     const semanticEnabled =
-        auraConfig.readConfig().semanticMatchingEnabled !== false;
+        config.semanticMatchingEnabled !== false;
 
     let triggerVectors = null;
     let inputVector = null;
@@ -354,7 +358,7 @@ async function findBestImageMatches(
     // threshold (checked client-side) -- a below-threshold top match never
     // reaches the screen, so it must not consume a rotation step either.
     const minimumMatchScore =
-        Number(auraConfig.readConfig().minimumMatchScore ?? 0);
+        Number(config.minimumMatchScore ?? 0);
 
     if (scored.length && scored[0].score >= minimumMatchScore) {
         scored[0] = resolveRotatedImage(scored[0]);

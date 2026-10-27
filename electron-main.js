@@ -16,7 +16,7 @@ const path = require('path');
 const IS_WINDOWS = process.platform === 'win32';
 
 // Aura is a live virtual camera: the whole frame pipeline (camera capture,
-// PsySeg segmentation, compositing, and export to the native bridge) runs in
+// segmentation, compositing, and export to the native bridge) runs in
 // the renderer. By default Chromium treats a minimized/occluded window as a
 // background page -- it pauses requestAnimationFrame / requestVideoFrameCallback
 // and throttles timers to ~1/second, which collapses the virtual camera to
@@ -72,7 +72,7 @@ if (app.isPackaged) {
 const sessionTracker = require('./src/electron/sessionTracker');
 
 // .env holds machine-specific paths (ComfyUI/Python venv locations) and
-// secrets (PsySeg license, SerpAPI key). None of that belongs inside the
+// secrets (the SerpAPI key). None of that belongs inside the
 // installed app folder: it would ship the developer's own secrets to every
 // tester, get silently overwritten on every upgrade, and be wrong on any
 // machine laid out differently. Packaged builds instead keep .env in
@@ -94,10 +94,11 @@ require('dotenv').config({ path: envPath });
     Fail loudly on a missing/incomplete .env.
 
     dotenv is silent when the file isn't there, so every key just becomes
-    undefined and the failures surface far from the cause: no PsySeg license
-    means the virtual camera emits BLACK FRAMES, and COMFYUI_AUTOSTART being
-    undefined means ComfyUI is simply never launched. Both look like broken
-    features rather than missing config.
+    undefined and the failures surface far from the cause: COMFYUI_AUTOSTART
+    being undefined means ComfyUI is simply never launched, and an unset
+    SPEECH_PYTHON sends Whisper down a dev-only path that does not exist in a
+    packaged install. Both look like broken features rather than missing
+    config.
 
     This is especially easy to hit because dev and packaged mode read
     DIFFERENT files (see above), so a perfectly good packaged config tells
@@ -119,7 +120,6 @@ function reportEnvHealth() {
             `(${app.isPackaged ? 'packaged' : 'dev'} mode reads that exact path)`,
             '',
             'Nothing is configured, so expect:',
-            '  * virtual camera = BLACK SCREEN (no PsySeg license)',
             '  * ComfyUI never starts (COMFYUI_AUTOSTART unset)',
             '  * ComfyUI / Whisper indicators stay red',
             '',
@@ -134,9 +134,6 @@ function reportEnvHealth() {
 
     // Present but hollow is just as broken, and harder to spot.
     const required = {
-        PSYSEG_LICENSE: 'virtual camera will be a black screen',
-        PSYSEG_ACCESS_KEY: 'virtual camera will be a black screen',
-        PSYSEG_ACCESS_TOKEN: 'virtual camera will be a black screen',
         COMFYUI_WORKING_DIR: 'ComfyUI cannot be started',
         COMFYUI_PYTHON: 'ComfyUI cannot be started',
         SPEECH_PYTHON: 'Whisper falls back to a dev-only path and will not start',
@@ -298,8 +295,8 @@ let auraFramePipeConnecting = null;
 async function checkOllama() {
     try {
         const response = await fetch(
-    `${process.env.OLLAMA_URL}/api/tags`
-);
+            `${process.env.OLLAMA_URL || 'http://127.0.0.1:11434'}/api/tags`
+        );
 
         if (!response.ok) {
             console.warn('Ollama check failed:', response.status);

@@ -5,11 +5,9 @@
 // Draw Active Scene v3 scene layouts onto any canvas.
 //
 // This renderer is intentionally DOM-independent.
-// It can later be reused by:
-// - Slide Output
-// - LiveCompositor
-// - Camera Output
-// - Future virtual webcam pipeline
+// It is shared by:
+// - Slide Output (public/aura-slide-output/)
+// - the camera compositor in public/index.html
 // ============================================================================
 
 export class SceneRenderer {

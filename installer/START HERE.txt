@@ -59,8 +59,8 @@ TIDINESS
   RECYCLE BIN once it's no longer needed. Nothing is left lying around,
   and nothing is permanently deleted.
 
-Paste your keys into the Configuration fields (PsySeg + SerpAPI - sent to
-you separately), click "Save my keys + config", then "Re-check all".
+Paste your SerpAPI key into the Configuration field (sent to you
+separately), click "Save my keys + config", then "Re-check all".
 When every row is [OK] (or the only [!] rows are "not running yet"),
 you're done here.
 

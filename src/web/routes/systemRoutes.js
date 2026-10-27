@@ -4,7 +4,6 @@
 // Purpose:
 // - System health checks
 // - Aura runtime config API
-// - PsySeg credential handoff
 // - Library group list/create routes
 //
 // These routes are intentionally extracted from server.js so server.js can
@@ -77,26 +76,20 @@ function createSystemRoutes({
         const ollamaUrl =
             process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
 
-        try {
-            const whisperResponse =
-                await fetch(`${whisperUrl}/health`);
+        // Bounded: the client polls this every 10s, and a service that has
+        // accepted the TCP connection but stopped answering (ComfyUI mid-load
+        // does this) would otherwise hold each poll open until Node's own
+        // socket timeout, stacking requests behind one stuck socket.
+        const probe = url =>
+            fetch(url, { signal: AbortSignal.timeout(3000) })
+                .then(response => response.ok)
+                .catch(() => false);
 
-            status.whisper = whisperResponse.ok;
-        } catch {}
-
-        try {
-            const comfyResponse =
-                await fetch(`${comfyUiUrl}/`);
-
-            status.comfyUi = comfyResponse.ok;
-        } catch {}
-
-        try {
-            const ollamaResponse =
-                await fetch(`${ollamaUrl}/api/tags`);
-
-            status.ollama = ollamaResponse.ok;
-        } catch {}
+        [status.whisper, status.comfyUi, status.ollama] = await Promise.all([
+            probe(`${whisperUrl}/health`),
+            probe(`${comfyUiUrl}/`),
+            probe(`${ollamaUrl}/api/tags`)
+        ]);
 
         status.serpApi = await checkSerpApiStatus();
 
@@ -117,18 +110,6 @@ function createSystemRoutes({
         res.json({
             success: true,
             config: auraConfig.updateConfig(req.body || {})
-        });
-    });
-
-    // -------------------------------------------------------------------------
-    // PsySeg Credential Configuration Route
-    // -------------------------------------------------------------------------
-    // Keep this server-side. Do not hardcode license/access values in frontend.
-    router.get('/api/config/psyseg', (req, res) => {
-        res.json({
-            license: process.env.PSYSEG_LICENSE,
-            accessKey: process.env.PSYSEG_ACCESS_KEY,
-            accessToken: process.env.PSYSEG_ACCESS_TOKEN
         });
     });
 

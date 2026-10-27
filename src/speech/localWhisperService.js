@@ -18,16 +18,18 @@
  * - Image generation
  *
  * Dependencies:
- * - Local Whisper service at http://127.0.0.1:8765/transcribe
+ * - Local Whisper service at WHISPER_URL (default http://127.0.0.1:8765)
  * - ffprobe available to the Aura runtime
- *
- * Future:
- * Move Whisper URL and ffprobe path into Aura config before packaging.
  */
 
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
+
+// Same variable the system status probe reads, so the green Whisper dot and
+// the transcription request can never point at different services.
+const WHISPER_URL =
+    process.env.WHISPER_URL || 'http://127.0.0.1:8765';
 
 /**
  * Transcribes an audio file by sending it to Aura's local Whisper service.
@@ -55,7 +57,7 @@ async function transcribeAudioFile(audioPath) {
 
     console.log('[AURA WHISPER] Sending audio to local Whisper service...');
 
-    const response = await fetch('http://127.0.0.1:8765/transcribe', {
+    const response = await fetch(`${WHISPER_URL}/transcribe`, {
         method: 'POST',
         body: formData
     });

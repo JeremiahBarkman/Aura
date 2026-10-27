@@ -42,7 +42,7 @@ Electron main process is a **named-pipe client** to AuraFrameBridge (`connectAur
 
 ## Frame pipeline end to end
 
-Camera frame → `PsySegSegmentationProvider` (background blur/remove/replace, runs in the **renderer/browser**) → composited with the current Play-Mode-matched image via `public/rendering/SceneRenderer.js` / `public/js/LiveCompositor.js` → sent to Electron main over the `aura-frame-export:send-frame` IPC call → written to `\\.\pipe\AuraFrameBridgePipe` → `AuraFrameBridge.exe` re-serves the latest frame over TCP on `127.0.0.1:5151` → `VCamSample.exe`'s `TcpFrameClient` pulls it and renders it as the virtual camera device.
+Camera frame → `PaddleSegSegmentationProvider` (background blur/remove/replace, runs in the **renderer/browser**) → composited with the current Play-Mode-matched image rendered by `public/rendering/SceneRenderer.js` → sent to Electron main over the `aura-frame-export:send-frame` IPC call → written to `\\.\pipe\AuraFrameBridgePipe` → `AuraFrameBridge.exe` re-serves the latest frame over TCP on `127.0.0.1:5151` → `VCamSample.exe`'s `TcpFrameClient` pulls it and renders it as the virtual camera device.
 
 ## Build
 

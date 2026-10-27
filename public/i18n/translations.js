@@ -79,8 +79,6 @@ en: {
     'set.negative': 'Negative Prompt', 'set.negativeHint': 'Applied to every ComfyUI image generation.', 'set.save': 'Save', 'set.status': 'STATUS', 'set.language': 'Language',
     'set.logs': 'Logs', 'set.logsSelect': 'Select Log', 'set.logsRefresh': 'Refresh Log', 'set.logsFolder': 'Open Log Folder', 'set.logsCopy': 'Copy Log',
     'set.dangerZone': 'Danger Zone', 'set.dangerZoneHint': 'Permanently deletes every record, image, and group in the database. This cannot be undone.', 'set.clearDatabase': 'Clear Database',
-    'set.segmentation': 'Segmentation', 'set.segEngine': 'Engine', 'set.segRestart': 'Restart the camera to apply a change.',
-    'set.segEngineHint': 'Which engine separates you from your background. PsySeg is the licensed SDK; PaddleSeg runs a local ONNX model on the GPU and needs no licence. Takes effect the next time the camera starts.'
 },
 
 es: {

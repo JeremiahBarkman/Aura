@@ -325,7 +325,9 @@ function Get-EnvStatus {
     }
     $env = Read-DotEnv
 
-    # SERPAPI_KEY is still required -- image search has no offline fallback.
+    # SERPAPI_KEY is required -- image search has no offline fallback. It is
+    # the only key Aura needs: background segmentation runs on a bundled
+    # local model and has no licence.
     $missing = @()
     foreach ($k in @('SERPAPI_KEY')) {
         if (-not $env[$k]) { $missing += $k }
@@ -335,25 +337,7 @@ function Get-EnvStatus {
         return @{ Ok=$false; State='partial'; Detail=('.env exists but missing keys: {0}' -f ($missing -join ', ')) }
     }
 
-    # The PsySeg keys are NO LONGER required. Aura ships a second segmentation
-    # engine (PaddleSeg, a bundled ONNX model) that needs no licence, so a
-    # machine without PsySeg credentials still has a working camera -- it just
-    # has to run on PaddleSeg, which Save-Config selects automatically below.
-    # Reported as informational so the user knows which engine they are on.
-    $psysegMissing = @()
-    foreach ($k in @('PSYSEG_LICENSE','PSYSEG_ACCESS_KEY','PSYSEG_ACCESS_TOKEN')) {
-        if (-not $env[$k]) { $psysegMissing += $k }
-    }
-
-    if ($psysegMissing.Count -gt 0) {
-        return @{
-            Ok = $true
-            State = 'ok'
-            Detail = 'Ready. No PsySeg licence found, so segmentation will use the built-in PaddleSeg engine (no licence needed). Add the PsySeg keys below if you have them.'
-        }
-    }
-
-    return @{ Ok=$true; State='ok'; Detail='.env exists with all license/API keys filled.' }
+    return @{ Ok=$true; State='ok'; Detail='.env exists with the SerpAPI key filled in.' }
 }
 
 # ---------------------------------------------------------------------------
@@ -610,11 +594,6 @@ function Write-DotEnv {
     AddLine '# Edit values here or re-run the wizard.'
     AddLine ''
     AddLine '# ============================================================================'
-    AddLine '# Segmentation Licensing (PsySeg SDK)'
-    AddLine '# ============================================================================'
-    AddKV 'PSYSEG_LICENSE'; AddKV 'PSYSEG_ACCESS_KEY'; AddKV 'PSYSEG_ACCESS_TOKEN'
-    AddLine ''
-    AddLine '# ============================================================================'
     AddLine '# SerpAPI (image search / import)'
     AddLine '# ============================================================================'
     AddKV 'SERPAPI_KEY'
@@ -652,70 +631,6 @@ function Write-DotEnv {
     $utf8 = New-Object System.Text.UTF8Encoding($false)
     [System.IO.File]::WriteAllText($script:EnvPath, $sb.ToString(), $utf8)
     Write-Log ('.env written to {0}' -f $script:EnvPath)
-}
-
-# Picks the segmentation engine when the machine has no PsySeg licence.
-#
-# Aura defaults to the PsySeg engine, which needs credentials. Without them
-# the camera fails with nothing on screen explaining why -- even though the
-# bundled PaddleSeg engine would work fine and needs no licence. So on a
-# licence-less machine, select PaddleSeg up front.
-#
-# Deliberately one-way: it never switches anyone back TO psyseg, so adding a
-# licence later and re-running the wizard will not override a choice made in
-# Settings. Existing keys in the file are preserved -- Aura owns this file and
-# stores unrelated settings (display mode, sliders, language) in it.
-function Set-SegmentationEngineForLicence {
-    $env = Read-DotEnv
-
-    $hasPsySeg =
-        $env['PSYSEG_LICENSE'] -and
-        $env['PSYSEG_ACCESS_KEY'] -and
-        $env['PSYSEG_ACCESS_TOKEN']
-
-    if ($hasPsySeg) {
-        return
-    }
-
-    $configDir = Join-Path $script:UserDataDir 'config'
-    $configPath = Join-Path $configDir 'aura-config.json'
-
-    try {
-        New-Item -ItemType Directory -Force -Path $configDir | Out-Null
-
-        $config = if (Test-Path $configPath) {
-            Get-Content $configPath -Raw | ConvertFrom-Json
-        } else {
-            # Aura has never run yet. A partial file is fine: auraConfig.js
-            # normalizes against its defaults on read, so the other keys fill
-            # themselves in.
-            [pscustomobject]@{}
-        }
-
-        if ($config.PSObject.Properties.Name -contains 'segmentationEngine') {
-            if ($config.segmentationEngine -eq 'paddleseg') { return }
-            $config.segmentationEngine = 'paddleseg'
-        } else {
-            $config | Add-Member -NotePropertyName 'segmentationEngine' -NotePropertyValue 'paddleseg'
-        }
-
-        # Must be BOM-free: auraConfig.js does JSON.parse on the raw text and a
-        # BOM makes that throw. Set-Content -Encoding utf8 writes one in
-        # Windows PowerShell 5.1, hence WriteAllText (same as .env above).
-        $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-        [System.IO.File]::WriteAllText(
-            $configPath,
-            ($config | ConvertTo-Json -Depth 10),
-            $utf8NoBom
-        )
-
-        Write-Log ('No PsySeg licence found - set segmentationEngine=paddleseg in {0}' -f $configPath)
-
-    } catch {
-        # Never block setup over this; the user can still pick the engine in
-        # Settings.
-        Write-Log ('Could not set segmentation engine: {0}' -f $_.Exception.Message)
-    }
 }
 
 # ---------------------------------------------------------------------------
@@ -1223,10 +1138,6 @@ function Save-Config {
     foreach ($k in $script:Fields.Keys) { $vals[$k] = $script:Fields[$k].Text }
     Write-DotEnv -Values $vals
 
-    # After .env is written, not before: this reads the PsySeg keys back from
-    # the file, so it must see the values the user just saved.
-    Set-SegmentationEngineForLicence
-
     Invoke-RefreshRows -Quiet
     if (-not $Quiet) { Set-Status ('Saved to {0}' -f $script:EnvPath) 'done' }
 }
@@ -1427,7 +1338,7 @@ function Invoke-RefreshRows {
         if ($firstTodo) {
             Set-Status ('Next: {0}  -  {1}' -f $firstTodo.Name, $firstTodoDetail) 'info'
         } else {
-            Set-Status 'All prerequisites are ready. Fill in your keys below, click "Save my keys + config", then launch Aura.' 'done'
+            Set-Status 'All prerequisites are ready. Fill in your SerpAPI key below, click "Save my keys + config", then launch Aura.' 'done'
         }
     }
 }
@@ -1443,7 +1354,7 @@ function Show-Wizard {
 
     $form = New-Object System.Windows.Forms.Form
     $form.Text = 'Aura Prerequisites Setup'
-    $form.Size = New-Object System.Drawing.Size(820, 902)
+    $form.Size = New-Object System.Drawing.Size(820, 818)
     $form.StartPosition = 'CenterScreen'
     $form.Font = New-Object System.Drawing.Font('Segoe UI', 9)
 
@@ -1550,7 +1461,7 @@ function Show-Wizard {
     $grp = New-Object System.Windows.Forms.GroupBox
     $grp.Text = 'Configuration (your keys + ComfyUI paths - written to .env)'
     $grp.Location = New-Object System.Drawing.Point(14, 438)
-    $grp.Size = New-Object System.Drawing.Size(780, 250)
+    $grp.Size = New-Object System.Drawing.Size(780, 166)
     $form.Controls.Add($grp)
 
     # Script-scoped: event handlers run on a different scope chain and would
@@ -1596,21 +1507,18 @@ function Show-Wizard {
     New-Field 'ComfyUI folder' 'COMFYUI_WORKING_DIR' $true $true
     New-Field 'ComfyUI python.exe' 'COMFYUI_PYTHON' $true $false
     New-Field 'ComfyUI output folder' 'COMFYUI_OUTPUT_DIR' $true $true
-    New-Field 'PsySeg license' 'PSYSEG_LICENSE'
-    New-Field 'PsySeg access key' 'PSYSEG_ACCESS_KEY'
-    New-Field 'PsySeg access token' 'PSYSEG_ACCESS_TOKEN'
     New-Field 'SerpAPI key' 'SERPAPI_KEY'
 
     # --- log ---
     $logLabel = New-Object System.Windows.Forms.Label
-    $logLabel.Location = New-Object System.Drawing.Point(14, 692)
+    $logLabel.Location = New-Object System.Drawing.Point(14, 608)
     $logLabel.Size = New-Object System.Drawing.Size(300, 16)
     $logLabel.Text = 'Details / progress log:'
     $logLabel.ForeColor = [System.Drawing.Color]::DimGray
     $form.Controls.Add($logLabel)
 
     $script:LogBox = New-Object System.Windows.Forms.TextBox
-    $script:LogBox.Location = New-Object System.Drawing.Point(14, 710)
+    $script:LogBox.Location = New-Object System.Drawing.Point(14, 626)
     $script:LogBox.Size = New-Object System.Drawing.Size(780, 96)
     $script:LogBox.Multiline = $true
     $script:LogBox.ReadOnly = $true
@@ -1620,19 +1528,19 @@ function Show-Wizard {
 
     # --- buttons ---
     $btnRecheck = New-Object System.Windows.Forms.Button
-    $btnRecheck.Location = New-Object System.Drawing.Point(14, 816)
+    $btnRecheck.Location = New-Object System.Drawing.Point(14, 732)
     $btnRecheck.Size = New-Object System.Drawing.Size(150, 32)
     $btnRecheck.Text = 'Re-check all'
     $form.Controls.Add($btnRecheck)
 
     $btnSave = New-Object System.Windows.Forms.Button
-    $btnSave.Location = New-Object System.Drawing.Point(174, 816)
+    $btnSave.Location = New-Object System.Drawing.Point(174, 732)
     $btnSave.Size = New-Object System.Drawing.Size(220, 32)
     $btnSave.Text = 'Save my keys + config (.env)'
     $form.Controls.Add($btnSave)
 
     $btnClose = New-Object System.Windows.Forms.Button
-    $btnClose.Location = New-Object System.Drawing.Point(694, 816)
+    $btnClose.Location = New-Object System.Drawing.Point(694, 732)
     $btnClose.Size = New-Object System.Drawing.Size(100, 32)
     $btnClose.Text = 'Close'
     $btnClose.Add_Click({ $form.Close() })

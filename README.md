@@ -65,7 +65,7 @@ Aura is Windows-first. Windows is the only platform where every feature works.
 | Area | Windows | Linux |
 | --- | --- | --- |
 | Backend, database, Studio, Play Mode, Slide Output | works | works |
-| Segmentation (PaddleSeg / PsySeg) | works | works |
+| Segmentation (PaddleSeg) | works | works |
 | ComfyUI / Ollama / Whisper integration | works | works |
 | **Virtual camera device** | works | **not implemented** |
 | Prerequisites wizard | works | not ported |
@@ -96,9 +96,6 @@ to each over local HTTP, so they stay independently installable and updatable.
 - **Visual Studio** with the C++ workload — only needed to rebuild the native
   virtual-camera components. Prebuilt binaries are committed (see below).
 - **SerpAPI key** — image search import
-- **PsySeg SDK license** — the higher-quality commercial segmentation engine.
-  Aura defaults to the bundled PaddleSeg model instead, so this is never
-  required.
 
 On Windows, the wizard in `installer/prerequisites/` installs and configures
 most of the above for you. Run `Install Aura Prerequisites.bat` and work down
@@ -188,19 +185,13 @@ behind a strict key allowlist in `src/config/auraConfig.js`.
 
 ---
 
-## Segmentation engines
+## Segmentation
 
-Aura ships two interchangeable background-segmentation providers, selected in
-Settings:
-
-- **PaddleSeg** (default) — ONNX PP-HumanSeg via `onnxruntime-web`, WebGPU with
-  a WASM fallback. The model is bundled under `public/models/paddleseg/`
-  (Apache-2.0) and needs no credentials, so a fresh clone has a working camera.
-- **PsySeg** — the commercial Personify SDK. Higher quality, but it requires a
-  paid license and renders black frames without one.
-
-An unrecognized engine value falls back to PaddleSeg rather than leaving you
-with no camera.
+Background segmentation runs in the renderer on a bundled PP-HumanSeg ONNX
+model (`public/models/paddleseg/`, Apache-2.0) through `onnxruntime-web`, using
+WebGPU with a WASM fallback. It needs no credentials, so a fresh clone has a
+working camera. The Erode and Background Blur sliders in Studio tune the mask
+edge and the blur strength.
 
 ---
 
@@ -263,8 +254,6 @@ MIT, Copyright (c) 2024-2026 Simon Mourier
 (`native/external/VCamSample/LICENSE`).
 
 Note that MIT covers Aura's own source. It does not grant rights to the external
-services Aura integrates with: the **PsySeg SDK** is proprietary and gated by a
-paid agreement with Personify Inc., and **SerpAPI** is a paid service under its
-own terms. Neither is redistributed here. A full component-by-component
-inventory is in `docs/Aura Documentation v0.7/Aura Third-Party Licensing
-Report.md`.
+services Aura integrates with: **SerpAPI** is a paid service under its own terms
+and is not redistributed here. A full component-by-component inventory is in
+`docs/Aura Documentation v0.7/Aura Third-Party Licensing Report.md`.

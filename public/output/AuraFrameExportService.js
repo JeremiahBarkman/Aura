@@ -51,9 +51,8 @@ export class AuraFrameExportService {
         // than drawn onto the live canvas, because the canvas is never read on
         // this path -- the provider hands pixels straight to submitFrame, and
         // anything drawn on auraLiveCanvas reaches only the local preview and
-        // the Aura Output window. This is also the one seam both segmentation
-        // providers pass through, so the badge does not have to be duplicated
-        // into two render loops that already duplicate each other.
+        // the Aura Output window. This is also the one seam every frame passes
+        // through, so the badge lives outside the provider's render loop.
         this.recordingIndicator = false;
         this.badge = null;
     }
@@ -265,7 +264,7 @@ export class AuraFrameExportService {
 
             The native camera output is opaque BGRA. Merely copying RGB while
             discarding alpha can expose invalid colors around partially
-            transparent PsySeg edges.
+            transparent segmentation edges.
 
             Composite each pixel over black:
 

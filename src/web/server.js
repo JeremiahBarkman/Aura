@@ -3,7 +3,7 @@
 // ============================================================================
 // Purpose:
 // - Hosts the Aura Control Panel, Aura Output Window, static assets, and local
-//   API routes used by Record Mode, Play Mode, system status, and PsySeg config.
+//   API routes used by Record Mode, Play Mode, and system status.
 // - Keeps the current MVP local-first by binding to the local Electron/Node app.
 //
 // Important boundaries:
@@ -2542,8 +2542,8 @@ app.post('/api/db-manager/import/package', importPackageUpload.single('package')
 // Server Startup (app.listen)
 // -----------------------------------------------------------------------------
 // Bind to loopback only. This server has no authentication and exposes
-// destructive routes plus PsySeg credentials (/api/config/psyseg); listening
-// on 0.0.0.0 would hand all of that to anyone on the local network.
+// destructive routes; listening on 0.0.0.0 would hand all of that to anyone
+// on the local network.
 const server = app.listen(port, '127.0.0.1', () => {
     console.log(`Aura local web UI running at http://localhost:${port}`);
 });
