@@ -15,6 +15,10 @@
 .env.*
 !.env.example
 
+# .mcp.json configures MCP servers for this repo and carries a live CV-Hub
+# bearer token in an Authorization header. Same rule as .env: never commit it.
+.mcp.json
+
 # -----------------------------------------------------------------------------
 # Dependencies and build output
 # -----------------------------------------------------------------------------
