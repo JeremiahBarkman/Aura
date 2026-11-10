@@ -12,7 +12,7 @@
 </head>
 <body>
 <h3>Clear Scene — does a transition to "nothing" actually fade?</h3>
-<p class="info">Drives each provider's background-transition code directly at
+<p class="info">Drives the provider's background-transition code directly at
 controlled progress values. No render loop and no model inference, so the
 result is deterministic rather than racing per-frame ONNX work on the main
 thread.</p>
@@ -39,14 +39,9 @@ const probe = document.createElement('canvas');
 probe.width = W; probe.height = H;
 const probeCtx = probe.getContext('2d', { willReadFrequently: true });
 
-// Reads the green channel at the centre of whatever the provider produced.
-function greenAt(imageDataOrCanvas) {
-    if (imageDataOrCanvas instanceof ImageData) {
-        const i = ((H >> 1) * W + (W >> 1)) * 4;
-        return imageDataOrCanvas.data[i + 1];
-    }
-    const d = probeCtx.getImageData(W >> 1, H >> 1, 1, 1).data;
-    return d[1];
+// Reads the green channel at the centre of what the provider drew.
+function greenAt() {
+    return probeCtx.getImageData(W >> 1, H >> 1, 1, 1).data[1];
 }
 
 // Puts a provider mid-transition at an exact progress, with no incoming
@@ -101,7 +96,7 @@ const { PaddleSegSegmentationProvider } =
 const paddleRender = p => {
     probeCtx.clearRect(0, 0, W, H);
     p.drawBackground(probeCtx, W, H);
-    return greenAt(probe);
+    return greenAt();
 };
 
 log('PaddleSeg — crossfade to nothing');
@@ -113,24 +108,6 @@ log('PaddleSeg — fade to nothing');
 const paddleFade = await sampleCurve(() => new PaddleSegSegmentationProvider(), paddleRender, 'fade');
 renderTable(paddleFade);
 assertFades('PaddleSeg fade', paddleFade);
-
-// --- PsySeg ---------------------------------------------------------------
-// getTransitionBackgroundImageData only touches the canvases built in the
-// constructor, so it runs without the PsySeg SDK or a licence.
-const { PsySegSegmentationProvider } =
-    await import('/segmentation/PsySegSegmentationProvider.js');
-
-const psyRender = p => greenAt(p.getTransitionBackgroundImageData(W, H));
-
-log('PsySeg — crossfade to nothing');
-const psyCross = await sampleCurve(() => new PsySegSegmentationProvider(), psyRender, 'crossfade');
-renderTable(psyCross);
-assertFades('PsySeg crossfade', psyCross);
-
-log('PsySeg — fade to nothing');
-const psyFade = await sampleCurve(() => new PsySegSegmentationProvider(), psyRender, 'fade');
-renderTable(psyFade);
-assertFades('PsySeg fade', psyFade);
 
 // --- regression: a real crossfade BETWEEN two images still works ----------
 const rc = document.createElement('canvas');

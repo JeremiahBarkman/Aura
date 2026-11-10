@@ -447,14 +447,6 @@ DB Manager, is immediate and permanent and does not go through Trash.
   Capture).
 - **Devices** — camera and microphone selection, mirrored with the pickers
   in Studio.
-- **Segmentation**:
-  - **Engine** — which engine separates you from your background.
-    **PsySeg** is the licensed Personify SDK (the default, and what Aura
-    has always used). **PaddleSeg (ONNX)** runs a local PP-HumanSeg model
-    on your GPU and needs no licence. Both support Blur, Remove and
-    Replace identically, so this is safe to switch between.
-    The change takes effect the next time you start the camera — if the
-    camera is already running, stop and start it again.
 - **Matching & Generation**:
   - **Semantic matching (embeddings) in Play Mode** — toggle described in
     section 6; hover the ⓘ for the short version.

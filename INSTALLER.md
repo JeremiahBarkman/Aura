@@ -67,15 +67,19 @@ It's copy-only and non-destructive, skips byte-identical copies to keep git clea
   - `linux.extraResources`: `native/runtime/node` → `resources/node`.
 - `win.target: nsis`, icon at `build/icon.ico`.
 - `linux.target: [AppImage, deb]`, `category: AudioVideo`, icon at `build/icon.png` (the 256×256 PNG extracted losslessly from `icon.ico`, which already embedded it — electron-builder will not take an `.ico` for Linux). `linux.artifactName` overrides the global `"Aura Installer v${version}.${ext}"` with `"Aura-${version}-${arch}.${ext}"`, because the global one puts spaces in a `.deb` filename.
-- `nsis`: `oneClick: false`, `perMachine: true`, user-choosable install directory, desktop + Start Menu shortcuts, `shortcutName: "Aura"`.
+- `nsis`: `oneClick: false`, `perMachine: true`, user-choosable install directory, desktop + Start Menu shortcuts, `shortcutName: "Aura"`. `perMachine` is what makes the installer ask for admin rights, and it is required by `build/installer.nsh` (below), not a preference.
+
+## build/installer.nsh
+
+electron-builder picks this file up by name from `build/` and splices its two macros into the generated NSIS script. `customInstall` runs `regsvr32 /s` on `resources\native\VCamSampleSource.dll` so Windows can resolve the virtual camera's COM CLSID (copying the DLL alone leaves the camera absent, or black in an app that remembers a stale entry); `customUnInstall` unregisters it so an uninstall does not leave a CLSID pointing at a deleted file. The registration writes `HKLM\SOFTWARE\Classes`, which is why the install is per-machine. A failed registration is reported in the installer's details pane and does not abort the install, since Aura itself still runs without the camera device.
 
 ## First-run config seeding
 
-On a packaged install, `electron-main.js` resolves `.env` to `<userData>/.env` (i.e. `%APPDATA%\Aura\.env`, capitalized per `productName`) and auto-seeds it from the bundled `.env.example` on first run if it doesn't already exist. `reportEnvHealth()` then validates required keys (`PSYSEG_LICENSE`, `COMFYUI_WORKING_DIR`, `SPEECH_PYTHON`, etc.) and logs a banner if any are missing or invalid.
+On a packaged install, `electron-main.js` resolves `.env` to `<userData>/.env` (i.e. `%APPDATA%\Aura\.env`, capitalized per `productName`) and auto-seeds it from the bundled `.env.example` on first run if it doesn't already exist. `reportEnvHealth()` then validates required keys (`COMFYUI_WORKING_DIR`, `SPEECH_PYTHON`, etc.) and logs a banner if any are missing or invalid.
 
 ## External prerequisites (not bundled by electron-builder)
 
-Aura depends on several external services/tools that are **not** packaged into the installer and must be present on the target machine: Ollama (with models pulled), ComfyUI (with checkpoints for `comfy/workflows/aura_background_api.json`), a Python venv for the speech service, and PsySeg/SerpAPI credentials. `installer/prerequisites/Aura-Prerequisites.ps1` is the tester-facing wizard that sets these up (including creating the speech venv and installing `faster-whisper`/`flask`/`flask-cors`), and `installer/prerequisites/speech_server.py` is a copy of the speech service staged for that wizard.
+Aura depends on several external services/tools that are **not** packaged into the installer and must be present on the target machine: Ollama (with models pulled), ComfyUI (with checkpoints for `comfy/workflows/aura_background_api.json`), a Python venv for the speech service, and a SerpAPI key. `installer/prerequisites/Aura-Prerequisites.ps1` is the tester-facing wizard that sets these up (including creating the speech venv and installing `faster-whisper`/`flask`/`flask-cors`), and `installer/prerequisites/speech_server.py` is a copy of the speech service staged for that wizard.
 
 **Keep `installer/prerequisites/speech_server.py` byte-identical to `services/speech/speech_server.py`.** They are maintained as duplicates; the installer copy is the one that reaches users.
 

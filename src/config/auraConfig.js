@@ -16,22 +16,11 @@ const defaultConfig = Object.freeze({
     minimumDisplayMs: 3000,
     minimumMatchScore: 0.45,
 
-    // Which segmentation engine backs the live camera pipeline. Engine ids
-    // are registered in public/segmentation/createSegmentationProvider.js;
-    // an unknown value falls back to paddleseg.
-    //
-    // paddleseg is the default because it is the only engine that works out
-    // of the box: the PP-HumanSeg ONNX model is bundled (Apache 2.0) and
-    // needs no credentials, whereas psyseg needs a Personify SDK licence in
-    // .env and renders BLACK FRAMES without one. psyseg stays selectable in
-    // Settings for anyone who has that licence.
-    segmentationEngine: 'paddleseg',
-
-    // PsySeg segmentation edge/blur controls (Webcam Live View sliders).
-    // psySegErode smooths the segmentation edge (blur/remove/replace);
-    // psySegBlur is the background-blur strength (blur mode only).
-    psySegErode: 1,
-    psySegBlur: 39,
+    // Segmentation edge/blur controls (Webcam Live View sliders).
+    // segmentationErode softens the segmentation edge (blur/remove/replace);
+    // segmentationBlur is the background-blur strength (blur mode only).
+    segmentationErode: 1,
+    segmentationBlur: 39,
 
     activeLibraryGroupId: '',
     libraryView: 'all-complete',
@@ -63,8 +52,22 @@ function ensureConfigFile() {
     }
 }
 
+// Keys that were renamed. A config file written by an older build still
+// carries the old name; read it once so the user's slider values survive the
+// rename, then writeConfig persists them under the new name.
+const renamedKeys = {
+    psySegErode: 'segmentationErode',
+    psySegBlur: 'segmentationBlur'
+};
+
 function normalizeConfig(candidateConfig = {}) {
     const normalized = { ...defaultConfig };
+
+    for (const [oldKey, newKey] of Object.entries(renamedKeys)) {
+        if (candidateConfig[newKey] === undefined && candidateConfig[oldKey] !== undefined) {
+            normalized[newKey] = candidateConfig[oldKey];
+        }
+    }
 
     for (const key of allowedKeys) {
         if (candidateConfig[key] !== undefined) {

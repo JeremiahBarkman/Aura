@@ -83,10 +83,10 @@ ABOUT COMFYUI (this is the step people get stuck on)
   - Aura does not use that .bat at all, so this cannot affect Aura. Aura
     starts ComfyUI itself using the paths you set in the wizard.
 
-WHAT YOU MUST PROVIDE (paste into the Configuration fields, then Save):
-  - PsySeg license / access key / access token  (from whoever manages the
-    PsySeg license - required for the camera/segmentation feature)
+WHAT YOU MUST PROVIDE (paste into the Configuration field, then Save):
   - SerpAPI key            (from serpapi.com - required for Image Search)
+    The camera/segmentation feature needs no key: Aura ships its own
+    local model.
 
 FINISHING
   Fill in the Configuration fields, click "Save configuration (.env)", then

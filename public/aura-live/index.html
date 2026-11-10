@@ -126,10 +126,8 @@
         <canvas id="outputCanvas"></canvas>
     </div>
 
-    <script src="/node_modules/@personifyinc/psyseg-sdk/src/index.min.js"></script>
-
     <script type="module">
-        import { PsySegSegmentationProvider } from '../segmentation/PsySegSegmentationProvider.js?v=6';
+        import { PaddleSegSegmentationProvider } from '../segmentation/PaddleSegSegmentationProvider.js';
 
         const video = document.getElementById('video');
         const canvas = document.getElementById('outputCanvas');
@@ -269,7 +267,7 @@
         async function initializeProvider() {
             statusBox.textContent = 'Initializing segmentation provider...';
 
-            provider = new PsySegSegmentationProvider();
+            provider = new PaddleSegSegmentationProvider();
             await provider.initialize();
 
             provider.attachVideo(video);

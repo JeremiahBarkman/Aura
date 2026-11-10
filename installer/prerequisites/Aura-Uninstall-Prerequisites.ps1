@@ -192,9 +192,9 @@ if (-not $IncludeComfyUI) {
     Say ('  * ComfyUI + SDXL checkpoint ({0:N2} GB) - KEPT.' -f $(if ($comfyDir) { Get-SizeGb $comfyDir } else { 0 }))
     Say '    Re-run with -IncludeComfyUI if you really want it gone.'
 }
-Say '  * Your PsySeg / SerpAPI keys - keep them, you will need them again.'
-Say '    (They live in the .env being removed, so copy them out first if'
-Say '     you have no other record of them.)'
+Say '  * Your SerpAPI key - keep it, you will need it again.'
+Say '    (It lives in the .env being removed, so copy it out first if'
+Say '     you have no other record of it.)'
 
 if (-not $WhatIf -and -not $Yes) {
     Say ''

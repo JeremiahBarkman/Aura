@@ -9,8 +9,8 @@
 # -----------------------------------------------------------------------------
 # Secrets  (MOST IMPORTANT RULE IN THIS FILE)
 # -----------------------------------------------------------------------------
-# .env holds the PsySeg license/access keys and the SerpAPI key. It must never
-# be committed. .env.example is the redacted template and IS tracked.
+# .env holds the SerpAPI key and machine-specific paths. It must never be
+# committed. .env.example is the redacted template and IS tracked.
 .env
 .env.*
 !.env.example

@@ -71,8 +71,8 @@
    <div class="two-col">
     <div class="panel"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:12px"><div class="panel-title" style="margin:0;flex-shrink:0" data-i18n="cam.panel">Webcam Live View</div><div id="auraSegmentationStatus" class="active-meta" style="text-align:right;min-width:0">Segmentation not initialized.</div></div><label data-i18n="cam.device">Camera Device</label><select id="cameraDeviceSelect"></select>
      <div class="button-row"><button onclick="startAuraCamera()" data-i18n="cam.start">Start Camera</button><button class="secondary" onclick="stopAuraCamera()" data-i18n="cam.stop">Stop Camera</button><button class="secondary" onclick="enableAuraRemove()" data-i18n="cam.removeBg">Remove BG</button><button class="secondary" onclick="enableAuraBlur()" data-i18n="cam.blur">Blur</button><button class="danger" onclick="resetAuraSegmentation()" data-i18n="cam.reset">Reset</button></div>
-    <label style="margin-top:16px"><span data-i18n="cam.erode">Edge Smoothing (Erode)</span> <span id="psySegErodeValue">1</span></label><input id="psySegErode" type="range" min="0" max="10" value="1" step="1" oninput="psySegErodeValue.textContent=this.value;handlePsySegParamChanged()">
-    <label><span data-i18n="cam.blurLevel">Background Blur</span> <span id="psySegBlurValue">39</span></label><input id="psySegBlur" type="range" min="1" max="60" value="39" step="1" oninput="psySegBlurValue.textContent=this.value;handlePsySegParamChanged()">
+    <label style="margin-top:16px"><span data-i18n="cam.erode">Edge Smoothing (Erode)</span> <span id="segmentationErodeValue">1</span></label><input id="segmentationErode" type="range" min="0" max="10" value="1" step="1" oninput="segmentationErodeValue.textContent=this.value;handleSegmentationParamChanged()">
+    <label><span data-i18n="cam.blurLevel">Background Blur</span> <span id="segmentationBlurValue">39</span></label><input id="segmentationBlur" type="range" min="1" max="60" value="39" step="1" oninput="segmentationBlurValue.textContent=this.value;handleSegmentationParamChanged()">
     </div>
     <div class="panel" style="display:flex;flex-direction:column"><div class="panel-title" style="margin:0 0 12px" data-i18n="visual.active">Active Visual</div><div id="activeVisualDisplay" class="active-visual-display" style="flex:1;aspect-ratio:auto">No active visual selected.</div></div>
    </div>
@@ -163,11 +163,6 @@
  <header class="view-header"><div><div class="view-title" data-i18n="set.title">Settings</div><div class="view-sub" data-i18n="set.sub">DEVICES · DISPLAY · PRESENTATION</div></div></header>
  <div class="settings-body"><div class="panel settings-card"><div class="panel-title" data-i18n="set.language">Language</div><select id="settingsUiLanguage" onchange="setUiLanguageFromSelect()"></select></div>
  <div class="panel settings-card"><div class="panel-title" data-i18n="set.devices">Devices</div><div class="two-col"><div><label data-i18n="set.camera">Camera</label><select id="settingsCameraDeviceSelect"></select></div><div><label data-i18n="set.mic">Microphone</label><select id="settingsMicrophoneDeviceSelect"></select></div></div></div>
- <div class="panel settings-card"><div class="panel-title" data-i18n="set.segmentation">Segmentation</div>
-  <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px"><label data-i18n="set.segEngine" style="margin-bottom:0">Engine</label><span class="info-icon" title="Which engine separates you from your background. PsySeg is the licensed SDK; PaddleSeg runs a local ONNX model on the GPU and needs no licence. Takes effect the next time the camera starts."><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.6"></circle><circle cx="8" cy="4.6" r="1.1" fill="currentColor"></circle><rect x="7.1" y="6.8" width="1.8" height="5.3" rx="0.9" fill="currentColor"></rect></svg></span></div>
-  <select id="settingsSegmentationEngine" onchange="setSegmentationEngineFromSelect()"></select>
-  <div id="settingsSegmentationStatus" class="status-box" data-i18n="set.segRestart">Restart the camera to apply a change.</div>
- </div>
  <div class="panel settings-card"><div class="panel-title" data-i18n="set.matching">Matching &amp; Generation</div>
   <label style="display:flex;align-items:center;gap:10px"><input id="settingsSemanticMatching" type="checkbox" style="width:auto" checked><span data-i18n="set.semantic">Semantic matching (embeddings) in Play Mode</span><span class="info-icon" title="Uses an Ollama embedding model so related phrases match triggers even without exact word overlap. Falls back to keyword matching automatically if the embedding model is unavailable."><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.6"></circle><circle cx="8" cy="4.6" r="1.1" fill="currentColor"></circle><rect x="7.1" y="6.8" width="1.8" height="5.3" rx="0.9" fill="currentColor"></rect></svg></span></label>
   <label data-i18n="set.model">Ollama Model Override</label><input id="settingsOllamaModel" placeholder="Empty = default from .env / built-in">
@@ -244,7 +239,6 @@
 </div>
 
 <div id="auraToast" class="aura-toast"></div>
-<script src="/node_modules/@personifyinc/psyseg-sdk/src/index.min.js"></script>
 <script src="/i18n/translations.js"></script>
 <script>
 // -----------------------------------------------------------------------------
@@ -341,7 +335,7 @@ document.querySelectorAll('.nav-item').forEach(btn=>btn.addEventListener('click'
       - audio recording upload for Record Mode
       - manual record creation and record editing
       - local Whisper Play Mode
-      - PsySeg live camera preview controls
+      - live camera preview and segmentation controls
       - Aura output-window frame broadcasting
       - system health display
 
@@ -371,6 +365,7 @@ let localWhisperInterval = null;
 let localWhisperRunning = false;
 
 let auraSegmentationProvider = null;
+let auraSegmentationProviderPromise = null;
 let auraCameraStream = null;
 
 let cameraSceneRenderer = null;
@@ -383,6 +378,11 @@ let cameraSceneSyncInProgress = false;
 let cameraSceneSyncStartedAt = 0;
 let auraBroadcastMirrorStarted = false;
 let auraBroadcastMirrorRunning = false;
+// Whether the Aura Camera (Electron output) window is open -- the only
+// listener for the broadcast mirror when running inside Electron.
+let auraCameraWindowOpen = false;
+// __auraFrameId of the last canvas frame handed to the output window.
+let lastBroadcastFrameId = -1;
 let auraOutputChannel = null;
 
 /**
@@ -2822,95 +2822,55 @@ function renderMatchCard(match) {
 // -----------------------------------------------------------------------------
 // Segmentation Provider Initialization
 // -----------------------------------------------------------------------------
-// Initializes the frontend PsySeg provider used by live preview. Aura core should
-// continue treating PsySeg behind the provider boundary.
+// Creates the PaddleSeg provider used by the live preview. Everything else in
+// this file talks to it through the SegmentationProvider contract only.
 async function initializeAuraSegmentationProvider() {
     if (auraSegmentationProvider) {
         return auraSegmentationProvider;
     }
 
-    const { createSegmentationProvider, DEFAULT_ENGINE } =
-        await import('/segmentation/createSegmentationProvider.js?v=1');
+    // Callers overlap (the scene-follow poll and a Blur/Remove click can both
+    // arrive before the model has loaded), so they share one in-flight
+    // initialization instead of each loading the model into its own ONNX
+    // session. A failed load rejects every waiter and leaves nothing cached,
+    // so the next attempt retries from scratch.
+    if (!auraSegmentationProviderPromise) {
+        auraSegmentationProviderPromise = (async () => {
+            const { PaddleSegSegmentationProvider } =
+                await import('/segmentation/PaddleSegSegmentationProvider.js?v=1');
 
-    const video = document.getElementById('auraLiveVideo');
-    const canvas = document.getElementById('auraLiveCanvas');
+            const provider = new PaddleSegSegmentationProvider();
 
-    const engineId =
-        (auraConfigState && auraConfigState.segmentationEngine) || DEFAULT_ENGINE;
+            await provider.initialize();
+            provider.attachVideo(document.getElementById('auraLiveVideo'));
+            provider.attachCanvas(document.getElementById('auraLiveCanvas'));
 
-    auraSegmentationProvider = await createSegmentationProvider(engineId);
+            return provider;
+        })().finally(() => {
+            auraSegmentationProviderPromise = null;
+        });
+    }
 
-    await auraSegmentationProvider.initialize();
-    auraSegmentationProvider.attachVideo(video);
-    auraSegmentationProvider.attachCanvas(canvas);
+    auraSegmentationProvider = await auraSegmentationProviderPromise;
 
     // Apply the current Erode / Blur slider values to the fresh provider.
-    applyPsySegParams();
+    applySegmentationParams();
 
     document.getElementById('auraSegmentationStatus').textContent =
-        `Segmentation provider initialized (${auraSegmentationProvider.engineId}).`;
+        'Segmentation provider initialized (PaddleSeg).';
 
     return auraSegmentationProvider;
-}
-
-// Settings > Segmentation: fill the engine dropdown from the provider
-// registry, so adding an engine there shows up here with no edit.
-async function populateSegmentationEngineSelect() {
-    const select = document.getElementById('settingsSegmentationEngine');
-    if (!select) return;
-
-    const { listSegmentationEngines, DEFAULT_ENGINE } =
-        await import('/segmentation/createSegmentationProvider.js?v=1');
-
-    select.innerHTML = listSegmentationEngines()
-        .map(engine => `<option value="${engine.id}">${escapeHtml(engine.label)}</option>`)
-        .join('');
-
-    select.value =
-        (auraConfigState && auraConfigState.segmentationEngine) || DEFAULT_ENGINE;
-}
-
-// Switching engines means building a different provider, and the live one is
-// created once and cached. Rather than tear down a running camera underneath
-// the user, the old provider is disposed and the choice takes effect the next
-// time the camera starts -- which the status line says explicitly.
-function setSegmentationEngineFromSelect() {
-    const select = document.getElementById('settingsSegmentationEngine');
-    const status = document.getElementById('settingsSegmentationStatus');
-    if (!select) return;
-
-    const engineId = select.value;
-
-    patchAuraConfig({ segmentationEngine: engineId })
-        .then(() => {
-            if (auraSegmentationProvider) {
-                auraSegmentationProvider.dispose();
-                auraSegmentationProvider = null;
-            }
-
-            if (status) {
-                status.textContent =
-                    `Engine set to ${select.selectedOptions[0].textContent}. Restart the camera to apply.`;
-            }
-        })
-        .catch(error => {
-            console.error('Failed to save segmentation engine:', error);
-
-            if (status) {
-                status.textContent = 'Could not save the engine choice.';
-            }
-        });
 }
 
 // Read the Webcam Live View sliders and push their values onto the live
 // segmentation provider. erode affects blur/remove/replace; blur affects
 // blur mode only. Called on slider input and when a provider is (re)created.
-function applyPsySegParams() {
+function applySegmentationParams() {
     if (!auraSegmentationProvider) {
         return;
     }
-    const erodeEl = document.getElementById('psySegErode');
-    const blurEl = document.getElementById('psySegBlur');
+    const erodeEl = document.getElementById('segmentationErode');
+    const blurEl = document.getElementById('segmentationBlur');
     if (erodeEl) {
         auraSegmentationProvider.erodeLevel = parseInt(erodeEl.value, 10);
     }
@@ -2919,43 +2879,43 @@ function applyPsySegParams() {
     }
 }
 
-function handlePsySegParamChanged() {
-    applyPsySegParams();
-    savePsySegSettings();
+function handleSegmentationParamChanged() {
+    applySegmentationParams();
+    saveSegmentationSettings();
 }
 
 // Persist the Erode / Blur slider values to aura-config.json. Matches the
 // display-settings sliders: saves on every input event.
-function savePsySegSettings() {
-    const erodeEl = document.getElementById('psySegErode');
-    const blurEl = document.getElementById('psySegBlur');
+function saveSegmentationSettings() {
+    const erodeEl = document.getElementById('segmentationErode');
+    const blurEl = document.getElementById('segmentationBlur');
 
     patchAuraConfig({
-        psySegErode: parseInt(erodeEl?.value ?? '1', 10),
-        psySegBlur: parseInt(blurEl?.value ?? '39', 10)
+        segmentationErode: parseInt(erodeEl?.value ?? '1', 10),
+        segmentationBlur: parseInt(blurEl?.value ?? '39', 10)
     }).catch(console.error);
 }
 
 // Restore the Erode / Blur sliders (and their value labels) from config on
 // startup, then push the values onto the provider if one already exists.
-function loadPsySegSettings() {
+function loadSegmentationSettings() {
     const settings = auraConfigState || {};
 
-    const erodeEl = document.getElementById('psySegErode');
-    if (erodeEl && settings.psySegErode !== undefined) {
-        erodeEl.value = settings.psySegErode;
-        const lbl = document.getElementById('psySegErodeValue');
-        if (lbl) lbl.textContent = settings.psySegErode;
+    const erodeEl = document.getElementById('segmentationErode');
+    if (erodeEl && settings.segmentationErode !== undefined) {
+        erodeEl.value = settings.segmentationErode;
+        const lbl = document.getElementById('segmentationErodeValue');
+        if (lbl) lbl.textContent = settings.segmentationErode;
     }
 
-    const blurEl = document.getElementById('psySegBlur');
-    if (blurEl && settings.psySegBlur !== undefined) {
-        blurEl.value = settings.psySegBlur;
-        const lbl = document.getElementById('psySegBlurValue');
-        if (lbl) lbl.textContent = settings.psySegBlur;
+    const blurEl = document.getElementById('segmentationBlur');
+    if (blurEl && settings.segmentationBlur !== undefined) {
+        blurEl.value = settings.segmentationBlur;
+        const lbl = document.getElementById('segmentationBlurValue');
+        if (lbl) lbl.textContent = settings.segmentationBlur;
     }
 
-    applyPsySegParams();
+    applySegmentationParams();
 }
 
 // -----------------------------------------------------------------------------
@@ -3264,9 +3224,15 @@ window.stopAuraCamera = function () {
     const video = document.getElementById('auraLiveVideo');
     video.srcObject = null;
 
+    // Same context attributes as the provider's attachCanvas: the first
+    // getContext call on this canvas fixes its backing store for good, and
+    // this can run before a provider ever attached (Stop pressed first).
     const canvas = document.getElementById('auraLiveCanvas');
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const ctx = canvas.getContext('2d', { willReadFrequently: false });
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // A new frame id so the output window mirror sends the cleared frame.
+    canvas.__auraFrameId = (canvas.__auraFrameId || 0) + 1;
 
     document.getElementById('auraSegmentationStatus').textContent =
         'Camera stopped.';
@@ -3276,8 +3242,8 @@ window.stopAuraCamera = function () {
 // -----------------------------------------------------------------------------
 // Live Segmentation Effects
 // -----------------------------------------------------------------------------
-// Applies PsySeg-backed blur, removal, reset, and image replacement effects to
-// the active webcam canvas through the provider.
+// Applies blur, removal, reset, and image replacement effects to the active
+// webcam canvas through the segmentation provider.
 window.enableAuraBlur = async function () {
     updateAuraActivity('Initializing segmentation engine...');
     await initializeAuraSegmentationProvider();
@@ -3305,13 +3271,16 @@ window.resetAuraSegmentation = function () {
 
     const video = document.getElementById('auraLiveVideo');
     const canvas = document.getElementById('auraLiveCanvas');
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const ctx = canvas.getContext('2d', { willReadFrequently: false });
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (video.videoWidth) {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     }
+
+    // See stopAuraCamera.
+    canvas.__auraFrameId = (canvas.__auraFrameId || 0) + 1;
 
     document.getElementById('auraSegmentationStatus').textContent =
         'Segmentation reset.';
@@ -3769,7 +3738,7 @@ function startAuraOutputTransition(durationMs, transitionType = 'crossfade', tar
         Transition ownership:
         The Aura Output window performs the visual fade using a GPU-backed
         canvas overlay. The Control Panel should keep broadcasting the live
-        PsySeg canvas normally. Blending here creates choppy frame pacing.
+        segmented canvas normally. Blending here creates choppy frame pacing.
 
         targetGeneration is the background generation the NEW scene will render
         with. The output window snapshots the old frame now but delays the fade
@@ -3808,12 +3777,25 @@ function startAuraBroadcastMirror() {
             return;
         }
 
+        // Only a frame nobody has seen yet, and only when someone is there
+        // to see it. rAF runs at the display rate (60 Hz) while the camera
+        // produces ~30 FPS, so without the frame-id check every frame was
+        // copied and posted twice; and with the Aura Camera window closed
+        // there is no listener at all. In a plain browser (no Electron
+        // bridge) the window state is unknown, so the mirror keeps running
+        // for anyone who opened /aura-output/ by hand.
+        const frameId = liveCanvas.__auraFrameId || 0;
+        const hasListener = !window.auraElectron || auraCameraWindowOpen;
+
         if (
             liveCanvas.width &&
             liveCanvas.height &&
-            !frameInProgress
+            !frameInProgress &&
+            hasListener &&
+            frameId !== lastBroadcastFrameId
         ) {
             frameInProgress = true;
+            lastBroadcastFrameId = frameId;
 
             try {
                 const bitmap = await createImageBitmap(liveCanvas);
@@ -3941,7 +3923,9 @@ async function transcribeLocalWhisperChunk(blob) {
     const formData = new FormData();
     formData.append('audio', blob, 'play-chunk.webm');
 
-    const response = await fetch('http://127.0.0.1:8765/transcribe', {
+    // Through the Aura server (which owns WHISPER_URL), not straight to the
+    // Whisper service: the renderer stays same-origin.
+    const response = await fetch('/api/play/transcribe', {
         method: 'POST',
         body: formData
     });
@@ -4136,8 +4120,7 @@ loadAuraConfig()
 
                 loadDisplaySettings();
         loadMatchingSettings();
-        loadPsySegSettings();
-        populateSegmentationEngineSelect().catch(console.error);
+        loadSegmentationSettings();
 
         try {
             await loadCameraDevices();
@@ -4226,15 +4209,28 @@ setInterval(() => {
     }
 }, 1000);
 
+function setAuraCameraWindowOpen(open) {
+    auraCameraWindowOpen = open;
+
+    // A window that just opened must receive the current frame even if the
+    // canvas is static (camera stopped, or showing the Reset frame), so the
+    // mirror's "already sent" marker is cleared.
+    if (open) {
+        lastBroadcastFrameId = -1;
+    }
+
+    setOutputWindowDot('auraCameraWindowDot', open);
+}
+
 if (window.auraElectron?.onOutputWindowStateChanged) {
     window.auraElectron.onOutputWindowStateChanged(state => {
-        setOutputWindowDot('auraCameraWindowDot', !!state?.open);
+        setAuraCameraWindowOpen(!!state?.open);
     });
 }
 
 if (window.auraElectron?.getOutputWindowState) {
     window.auraElectron.getOutputWindowState()
-        .then(state => setOutputWindowDot('auraCameraWindowDot', !!state?.open))
+        .then(state => setAuraCameraWindowOpen(!!state?.open))
         .catch(console.error);
 }
 

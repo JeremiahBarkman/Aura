@@ -44,7 +44,7 @@ foreach ($k in @('COMFYUI_AUTOSTART','COMFYUI_WORKING_DIR','COMFYUI_PYTHON','COM
     $v = $cfg[$k]
     if ([string]::IsNullOrWhiteSpace($v)) { KV $k '<<< EMPTY / MISSING >>>' } else { KV $k $v }
 }
-foreach ($k in @('PSYSEG_LICENSE','PSYSEG_ACCESS_KEY','PSYSEG_ACCESS_TOKEN','SERPAPI_KEY')) {
+foreach ($k in @('SERPAPI_KEY')) {
     KV $k $(if ([string]::IsNullOrWhiteSpace($cfg[$k])) { '<<< EMPTY >>>' } else { '(filled in)' })
 }
 

@@ -4,19 +4,22 @@ import { SegmentationProvider } from './SegmentationProvider.js?v=2';
  * PaddleSeg (PP-HumanSeg family) segmentation provider.
  *
  * Runs an ONNX-exported PaddleSeg model in the renderer via onnxruntime-web,
- * so segmentation stays in-process on the same render loop as the PsySeg
- * provider -- no Python sidecar, no per-frame HTTP round trip on the live
- * camera path.
+ * so segmentation stays in-process on the camera's own render loop -- no
+ * Python sidecar, no per-frame HTTP round trip on the live camera path.
  *
- * Drop-in peer of PsySegSegmentationProvider: same method surface, same
- * erodeLevel/blurLevel knobs, same canvas stamps and frame-sink handoff, so
- * either can back the live preview and the aura-live output window.
+ * Implements the SegmentationProvider contract. The live preview
+ * (public/index.html) and the aura-live dev page drive it through that
+ * surface plus the erodeLevel/blurLevel knobs behind the Webcam Live View
+ * sliders; composited frames reach the virtual camera through the
+ * window.__auraFrameSink handoff and the output window through the canvas
+ * stamps (__auraFrameId / __auraBackgroundGeneration).
  *
- * Unlike PsySeg (whose SDK composites internally), a raw ONNX model returns
- * only a mask -- this provider does its own compositing. That is deliberately
- * done with canvas operations (drawImage / globalCompositeOperation /
- * ctx.filter), which Chromium runs on the GPU, rather than per-pixel JS loops
- * over a 720p frame every tick.
+ * A raw ONNX model returns only a mask, so this provider does its own
+ * compositing. That is deliberately done with canvas operations (drawImage /
+ * globalCompositeOperation / ctx.filter) directly on the attached, GPU-backed
+ * output canvas, rather than per-pixel JS loops over a 720p frame every tick.
+ * The frame is read back exactly once per tick, for the virtual-camera sink;
+ * everything else on the path stays on the GPU.
  */
 export class PaddleSegSegmentationProvider extends SegmentationProvider {
     /**
@@ -52,10 +55,13 @@ export class PaddleSegSegmentationProvider extends SegmentationProvider {
         this.isRunning = false;
         this.backgroundImage = null;
 
-        // See PsySegSegmentationProvider: bumped on every background change so
-        // the output window can sync its crossfade to the first frame actually
-        // composited with the new background.
+        // Bumped on every background change so the output window can sync its
+        // crossfade to the first frame actually composited with the new
+        // background.
         this.backgroundGeneration = 0;
+
+        // See startRenderLoop.
+        this.loopGeneration = 0;
 
         // Frame -> model input (downscale + normalize happen off this one).
         this.inputCanvas = document.createElement('canvas');
@@ -69,13 +75,8 @@ export class PaddleSegSegmentationProvider extends SegmentationProvider {
         this.personCanvas = document.createElement('canvas');
         this.personCtx = this.personCanvas.getContext('2d');
 
-        // Composite scratch -- what actually gets read back once per frame.
-        this.composeCanvas = document.createElement('canvas');
-        this.composeCtx = this.composeCanvas.getContext('2d', { willReadFrequently: true });
-
-        // Matches the PsySeg provider's sliders so the existing Webcam Live
-        // View controls drive this provider unchanged. erode softens the mask
-        // edge; blur is background blur strength in blur mode.
+        // Webcam Live View sliders. erode softens the mask edge; blur is the
+        // background blur strength in blur mode.
         this.erodeLevel = 1;
         this.blurLevel = 39;
 
@@ -102,8 +103,10 @@ export class PaddleSegSegmentationProvider extends SegmentationProvider {
 
     async initialize() {
         // The bundle build inlines the WASM binary, so no ort.env.wasm.wasmPaths
-        // setup is needed -- important because Express serves /node_modules
-        // statically and relative wasm resolution from there is fragile.
+        // setup is needed -- important because Express serves only this dist
+        // folder out of node_modules and relative wasm resolution from there
+        // is fragile. The page is cross-origin isolated (COOP/COEP headers set
+        // by server.js), so the WASM fallback runs its threaded build.
         this.ort = await import(
             '/node_modules/onnxruntime-web/dist/ort.webgpu.bundle.min.mjs'
         );
@@ -158,11 +161,18 @@ export class PaddleSegSegmentationProvider extends SegmentationProvider {
         const FALLBACK_WIDTH = 192;
         const FALLBACK_HEIGHT = 192;
 
-        const meta =
-            this.session.inputMetadata &&
-            this.session.inputMetadata[this.inputName];
+        // onnxruntime-web exposes inputMetadata as an array of
+        // { name, shape, ... } entries; a name-keyed object is accepted too in
+        // case a build ever returns one. Looking it up by name as an object
+        // key on the array always missed, so every model fell back to the
+        // hardcoded size and the warning below fired on each start.
+        const metadata = this.session.inputMetadata;
 
-        const dims = meta && (meta.dimensions || meta.shape);
+        const meta = Array.isArray(metadata)
+            ? metadata.find(entry => entry && entry.name === this.inputName)
+            : metadata && metadata[this.inputName];
+
+        const dims = meta && (meta.shape || meta.dimensions);
 
         // NCHW -> [batch, channels, height, width]
         if (Array.isArray(dims) && dims.length === 4) {
@@ -197,12 +207,22 @@ export class PaddleSegSegmentationProvider extends SegmentationProvider {
     attachCanvas(canvasElement) {
         this.canvasElement = canvasElement;
 
-        // Claim the context first, with willReadFrequently, for the same
-        // reason the PsySeg provider does: whoever calls getContext first
-        // decides the backing store, and the export service must not be the
-        // one that loses and turns every readback into a GPU stall.
+        // The frame is composited straight onto this canvas, so it has to be
+        // GPU-backed: the blur filter, the background draw and the person-layer
+        // draw are then GPU work, the preview costs nothing extra, and the one
+        // getImageData at the end of each frame is the only GPU->CPU transfer
+        // on the path. (A software scratch canvas was used before; drawing the
+        // GPU-backed person layer onto it was a hidden readback every frame,
+        // and the blur ran on the CPU.)
+        //
+        // willReadFrequently is set to false EXPLICITLY, not left undefined:
+        // Chromium's default heuristic demotes a canvas to software after a
+        // few consecutive getImageData calls, which would silently move all of
+        // the above back onto the CPU. Whoever calls getContext first decides
+        // the backing store, so this runs before anything else touches the
+        // canvas (the other call sites in index.html pass the same value).
         this.outputCtx = canvasElement.getContext('2d', {
-            willReadFrequently: true
+            willReadFrequently: false
         });
     }
 
@@ -260,8 +280,6 @@ export class PaddleSegSegmentationProvider extends SegmentationProvider {
     }
 
     startRenderLoop() {
-        this.isRunning = false;
-
         if (!this.videoElement || !this.canvasElement) {
             throw new Error('Video and canvas must be attached before rendering.');
         }
@@ -270,10 +288,10 @@ export class PaddleSegSegmentationProvider extends SegmentationProvider {
             throw new Error('PaddleSeg must be initialized before rendering.');
         }
 
-        // Same dual-scheduling as the PsySeg provider: rVFC/rAF drives smooth
-        // frame-accurate rendering while visible, and a timer takes over when
-        // the window is minimized and the compositor stops driving rAF (which
-        // would otherwise collapse the camera pipeline to ~1 FPS).
+        // Dual scheduling: rVFC/rAF drives smooth frame-accurate rendering
+        // while visible, and a timer takes over when the window is minimized
+        // and the compositor stops driving rAF (which would otherwise collapse
+        // the camera pipeline to ~1 FPS).
         const MINIMIZED_FALLBACK_MS = 40;
 
         const scheduleNextFrame = frame => {
@@ -303,55 +321,59 @@ export class PaddleSegSegmentationProvider extends SegmentationProvider {
             timerId = setTimeout(runOnce, MINIMIZED_FALLBACK_MS);
         };
 
-        setTimeout(() => {
-            this.isRunning = true;
+        // Every start gets its own generation and every scheduled callback
+        // checks it. stop() followed quickly by a new start (Reset then Blur,
+        // or a scene transition landing while the camera restarts) used to
+        // leave the old loop's pending rVFC/timer callback alive: it woke
+        // after the new loop had set isRunning again, so from then on two
+        // loops ran the model and the compositing on every frame.
+        const generation = ++this.loopGeneration;
 
-            const frame = async () => {
-                if (!this.isRunning) {
+        this.isRunning = true;
+
+        const frame = async () => {
+            if (!this.isRunning || generation !== this.loopGeneration) {
+                return;
+            }
+
+            // Whole body guarded so one bad frame (a decoding background, a
+            // transient ORT error) is logged and skipped rather than throwing
+            // out of the loop and freezing the camera for good.
+            try {
+                if (!this.videoElement.videoWidth || !this.videoElement.videoHeight) {
                     return;
                 }
 
-                // Whole body guarded so one bad frame (a decoding background,
-                // a transient ORT error) is logged and skipped rather than
-                // throwing out of the loop and freezing the camera for good.
-                try {
-                    if (!this.videoElement.videoWidth || !this.videoElement.videoHeight) {
-                        return;
+                const width = this.videoElement.videoWidth;
+                const height = this.videoElement.videoHeight;
+
+                this.resizeSurfaces(width, height);
+
+                await this.updatePersonLayer(width, height);
+
+                const composited = this.composite(width, height);
+
+                if (composited) {
+                    if (window.__auraFrameSink) {
+                        window.__auraFrameSink.submitFrame(composited, width, height);
                     }
 
-                    const width = this.videoElement.videoWidth;
-                    const height = this.videoElement.videoHeight;
+                    this.canvasElement.__auraFrameId =
+                        (this.canvasElement.__auraFrameId || 0) + 1;
 
-                    this.resizeSurfaces(width, height);
-
-                    await this.updatePersonLayer(width, height);
-
-                    const composited = this.composite(width, height);
-
-                    if (composited) {
-                        this.outputCtx.putImageData(composited, 0, 0);
-
-                        if (window.__auraFrameSink) {
-                            window.__auraFrameSink.submitFrame(composited, width, height);
-                        }
-
-                        this.canvasElement.__auraFrameId =
-                            (this.canvasElement.__auraFrameId || 0) + 1;
-
-                        this.canvasElement.__auraBackgroundGeneration =
-                            this.backgroundGeneration;
-                    }
-                } catch (error) {
-                    console.error('PaddleSeg render frame failed (continuing):', error);
-                } finally {
-                    if (this.isRunning) {
-                        scheduleNextFrame(frame);
-                    }
+                    this.canvasElement.__auraBackgroundGeneration =
+                        this.backgroundGeneration;
                 }
-            };
+            } catch (error) {
+                console.error('PaddleSeg render frame failed (continuing):', error);
+            } finally {
+                if (this.isRunning && generation === this.loopGeneration) {
+                    scheduleNextFrame(frame);
+                }
+            }
+        };
 
-            scheduleNextFrame(frame);
-        }, 0);
+        scheduleNextFrame(frame);
     }
 
     resizeSurfaces(width, height) {
@@ -360,11 +382,9 @@ export class PaddleSegSegmentationProvider extends SegmentationProvider {
             this.canvasElement.height = height;
         }
 
-        for (const canvas of [this.personCanvas, this.composeCanvas]) {
-            if (canvas.width !== width || canvas.height !== height) {
-                canvas.width = width;
-                canvas.height = height;
-            }
+        if (this.personCanvas.width !== width || this.personCanvas.height !== height) {
+            this.personCanvas.width = width;
+            this.personCanvas.height = height;
         }
     }
 
@@ -547,12 +567,13 @@ export class PaddleSegSegmentationProvider extends SegmentationProvider {
     }
 
     /**
-     * Combines the person layer with whatever the current mode calls for and
-     * returns the finished frame. One getImageData per frame, at the end --
-     * the same single readback the PsySeg path pays.
+     * Combines the person layer with whatever the current mode calls for,
+     * drawing straight onto the output canvas (so the preview is already
+     * done), and returns the finished frame for the frame sink. One
+     * getImageData per frame, at the end -- the only readback on this path.
      */
     composite(width, height) {
-        const ctx = this.composeCtx;
+        const ctx = this.outputCtx;
 
         ctx.globalAlpha = 1;
         ctx.filter = 'none';
@@ -636,7 +657,7 @@ export class PaddleSegSegmentationProvider extends SegmentationProvider {
             // failed to load) there is nothing to dissolve into, so the
             // outgoing image must fade itself out over black -- otherwise it
             // stays fully opaque for the whole duration and snaps to black at
-            // the end. Mirrors PsySegSegmentationProvider.
+            // the end.
             const t = smoothstep(progress);
             const hasIncoming = isDrawable(this.transitionTo);
 

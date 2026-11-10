@@ -3,7 +3,7 @@
 // ============================================================================
 // Purpose:
 // - Hosts the Aura Control Panel, Aura Output Window, static assets, and local
-//   API routes used by Record Mode, Play Mode, system status, and PsySeg config.
+//   API routes used by Record Mode, Play Mode, and system status.
 // - Keeps the current MVP local-first by binding to the local Electron/Node app.
 //
 // Important boundaries:
@@ -30,6 +30,7 @@ const multer = require('multer');
 const db = require('../db/connection');
 const paths = require('../config/paths');
 const recordModeService = require('../record/recordModeService');
+const speechService = require('../speech/localWhisperService');
 const stopwordService = require('../text/stopwordService');
 
 const playModeService = require('../play/playModeService');
@@ -78,6 +79,10 @@ const audioStorage = multer.diskStorage({
 });
 
 const upload = multer({ storage: audioStorage });
+
+// Play Mode speech chunks are forwarded to Whisper straight from memory (see
+// playRoutes.js); nothing needs them on disk.
+const transcribeUpload = multer({ storage: multer.memoryStorage() });
 
 const manualImageStorage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -177,7 +182,26 @@ app.use('/manual-images', express.static(path.join(paths.imagesDir, 'manual')));
 app.use('/imported-images', express.static(path.join(paths.imagesDir, 'imports')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json({ limit: '25mb' }));
-app.use('/node_modules', express.static(path.join(paths.projectRoot, 'node_modules')));
+
+// Cross-origin isolation for every page, so SharedArrayBuffer exists and
+// onnxruntime-web's WASM fallback can run its threaded build -- without it
+// ORT silently drops to a single thread. COOP same-origin keeps same-origin
+// popups (Slide Output) in the browsing-context group; COEP is
+// "credentialless" rather than "require-corp" so cross-origin subresources
+// that carry no CORP header (the Google Fonts stylesheet) still load.
+app.use((req, res, next) => {
+    res.set('Cross-Origin-Opener-Policy', 'same-origin');
+    res.set('Cross-Origin-Embedder-Policy', 'credentialless');
+    next();
+});
+
+// Only onnxruntime-web's dist folder reaches the browser: it is the one thing
+// public/ loads out of node_modules (the WebGPU bundle plus its threaded
+// WASM files), and nothing else installed there belongs on an HTTP route.
+app.use(
+    '/node_modules/onnxruntime-web/dist',
+    express.static(path.join(paths.projectRoot, 'node_modules', 'onnxruntime-web', 'dist'))
+);
 app.use(express.static(path.join(paths.projectRoot, 'public')));
 
 // API responses reflect live, frequently-changing local data (records,
@@ -198,7 +222,9 @@ app.use(createSystemRoutes({
 app.use(createPlayRoutes({
     playModeService,
     sceneSlotManager,
-    sceneState
+    sceneState,
+    speechService,
+    transcribeUpload
 }));
 
 app.use(createConferenceRoutes({
@@ -2039,50 +2065,6 @@ app.patch('/api/source-items/:id/group', (req, res) => {
 });
 
 /**
- * Temporary SerpAPI image search test endpoint.
- *
- * Purpose:
- * Verifies:
- * - SerpAPI connectivity
- * - API key validity
- * - image result normalization
- *
- * Example:
- * /api/import/image-search/test?q=moog&limit=5
- */
-app.get('/api/import/image-search/test', async (req, res) => {
-    try {
-        const { searchImages } =
-            require('../import/serpApiImageSearchService');
-
-        const query =
-            String(req.query.q || '').trim();
-
-        const limit =
-            Number(req.query.limit || 5);
-
-        const results =
-            await searchImages({
-                query,
-                limit
-            });
-
-        res.json({
-            success: true,
-            count: results.length,
-            results
-        });
-    } catch (error) {
-        console.error(error);
-
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
-    }
-});
-
-/**
  * Imports internet image-search results into Aura as draft records.
  *
  * Flow:
@@ -2542,8 +2524,8 @@ app.post('/api/db-manager/import/package', importPackageUpload.single('package')
 // Server Startup (app.listen)
 // -----------------------------------------------------------------------------
 // Bind to loopback only. This server has no authentication and exposes
-// destructive routes plus PsySeg credentials (/api/config/psyseg); listening
-// on 0.0.0.0 would hand all of that to anyone on the local network.
+// destructive routes; listening on 0.0.0.0 would hand all of that to anyone
+// on the local network.
 const server = app.listen(port, '127.0.0.1', () => {
     console.log(`Aura local web UI running at http://localhost:${port}`);
 });

@@ -1,7 +1,7 @@
 # Aura Installation Guide (Packaged Build)
 
 This guide covers installing Aura from the distributable installer
-(`Aura Installer v0.7.1.exe`) rather than running it from source. It's for
+(`Aura Installer v0.7.2.exe`) rather than running it from source. It's for
 testers who received the installer, not for development setup — see
 `INSTALL.md` for that.
 
@@ -13,9 +13,8 @@ not bundled in the installer and need to already be running on the machine.
 > The `Aura Prerequisites` folder ships a wizard
 > (`Install Aura Prerequisites.bat`) that checks for everything below,
 > installs the small tools for you (Ollama, Python, FFmpeg), sets up the
-> speech service, and writes your `.env` — including fields to paste your
-> SerpAPI key and, optionally, your PsySeg keys into (leave PsySeg empty and
-> the wizard selects the license-free PaddleSeg engine). It also enables GPU
+> speech service, and writes your `.env` — including a field to paste your
+> SerpAPI key into. It also enables GPU
 > acceleration for speech-to-text automatically on NVIDIA machines. For
 > ComfyUI, the checkpoint, and a text
 > model it detects what's missing and links you to the downloads (those are
@@ -29,7 +28,8 @@ not bundled in the installer and need to already be running on the machine.
 - Windows 10 or 11 (64-bit)
 - NVIDIA GPU strongly recommended (ComfyUI image generation is very slow on
   CPU)
-- No administrator rights required to install Aura itself (per-user install)
+- Administrator rights to run the Aura installer: it registers Aura's virtual
+  camera with Windows, which only works machine-wide (see section 3)
 
 ---
 
@@ -226,25 +226,7 @@ The **app interface language** is separate and set in
 **Settings → Language** (17 languages available). It does not affect how
 your records are processed.
 
-### 2.4 PsySeg SDK license — optional
-
-Used by the **PsySeg** background-segmentation engine. If you have one, you
-need a valid license key, access key, and access token for the
-`@personifyinc/psyseg-sdk` package. Contact whoever manages the PsySeg
-license — there's no self-serve signup.
-
-**This is no longer required.** Aura ships a second segmentation engine,
-**PaddleSeg**, which runs a bundled ONNX model on your GPU and needs no
-license. Blur, Remove Background and Replace Background all work the same
-on either engine.
-
-If you leave the PsySeg fields empty, the prerequisites wizard selects
-PaddleSeg for you, so background segmentation works on a fresh install with
-no license at all. You can switch engines any time in
-**Settings → Segmentation → Engine** (the change applies the next time you
-start the camera).
-
-### 2.5 SerpAPI key
+### 2.4 SerpAPI key
 
 Used for the image search / image import feature. Sign up at
 https://serpapi.com and generate an API key.
@@ -253,12 +235,14 @@ https://serpapi.com and generate an API key.
 
 ## 3. Install Aura
 
-1. Run `Aura Installer v0.7.1.exe`.
-2. Follow the installer (per-user install, no admin prompt). You can change
-   the install location if you want; Desktop and Start Menu shortcuts are
-   created by default.
+1. Run `Aura Installer v0.7.2.exe`.
+2. Approve the administrator prompt. The installer registers Aura's virtual
+   camera with Windows so Teams, Zoom, OBS and similar apps can see "Aura
+   Camera"; that registration is machine-wide and cannot be done without
+   admin rights. You can change the install location if you want; Desktop
+   and Start Menu shortcuts are created by default.
 3. Do **not** launch Aura yet — configure `.env` first (next step), or the
-   app will start with blank service URLs and licensing missing.
+   app will start with blank service URLs.
 
 ---
 
@@ -280,10 +264,6 @@ out of the installer for security. Instead:
    what you gathered in section 2:
 
    ```env
-   PSYSEG_LICENSE=<your license>
-   PSYSEG_ACCESS_KEY=<your access key>
-   PSYSEG_ACCESS_TOKEN=<your access token>
-
    SERPAPI_KEY=<your serpapi key>
 
    PORT=5150
