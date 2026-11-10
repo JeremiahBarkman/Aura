@@ -25,6 +25,10 @@ foreach ($Folder in $Folders) {
     }
 }
 
+# Hooks before the tool checks: the CV-Hub mirror does not need node or
+# python, so a clone missing one of those should still get a working hook.
+& (Join-Path $PSScriptRoot "install-hooks.ps1")
+
 if (!(Get-Command node -ErrorAction SilentlyContinue)) {
     Write-Host "ERROR: Node.js is not installed or not in PATH."
     exit 1

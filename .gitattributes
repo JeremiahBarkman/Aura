@@ -11,3 +11,9 @@
 *.dll binary
 *.zip binary
 *.7z binary
+
+# Git hooks run under git's bundled sh. With `* text=auto` above plus
+# core.autocrlf=true they would check out CRLF on Windows, making the `#!/bin/sh`
+# line read as "/bin/sh\r" -- the hook then dies with "bad interpreter" on every
+# push. Force LF so a fresh Windows clone gets a working hook.
+scripts/hooks/* text eol=lf

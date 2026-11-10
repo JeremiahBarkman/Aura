@@ -1,0 +1,46 @@
+#!/bin/sh
+# Mirror pushes to GitHub onto the CV-Hub remote.
+#
+# Git has no post-push hook, so pre-push is the only place a push can be
+# observed locally. CV-Hub is a mirror, not a second source of truth, so a
+# mirror failure warns and never blocks the push to GitHub.
+#
+# Pushing to the mirror can prompt for credentials, and Git Credential
+# Manager's prompt is a GUI window that blocks forever rather than erroring.
+# credential.interactive=false plus the empty GIT_ASKPASS suppress it, and the
+# timeout is the backstop so a stale credential can never wedge a push.
+
+MIRROR=cvhub
+
+[ "$1" = "$MIRROR" ] && exit 0
+git remote get-url "$MIRROR" >/dev/null 2>&1 || exit 0
+
+refs=''
+while read -r local_ref local_sha remote_ref remote_sha; do
+	[ -n "$local_ref" ] || continue
+	case "$local_sha" in
+		*[!0]*) refs="$refs $local_sha:$remote_ref" ;;
+		# Deleting a branch on the mirror is not something a push should do
+		# silently; CLAUDE.md treats branch deletion as explicit-permission work.
+		*) echo "mirror: not deleting $remote_ref on $MIRROR -- do that by hand if intended" >&2 ;;
+	esac
+done
+
+[ -n "$refs" ] || exit 0
+
+out=$(GIT_TERMINAL_PROMPT=0 GIT_ASKPASS=/bin/true \
+	timeout 60 git -c credential.interactive=false \
+	push --quiet "$MIRROR" $refs 2>&1)
+status=$?
+
+if [ "$status" -eq 0 ]; then
+	echo "mirror: $MIRROR updated" >&2
+elif [ "$status" -eq 124 ]; then
+	echo "mirror: $MIRROR timed out -- credential likely stale; see 'Account switching' in project notes" >&2
+	echo "mirror: GitHub push continues; re-run 'git push $MIRROR' once fixed" >&2
+else
+	echo "mirror: $MIRROR push failed (exit $status); GitHub push continues" >&2
+	[ -n "$out" ] && echo "$out" | sed 's/^/mirror: /' >&2
+fi
+
+exit 0
